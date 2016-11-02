@@ -1,0 +1,4075 @@
+/**********************************************************/
+/**********************  Setup  ***************************/
+/**********************************************************/
+Import "file.lua"
+Import "shanhai.lua"
+
+Dim g_version = "1.0.7.1"
+Dim log_level = 3
+
+url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
+
+// Setup knowledge tips / jokes
+PutAttachment "/sdcard/tyc_coc", "jokes.txt"
+PutAttachment "/sdcard/tyc_coc", "knowledge.txt"
+Dim g_jokes = File.ReadLines("/sdcard/tyc_coc/knowledge.txt") 
+Dim g_joke_count = GetLength(g_jokes)
+
+/**********************************************************/
+/********************** Utility ***************************/
+/**********************************************************/
+
+Function FillArray(a, length, value)
+	For i = 0 To length - 1
+		a(i) = value
+	Next
+End Function
+
+Function CopyArray(a, length, b)
+	For i = 0 To length - 1
+		b(i) = a(i)
+	Next
+End Function
+
+Function Fill2DArray(a, first_length, second_length, value)
+	For i = 0 To first_length - 1
+		For j = 0 To second_length - 1
+			a(i, j) = value
+		Next
+	Next
+End Function
+
+Function ExtractArrayFrom2DArray(two_dimension_array, index, length, target_array)
+	For i = 0 To length - 1
+		target_array(i) = two_dimension_array(index, i)
+	Next
+End Function
+
+Function GetLength(a)
+	Dim l = Len(a)
+	While l > 0
+		If a(l - 1) <> null Then 
+			Exit While
+		End If
+		l=l-1
+	Wend
+	GetLength = l
+End Function
+
+Function Sort(a)
+	Dim l = GetLength(a)
+	For i = 1 To l - 1
+		Dim t=a(i)
+		Dim j=i-1
+		While j>=0
+			If t < a(j) Then 
+				a(j + 1) = a(j)
+			Else 
+				Exit While
+			End If
+			j=j-1
+		Wend
+		a(j+1) = t
+	Next
+End Function
+
+Function MDistance(grid_a, grid_b)
+	MDistance = Abs(grid_a(0) - grid_b(0)) + Abs(grid_a(1) - grid_b(1))
+End Function
+/**********************************************************/
+/************** run coc ***********************************/
+/**********************************************************/
+Dim kCOCApps = {_
+	{"国际版", "com.supercell.clashofclans"}, _
+	{"谷歌版", "com.supercell.clashofclans"}, _
+	{"原版", "com.supercell.clashofclans"}, _
+	{"九游", "com.supercell.clashofclans.uc"}, _
+	{"昆仑", "com.supercell.clashofclans.kunlun"}, _
+	{"小米", "com.supercell.clashofclans.mi"}, _
+	{"360", "com.supercell.clashofclans.qihoo"}, _
+	{"百度", "com.supercell.clashofclans.baidu"}, _
+	{"豌豆荚", "com.supercell.clashofclans.wdj"}, _
+	{"华为", "com.supercell.clashofclans.huawei"}, _
+	{"靠谱", "com.supercell.clashofclans.kaopu"}, _
+	{"松果", "com.supercell.clashofclans.kaopu"}, _
+	{"新浪", "com.supercell.clashofclans.ewan.wyx"}, _
+	{"益玩海马", "com.supercell.clashofclans.ewan.hm"}, _
+	{"益玩靠谱", "com.supercell.clashofclans.ewan.kaopu"} _
+}
+Dim kRunningApp = null
+
+Function RunCOCApp(package_name)
+	KillApp (package_name)
+	Delay 500
+	RunApp (package_name)
+	Delay 3000
+	Dim running_apps = GetRunningApp()
+	For j = 0 To GetLength(running_apps) - 1
+		If Trim(running_apps(j)) = package_name Then 
+			RunCOCApp = True
+			Exit Function
+		End If
+	Next
+	RunCOCApp = False
+End Function
+
+Function TryToStartCOCApp()
+	Dim l=GetLength(kCOCApps)
+	Dim package_name = null
+	For i = l-1 To 0 step -1
+		Dim app_info = kCOCApps(i)
+		If i = l - 1 or app_info(1) <> package_name Then 
+			package_name = app_info(1)
+			If shanhai.ExistApp(package_name) Then 
+				LogAndShow 1, "尝试启动" & app_info(0) &"版本.."
+				If RunCOCApp(package_name) Then 
+					kRunningApp = package_name
+					LogAndShow 1, app_info(0) &"版本启动成功"
+					TryToStartCOCApp = True
+					Exit Function
+				End If
+			End If
+		End If
+	Next
+	// Try to find and start package with name prefix matched
+	Dim apps = shanhai.GetAppList(0)
+	Dim app_prefix = "com.supercell.clashofclans"
+	Dim app_prefix_len = Len(app_prefix)
+	For Each app In apps
+		If Len(app) >= app_prefix_len and Left(app, app_prefix_len) = app_prefix Then 
+			LogAndShow 1, "尝试启动游戏包" & app &".."
+			If RunCOCApp(app) Then 
+				kRunningApp = app
+				LogAndShow 1, app &"启动成功"
+				TryToStartCOCApp = True
+				Exit Function
+			End If
+		End If
+	Next
+	TryToStartCOCApp = False
+End Function
+
+Dim kApkVersions = {"自动检测", "九游", "昆仑", "小米", "360", "百度", "豌豆荚", "华为", "靠谱", "松果", "新浪", "国际版", "谷歌版", "原版",  "益玩海马", "益玩靠谱"}
+Function StartApp()
+	If kRunningApp <> null Then 
+		RunCOCApp (kRunningApp)
+		StartApp = true
+		Exit Function
+	End If
+	
+	Dim selected = ReadUIConfig("apk_version", 0)
+	If selected = 0 Then 
+		If not TryToStartCOCApp() Then 
+			LogAndShow 1, "启动游戏失败，如确认游戏已安装，请联系作者"
+			Delay 3000
+			StartApp = false
+			Exit Function
+		Else 
+			StartApp = true
+			Exit Function
+		End If
+	Else 
+		Dim l=GetLength(kCOCApps)
+		For i = 0 To l - 1
+			Dim app_info = kCOCApps(i)
+			If kApkVersions(selected) = app_info(0) Then 
+				If RunCOCApp(app_info(1)) Then 
+					kRunningApp = app_info(1)
+					StartApp = true
+					Exit Function
+				Else 
+					LogAndShow 1, "启动"&app_info(0)&"版本失败，建议使用自动检测，如仍无法启动，请联系作者"
+					Delay 3000
+					StartApp = false
+					Exit Function
+				End If
+			End If
+			TracePrint "error! no info for "&kApkVersions(selected)
+		Next
+	End If
+	StartApp = false
+End Function
+
+/**********************************************************/
+/*************** Read Log *********************************/
+/**********************************************************/
+
+// Setup war results
+Dim g_bot_start_time = Time()
+Dim g_total_attack_count = 0
+Dim g_total_robbed_gold = 0
+Dim g_total_robbed_elixir = 0
+Dim g_total_robbed_dark_elixir = 0
+
+/**********************************************************/
+Dim kScreenWidth, kScreenHeight
+kScreenWidth=GetScreenX()
+kScreenHeight = GetScreenY()
+Dim kCenterX = kScreenWidth / 2
+Dim kCenterY = kScreenHeight / 2
+
+Dim kResourceDigitIndex = 1
+Dim kTotalTroopCountDigitIndex = 2
+Dim kTroopCountDigitIndex = 3
+Dim kTrainingTroopDigitIndex = 4
+Dim kWarResultDigitIndex = 5
+SetDictEx kResourceDigitIndex, "Attachment:digits.txt"
+SetDictEx kTotalTroopCountDigitIndex, "Attachment:total_troop_count_digits.txt"
+SetDictEx kTroopCountDigitIndex, "Attachment:troop_count_digits.txt"
+SetDictEx kTrainingTroopDigitIndex, "Attachment:training_troop_count_digits.txt"
+SetDictEx kWarResultDigitIndex, "Attachment:war_result_digits.txt"
+
+Function LogInfo(level, log_message)
+	If log_level >= level Then 
+		TracePrint log_message
+	End If
+End Function
+
+Dim g_show_log_on_top = false
+Function LogAndShow(level, log_message)
+	If log_level >= level Then 
+		TracePrint "[",Now(),"]",log_message
+		If g_show_log_on_top Then 
+			ShowMessage log_message, 10000, 900, 0
+		Else 
+			ShowMessage log_message, 10000, 900, 550
+		End If
+	End If
+End Function
+
+Function ShowMsg(level, log_message)
+	If log_level >= level Then 
+		If g_show_log_on_top Then 
+			ShowMessage log_message, 10000, 900, 0
+		Else 
+			ShowMessage log_message, 10000, 900, 550
+		End If
+	End If
+End Function
+
+Dim g_monitor_server_is_ok = true
+Dim g_monitor_server_down_time = 0
+Dim g_monitor_server_connection_failure = 0
+
+Function ReportInfo(gold, elixir, dark_elixir, trophy)
+	Dim now_str = Replace(Now(), " ", "_")
+	Dim info_str = "gold=" & CStr(gold) & "&elixir=" & CStr(elixir) & "&dark_elixir=" & CStr(dark_elixir) & "&trophy=" & CStr(trophy) & _
+	        "&ip=" & Device.GetIp() & "&imsi=" & Device.GetImsi() & "&resolution=" & CStr(kScreenWidth) & "x" & CStr(kScreenHeight) & _
+	        "&dpi=" & CStr(Device.GetDPI()) & "&last_update=" & now_str
+	TracePrint info_str
+	If g_monitor_server_is_ok Then 
+		//url.get("http://10.0.2.2:80/info?" & info_str, 1)
+	End If
+End Function
+
+Function ReportAndShowOnTop(log_message)
+	g_show_log_on_top = true
+	Report (log_message)
+	g_show_log_on_top = false
+End Function
+
+Function Report(log_message)
+	TracePrint log_message
+//	If g_monitor_server_is_ok or Time() - g_monitor_server_down_time > 30 * 60 Then 
+//		Dim result = url.get("http://10.0.2.2:80/log?time=" & CStr(Time()) & "&log=" & Replace(log_message, " ", "_"), 1)
+//		If Trim(result) <> "successful" Then 
+//			g_monitor_server_connection_failure = g_monitor_server_connection_failure + 1
+//			If g_monitor_server_connection_failure >= 10 Then 
+//				g_monitor_server_is_ok = false
+//				g_monitor_server_connection_failure = 0
+//				g_monitor_server_down_time = Time()
+//			End If
+//		Else 
+//			g_monitor_server_connection_failure = 0
+//			g_monitor_server_is_ok = true
+//		End If
+//	End If
+	
+End Function
+
+LogAndShow(1, "辅助版本:"&CStr(g_version))
+
+//{"ElixirCollector12", {"65D0FC-202020","0|11|78F8FF-202020,-8|1|285970-202020,-9|11|256493-202020,15|4|9E8E94-202020,17|1|B6B2B8-202020,14|8|999198-202020,23|8|50BDF8-202020,11|7|59C8F8-202020"}}, _
+//{"ElixirCollector11", {"70E0FF-202020","0|9|78F6FF-202020,-6|-1|285C70-202020,-5|9|276795-202020,14|1|8C7E7E-202020,13|5|8B7E80-202020,7|2|275470-202020,22|7|54C4F8-202020"}}, _
+//{"ElixirCollector10", {"595E60-202020","0|12|5A7080-202020,0|6|58BDEF-202020,34|6|00F0FB-202020,24|-8|544A45-202020,16|19|5F5050-202020,31|11|5BC7F5-202020,40|10|ADA8B6-202020"}}, _
+//{"ElixirCollector9", {"58585B-202020","-2|-6|5C5754-202020,8|-6|B2ACB1-202020,3|7|636168-202020,-12|14|625E60-202020,-9|-6|58C4F0-202020,-9|6|52B6E2-202020"}}, _
+//{"ElixirCollector8", {"565350-202020","-1|-6|5A5550-202020,3|-5|B0A7A9-202020,2|7|60595B-202020,-13|14|706468-202020,-30|-5|96A7B8-202020,-12|1|284668-202020,-6|-2|5BC1F0-202020,-30|0|58C4F5-202020"}}, _
+//{"GoldMine11", {"54412c-1a140c", "0|6|2c221f-1d1513, -3|-1|1d2832-15181e, 9|2|2f221f-201918, 1|-1|58402e-231a11, -1|0|4f3e34-26151d, 1|11|7e726c-27231a, -2|-2|14212b-1b1f2b, 1|6|2f241f-2e251e, -3|-2|1f1b22-321d1c, 3|0|7e6150-332624, 10|2|40312b-332927, 3|10|887975-342923, 2|-1|604a36-352b28, 2|11|817470-362722, 4|11|8f7f7d-362e26, -1|6|2e2724-39342d, 10|1|392b29-3c2a2b, 10|11|b6b9c1-3c3a35, -1|-2|18252c-23333d, 0|1|645145-36343d, 9|10|9fa4ac-3e3a39, -2|-1|34303a-401a1e, -1|-1|3d363b-401f39, 0|-1|433d3d-401330, 4|3|38333a-3f2e40, 1|5|1f1715-40302d, 0|11|72645e-433f3a, 6|6|aeb0bc-454139, 9|9|9a9ba2-3c3d45"}}, _
+//{"GoldMine12", {"252121-181010", "-5|3|06171c-0f131c, -5|0|523e2b-221a0e, -1|11|1d1c1b-25262a, -2|0|745845-2d1f19, -2|3|2a3b49-1b242f, -1|3|2a2e35-23232f, -4|3|091e29-122330, -1|7|37404a-262831, -3|0|715643-33281d, -4|0|604735-342318, 2|6|505960-232934, -3|3|111e28-273035, -6|4|18151a-352d38, -5|1|604f40-343039, 3|7|4e5861-272f39, -2|4|2d323c-23273e, -3|5|212b33-3f292b, 4|9|545c67-24353f, 0|3|41474e-293641"}}, _
+//{"GoldMine9", {"0f1314-050909", "0|-1|111112-12110f, 5|-3|9a8980-1f1912, 4|-9|17202a-1c2528, 1|-5|456891-141e28, 4|-2|6e655d-282218, 6|-2|9b867c-1d1c28, 7|-5|b5998d-2a1c18, 6|-4|9b7a67-2a281d, 0|-5|4a75ab-1f262d, 6|-9|73584d-312326, 3|-7|8c6a50-312f23, 4|0|4e7db2-222831, 0|-6|49719f-192332, 8|-5|aa876f-1e2632, 2|-9|406c9c-121e33, 5|-8|382e30-351c1e, 6|-3|a08881-352722, 0|-7|3d5c7b-182639, 2|-3|517eb1-1b2b39, 3|-6|8a6658-32343b, 4|-5|5e412f-3b271e, 2|-4|3f5c7f-192f3c, 1|0|242426-3c3335, 7|-4|ab8f85-403e3c, 1|-3|4470a1-1a2d40, 5|-2|8a7c74-413535, 9|-9|302c29-46312f, 2|0|584e53-46393b, 8|0|3b3332-464040"}}, _
+//{"GoldMine10", {"273544-151213", "0|8|271f1a-18140e, 1|2|55422f-191411, 0|2|564131-1a1414, 2|7|322521-1d1712, 1|1|524034-1e111b, 5|1|826754-1f1b1b, -1|0|1e2b37-141a23, 2|2|67503e-241b1f, 3|5|100e0e-241717, 2|0|4f3b30-262212, 4|1|7a5d4d-261e1d, 1|7|261c18-261c15, 2|1|5c4532-2a231c, 3|6|291e1e-2a1f1f, -2|1|292f39-2d1913, 5|2|856856-2d252a, 9|3|9b775b-2f1d1a, -2|0|17232e-1d2831, 6|7|9b8777-2d1d31, 8|1|99775e-322515, 8|3|99755c-322018, 1|8|3d2e28-332723, 9|2|97755c-34201b, 8|2|98755a-352a1e, 5|11|93827d-352f2a, 8|8|a78a82-38291f, 7|7|a68d80-3a2a30, 7|8|907a72-3a2a28, 6|6|ab8b7c-3c343c"}}, _
+//{"GoldMine8", {"0d161d-0e1922", "7|-5|453325-23130e, 5|-7|1c252d-0f1b28, 2|-8|97755e-292015, 6|-5|3a281e-2a1c14, 3|-6|96745e-2b2014, 6|-6|332a23-2b1e1e, 1|-9|937157-2e2223, 2|-7|93735b-2e221c, 0|-4|4975a7-1d252e, 4|-5|9a785e-302317, 3|-9|334e70-1d2933, 7|-1|51392b-331f1b, 1|-8|97735b-34261c, 3|-7|987561-34231c, 4|-4|98775c-35271e, 5|-6|232e3b-172536, 3|-5|957561-362a24, 1|-2|4573a3-152636, 4|-8|2a3c56-1d2a38, 1|-4|426894-1c2938, 2|-1|4572a2-19283a, 5|-3|95745b-3b2b1d, 1|-3|4972a2-1e2d3d, 7|-4|3b2a1c-3e2b1e, 0|-3|41678e-18243e, 5|-4|937157-3f3326, 1|0|5a4e53-3f3a3a, 7|-8|987459-402e1f, 8|-7|926e53-41362e"}}, _   	
+//{"DarkElixirDrill1", {"6094D0-202020","6|6|8E90A6-202020,16|6|878A9E-202020,9|10|858290-202020,13|17|6093D0-202020,-16|-1|B6BDC7-202020,-1|21|C8D7E6-202020"}}, _
+//{"DarkElixirDrill2", {"888698-202020","15|6|8C8E9F-202020,6|9|868696-202020,12|17|888CA0-202020,-9|2|305078-202020,5|19|305078-202020,-17|4|708498-202020,-5|21|77889F-202020"}}, _
+//{"DarkElixirDrill3", {"304D62-202020","7|1|5DC8FF-202020,21|17|60C1F8-202020,-11|4|5B5C68-202020,3|22|605E68-202020,24|0|868899-202020,-13|18|5D8AC0-202020"}}, _
+//{"DarkElixirDrill4", {"60C1F8-202020","4|7|5DBCF0-202020,13|17|60C1F8-202020,16|7|8F97AF-202020,-18|-1|282420-202020,-17|4|2A3038-202020,-15|12|466FA0-101010"}}, _
+//{"DarkElixirDrill5", {"60C3F8-202020","6|9|5CC0F8-202020,18|3|888C9D-202020,13|17|60C4F8-202020,1|17|888BA0-202020,-20|3|21659D-202020,-17|1|535A63-202020,-18|-2|3B84AF-202020"}}, _
+//{"DarkElixirDrill6", {"60C4F8-202020","6|10|60C0F8-202020,17|4|828595-202020,12|18|62C5F8-202020,-17|5|202025-202020,-18|6|202328-202020,-19|-4|184C68-202020,-11|0|2E4654-202020"}}, _
+// DarkElixirLevel3 "321A2A-202020","5|-2|402230-202020,2|0|311B28-202020,3|0|301C28-202020,4|0|352526-202020,1|-1|39202A-202020,4|-1|381D29-101010,5|-2|402230-101010,5|1|817E8B-202020"
+Dim kObjectPixels = { _
+    {"Tumb", {"5B6874-101010","-4|1|606D7C-101010,2|4|606D7B-101010,-2|5|576373-101010,-7|2|3873AD-202020,-6|6|2D6AA8-202020,4|1|A0AAB8-202020"}}, _
+    {"ElixirLevel4", {"CF44BE-020202","-2|-1|B854A3-020202,-3|0|AA3F99-020202,-5|0|923C81-020202,-6|-1|8B4D75-020202"}}, _
+    {"ElixirLevel3", {"FB89EB-020202","-2|1|D042BF-020202,-3|0|C255AA-020202,-5|1|9C388C-020202,-6|0|914F7F-020202"}}, _
+    {"ElixirLevel2", {"FF82EE-020202","-2|1|FF7EF0-020202,-4|0|FC89EA-020202,-5|1|D949C6-020202,-6|0|BB55A5-020202"}}, _
+    {"ElixirLevel1", {"FF80F0-020202","-2|1|FF78E9-020202,-4|0|FF7BED-020202,-5|1|FF77E8-020202,-6|0|FF93EF-020202"}}, _
+    {"ElixirLevel0", {"FF87F0-101010","-3|1|5F799A-101010,-4|1|596C8A-101010,-6|-1|FF7CE8-101010,-6|2|FF70E8-101010,0|2|FF7FEF-101010"}}, _
+    {"ElixirCollector12", {"59C8F8-202020","4|-3|9E8E94-202020,-11|-7|65D0FC-202020,-11|4|78F8FF-202020,-19|-6|285970-202020,-20|4|256493-202020,6|-6|B6B2B8-202020,3|1|999198-202020,12|1|50BDF8-202020"}}, _
+   	{"ElixirCollector11", {"8B7E80-202020","-13|-5|70E0FF-202020,-13|4|78F6FF-202020,-19|-6|285C70-202020,-18|4|276795-202020,1|-4|8C7E7E-202020,-6|-3|275470-202020,9|2|54C4F8-202020"}}, _
+   	{"ElixirCollector10", {"205D88-303030","7|3|5BC7F5-202020,10|-2|00F0FB-202020,-24|-8|595E60-202020,-24|4|5A7080-202020,-24|-2|58BDEF-202020,0|-16|544A45-202020,-8|11|5F5050-202020,16|2|ADA8B6-202020"}}, _
+   	{"ElixirCollector9", {"58585B-202020","-2|-6|5C5754-202020,8|-6|B2ACB1-202020,3|7|636168-202020,-12|14|625E60-202020,-9|-6|58C4F0-202020,-9|6|52B6E2-202020"}}, _
+   	{"ElixirCollector8", {"565350-202020","-1|-6|5A5550-202020,3|-5|B0A7A9-202020,2|7|60595B-202020,-13|14|706468-202020,-30|-5|96A7B8-202020,-12|1|284668-202020,-6|-2|5BC1F0-202020,-30|0|58C4F5-202020"}}, _
+   	{"GoldMine11", {"aeb0bc-454139","-6|-6|54412c-1a140c,-6|0|2c221f-1d1513,-9|-7|1d2832-15181e,3|-4|2f221f-201918,-5|-7|58402e-231a11,-7|-6|4f3e34-26151d,-5|5|7e726c-27231a,-8|-8|14212b-1b1f2b,-5|0|2f241f-2e251e,-9|-8|1f1b22-321d1c,-3|-6|7e6150-332624,4|-4|40312b-332927,-3|4|887975-342923,-4|-7|604a36-352b28,-4|5|817470-362722,-2|5|8f7f7d-362e26,-7|0|2e2724-39342d,4|-5|392b29-3c2a2b,4|5|b6b9c1-3c3a35,-7|-8|18252c-23333d,-6|-5|645145-36343d,3|4|9fa4ac-3e3a39,-8|-7|34303a-401a1e,-7|-7|3d363b-401f39,-6|-7|433d3d-401330,-2|-3|38333a-3f2e40,-5|-1|1f1715-40302d,-6|5|72645e-433f3a,3|3|9a9ba2-3c3d45"}}, _
+	{"GoldMine12", {"4e5861-272f39","-3|-7|252121-181010,-8|-4|06171c-0f131c,-8|-7|523e2b-221a0e,-4|4|1d1c1b-25262a,-5|-7|745845-2d1f19,-5|-4|2a3b49-1b242f,-4|-4|2a2e35-23232f,-7|-4|091e29-122330,-4|0|37404a-262831,-6|-7|715643-33281d,-7|-7|604735-342318,-1|-1|505960-232934,-6|-4|111e28-273035,-9|-3|18151a-352d38,-8|-6|604f40-343039,-5|-3|2d323c-23273e,-6|-2|212b33-3f292b,1|2|545c67-24353f,-3|-4|41474e-293641"}}, _
+	{"GoldMine9", {"ab8f85-403e3c","-7|4|0f1314-050909,-7|3|111112-12110f,-2|1|9a8980-1f1912,-3|-5|17202a-1c2528,-6|-1|456891-141e28,-3|2|6e655d-282218,-1|2|9b867c-1d1c28,0|-1|b5998d-2a1c18,-1|0|9b7a67-2a281d,-7|-1|4a75ab-1f262d,-1|-5|73584d-312326,-4|-3|8c6a50-312f23,-3|4|4e7db2-222831,-7|-2|49719f-192332,1|-1|aa876f-1e2632,-5|-5|406c9c-121e33,-2|-4|382e30-351c1e,-1|1|a08881-352722,-7|-3|3d5c7b-182639,-5|1|517eb1-1b2b39,-4|-2|8a6658-32343b,-3|-1|5e412f-3b271e,-5|0|3f5c7f-192f3c,-6|4|242426-3c3335,-6|1|4470a1-1a2d40,-2|2|8a7c74-413535,2|-5|302c29-46312f,-5|4|584e53-46393b,1|4|3b3332-464040"}}, _
+	{"GoldMine10", {"a78a82-38291f","-8|-8|273544-151213,-8|0|271f1a-18140e,-7|-6|55422f-191411,-8|-6|564131-1a1414,-6|-1|322521-1d1712,-7|-7|524034-1e111b,-3|-7|826754-1f1b1b,-9|-8|1e2b37-141a23,-6|-6|67503e-241b1f,-5|-3|100e0e-241717,-6|-8|4f3b30-262212,-4|-7|7a5d4d-261e1d,-7|-1|261c18-261c15,-6|-7|5c4532-2a231c,-5|-2|291e1e-2a1f1f,-10|-7|292f39-2d1913,-3|-6|856856-2d252a,1|-5|9b775b-2f1d1a,-10|-8|17232e-1d2831,-2|-1|9b8777-2d1d31,0|-7|99775e-322515,0|-5|99755c-322018,-7|0|3d2e28-332723,1|-6|97755c-34201b,0|-6|98755a-352a1e,-3|3|93827d-352f2a,-1|-1|a68d80-3a2a30,-1|0|907a72-3a2a28,-2|-2|ab8b7c-3c343c"}}, _
+	{"GoldMine8", {"332a23-2b1e1e","-6|6|0d161d-0e1922,1|1|453325-23130e,-1|-1|1c252d-0f1b28,-4|-2|97755e-292015,0|1|3a281e-2a1c14,-3|0|96745e-2b2014,-5|-3|937157-2e2223,-4|-1|93735b-2e221c,-6|2|4975a7-1d252e,-2|1|9a785e-302317,-3|-3|334e70-1d2933,1|5|51392b-331f1b,-5|-2|97735b-34261c,-3|-1|987561-34231c,-2|2|98775c-35271e,-1|0|232e3b-172536,-3|1|957561-362a24,-5|4|4573a3-152636,-2|-2|2a3c56-1d2a38,-5|2|426894-1c2938,-4|5|4572a2-19283a,-1|3|95745b-3b2b1d,-5|3|4972a2-1e2d3d,1|2|3b2a1c-3e2b1e,-6|3|41678e-18243e,-1|2|937157-3f3326,-5|6|5a4e53-3f3a3a,1|-2|987459-402e1f,2|-1|926e53-41362e"}}, _
+	{"DarkElixirDrill1", {"8E90A6-202020","-6|-6|6094D0-202020,10|0|878A9E-202020,3|4|858290-202020,7|11|6093D0-202020,-22|-7|B6BDC7-202020,-7|15|C8D7E6-202020"}}, _
+	{"DarkElixirDrill2", {"868696-202020","-6|-9|888698-202020,9|-3|8C8E9F-202020,6|8|888CA0-202020,-15|-7|305078-202020,-1|10|305078-202020,-23|-5|708498-202020,-11|12|77889F-202020"}}, _
+	{"DarkElixirDrill3", {"60C0F8-303030","-7|-8|5DC8FF-202020,-14|-9|304D62-202020,7|8|60C1F8-202020,-25|-5|5B5C68-202020,-11|13|605E68-202020,10|-9|868899-202020,-27|9|5D8AC0-202020", _
+	                      "5EBCF2-202020","-7|-9|5FC0F8-202020,6|8|60C0F8-202020,-16|-11|2D4350-202020,-23|-15|3D312C-202020,-26|-4|5B5E68-202020,-4|7|888899-202020,-12|14|606068-202020,2|-2|50AFDF-202020,12|-4|8E96B0-202020"}}, _
+	{"DarkElixirDrill4", {"5DBCF0-202020","-4|-7|60C1F8-202020,9|10|60C1F8-202020,12|0|8F97AF-202020,-22|-8|282420-202020,-21|-3|2A3038-202020,-19|5|466FA0-101010"}}, _
+	{"DarkElixirDrill5", {"5CC0F8-202020","-6|-9|60C3F8-202020,12|-6|888C9D-202020,7|8|60C4F8-202020,-5|8|888BA0-202020,-26|-6|21659D-202020,-23|-8|535A63-202020,-24|-11|3B84AF-202020"}}, _
+	{"DarkElixirDrill6", {"60C0F8-202020","6|8|62C5F8-202020,-6|-10|60C4F8-202020,11|-6|828595-202020,-23|-5|202025-202020,-24|-4|202328-202020,-25|-14|184C68-202020,-17|-10|2E4654-202020"}}, _
+	{"DarkElixirLevel3", {"1F0C18-101010","0|0|1F0C18-101010,1|0|1C0A18-101010,2|0|1F0818-101010,5|-1|888D9F-101010,1|-1|301926-101010,3|-2|381E28-101010,4|-3|402230-101010,2|-3|402430-101010", _
+	                      "2D1820-101010","1|0|2F1820-101010,2|0|2B1820-101010,3|0|301820-101010,5|0|808090-101010,1|-1|341C28-101010,2|-2|40202B-101010,4|-2|3C2030-101010,3|-1|341C28-101010"}}, _
+	{"DarkElixirLevel2", {"321C2A-202020","1|0|331C28-202020,2|0|442431-202020,2|0|442431-202020,3|0|3C2230-202020,1|-1|38202B-202020,4|5|9F8B9E-202020,5|2|828294-202020,9|2|8B8E9C-202020,1|3|403440-101010", _
+	                      "1E131B-101010","1|0|200E1C-101010,2|0|281522-101010,3|0|50344C-101010,4|0|351F2D-101010,4|-2|402333-101010,5|-3|563346-101010,3|1|7D5D7D-101010,5|-1|797C8D-101010,4|-4|543542-101010"}}, _
+	{"DarkElixirLevel1", {"5B3650-202020","1|0|422434-202020,2|0|3C2230-202020,1|-1|4C2C3C-202020,2|-1|482438-202020,3|0|402332-202020,4|1|8890A0-202020,9|1|9297AC-202020,1|3|685064-202020"}}, _
+	{"DarkElixirLevel0", {"64646B-202020","0|1|92909A-202020,1|2|92969D-202020,2|3|A2A0AD-202020,3|3|999DA5-202020,5|-1|898EA1-202020,9|1|9095A3-202020"}}, _
+	{"Townhall11", {"3680FF-202020","-6|-23|0748C8-202020,-17|-2|0030CE-202020,1|22|0032D3-202020,-6|-2|3399FF-202020,-23|3|909DA7-202020,-5|28|939FA8-202020,-41|0|00005B-202020"}}, _
+	{"Townhall10", {"2176FF-202020","18|0|787070-202020,-3|-29|2B2C7A-202020,2|22|7E7070-202020,-16|-8|38409B-202020,-21|16|46AEEE-202020,-35|1|333688-202020,-14|29|3838B0-202020"}}, _
+	{"Townhall9", {"4B433E-202020","14|-8|8EA6BE-202020,1|-33|3E322C-202020,1|15|B0C4DC-202020,-13|-10|95A8BF-202020,-35|-5|4B403D-202020,-17|20|4C4246-202020,-23|15|C8DDEF-202020"}}, _
+	{"Townhall8", {"4778AB-202020","8|-9|C1D0EC-202020,17|-1|B0BEE0-202020,-18|-2|B8C7E8-202020,-19|28|40A8FF-202020,-38|-1|3C9DEF-202020,-34|15|B4B4C8-202020,-18|-30|2767A2-202020"}}, _
+	{"Townhall7", {"A8B4D8-202020","-3|-12|4879AF-202020,9|-5|40B0FF-202020,-8|18|40AFFF-202020,-19|4|40B0FF-202020,-18|-23|58544B-202020,-2|8|575D72-202020,-35|16|B2B0C2-202020"}}, _
+	{"Townhall6", {"46B4FF-202020","-5|-17|41ADFF-202020,-22|6|40ACFF-202020,-12|20|42B1FF-202020,-2|13|6D6F6B-202020,-23|-19|685850-202020,-33|-15|235C95-202020,-39|18|B4B2C4-202020"}}, _
+	{"AirDefense2", {"30B698-303030","2|11|4E57D5-303030,1|-7|5064DD-303030,-10|-5|53463B-303030,-10|6|5B4A3C-303030,-4|1|35BB97-303030,-12|11|31C8A1-303030,-12|-2|204061-303030,-5|-11|37B090-303030,-19|-2|0F372C-303030"}}, _
+	{"AirDefense3", {"2EA683-303030","3|-7|6979F0-303030,3|10|5967DD-303030,-4|0|31B08F-303030,-8|-1|2024B8-303030,-16|-2|3C2C20-303030,-19|-1|3B2E26-303030,-2|11|36BB97-303030,-16|8|3D7596-303030,-19|-4|0E3125-303030"}}, _
+	{"AirDefense4", {"2AC8FF-303030","2|-1|5350EC-303030,0|7|3E41DE-303030,-6|10|31A686-303030,-6|-1|0CADFA-303030,-7|4|1A1DA1-303030,-14|0|6E5748-303030,-14|4|786058-303030,-22|0|0F382D-303030,-13|10|33BF9B-303030"}}, _
+	{"AirDefense5", {"35C29F-303030","2|5|4A4CEE-303030,-2|9|32B18D-303030,1|-4|4546D0-303030,-11|-9|4F3B30-303030,-13|4|6A5448-303030,-17|7|8997B0-303030,-15|-14|22384A-303030,-18|-4|0F3B31-303030,-2|8|2F9678-303030"}}, _
+	{"AirDefense6", {"2DAE8F-303030","5|5|5258FA-303030,1|-4|3235D8-303030,0|-11|73C0FF-303030,-15|-4|1516CC-303030,-7|-2|242ADC-303030,-2|5|10CCFF-303030,-10|6|65554C-303030,-10|11|33B792-303030,-16|6|98A3BC-303030", _
+					 "2B2DDD-303030","-3|-9|3AB2FC-303030,4|8|4F50F0-303030,2|8|2FD0FF-303030,-16|0|1818D4-303030,-9|2|282CD8-303030,-12|9|5F4D47-303030,-18|9|98A2B8-303030,-3|2|37C8A4-303030,-23|7|304E68-303030"}}, _
+	{"AirDefense7", {"0E7DB2-303030","5|-4|302528-303030,10|-4|4DDDFF-303030,12|6|403A3E-303030,2|7|2A2020-303030,2|0|001B9B-303030,-11|13|4B4A50-303030,1|8|20ABF6-303030,15|6|46DBFF-303030,-16|1|0E342A-303030"}}, _
+	{"AirDefense8", {"1A95D2-303030","3|0|282122-303030,-1|-1|201918-303030,7|4|18D8FF-303030,10|3|383030-303030,18|3|69E4FF-303030,12|-11|53E0FF-303030,-9|1|1A1C5A-303030,-16|0|14143D-303030,-15|7|4EABE0-303030"}}, _
+	{"", {"", ""}} _
+}
+
+// dark elixir drill 1 {"304858-101010","16|7|888A9B-101010,19|9|828090-101010,26|6|898B9E-101010,-4|4|C0CADC-101010,-12|18|598AC1-101010,9|21|C4D0DC-101010"}}, _
+// dark elixir drill 6 {"60C4F8-202020","6|10|60C0F8-202020,17|4|828595-202020,12|18|62C5F8-202020,-17|5|202025-202020,-18|6|202328-202020,-19|-4|184C68-202020,-11|0|2E4654-202020"}
+Dim kObjecteCount = Len(kObjectPixels)
+
+Function GetPixels(object_name)
+	Dim result = -1
+	For i = 0 To kObjecteCount - 1
+		If kObjectPixels(i, 0) = object_name Then 
+			result = i
+			Exit For
+		End If
+	Next
+	If result = -1 Then 
+		TracePrint "not found", object_name
+	Else
+		GetPixels = kObjectPixels(result, 1)
+	End If
+End Function
+
+Dim kTroopInfos = { _
+	{"Barbarian", 1, 5, 0, {275, 130},  {"42E6FF-101010","-2|-25|D8A970-101010,-13|36|D8A068-101010,-29|2|C0CAFF-101010,-57|7|C0C8FF-101010,-36|10|36F9FF-101010"}}, _
+	{"Archer", 1, 6, 0, {145, 130}, {"D05AFC-101010","-19|10|7340EE-101010,-47|6|A0B7FB-101010,-78|13|10DEF6-101010,-10|40|D19C60-101010"}}, _
+	{"Giant", 5, 30, 0, {275, 262}, {"98CCFF-101010","-10|27|087CF8-101010,-11|-7|0877EF-101010,-29|14|98D8FF-101010,-57|21|7FC5F9-101010,-61|49|6069A0-101010"}}, _
+	{"Goblin", 1, 7, 0, {145, 262}, {"6CF4B8-101010","-25|-48|184C9B-101010,-20|-37|D8AC78-101010,-12|23|66F0AB-101010,-65|20|7DEAAD-101010"}}, _
+	{"WallBreaker", 2, 15, 0, {275, 394}, {"E8C089-101010","-18|-23|705F6E-101010,-9|17|4883DF-101010,-36|14|CFE4FE-101010,-54|25|CC9460-101010"}}, _
+	{"Balloon", 5, 30, 0, {145, 394}, {"121F88-101010","-11|-13|E4BB88-101010,-29|23|43424B-101010,-12|35|D8AC78-101010,-65|24|8AA8D2-101010,-25|-6|104199-101010"}}, _
+	{"Wizard", 4, 30, 0, {275, 526}, {"DAAE76-101010","-8|20|D0F0FF-101010,-31|37|88A4F8-101010,-45|43|2E3347-101010,-55|19|282C30-101010,-14|51|E1ECDF-101010"}}, _
+	{"Healer", 14, 120, 0, {145, 526}, {"E2F8FD-101010","-2|-19|D8A468-101010,2|27|ECFCFC-101010,-33|16|B8D5FB-101010,-67|20|B8DAFB-101010,-28|45|D8F7FA-101010"}}, _
+	{"Dragon", 20, 180, 0, {275, 658}, {"502D38-101010","30|19|F0F8F8-101010,23|-20|D8AB70-101010,-16|5|3855FA-101010,2|38|5F3040-101010,-21|38|CEDBEC-101010"}}, _
+	{"PEKKA", 25, 180, 0, {145, 658}, {"A08968-101010","13|-2|E0BA87-101010,22|-15|F8F8F8-101010,14|40|D5A268-101010,3|49|B728A4-101010,-49|32|98805E-101010"}}, _
+	{"BayDragon", 10, 90, 0, {275, 790}, {"39A179-101010","11|-13|D9AC78-101010,21|2|7065E8-101010,-9|42|49C489-101010,-39|46|215F38-101010"}}, _
+	{"Miner", 5, 120, 0, {145, 790}, {"809CDA-101010","45|-10|52524F-101010,41|-37|D7A065-101010,-20|4|E89868-101010,-9|22|304460-101010"}}, _
+	{"Minion", 2, 18, 1, {275, 930}, {"E8D475-101010","-10|16|E8E4A0-101010,16|27|402518-101010,21|-4|382010-101010,-43|19|987C50-101010,1|-26|854E23-101010"}}, _
+	{"HogRider", 5, 45, 1, {145, 930}, {"27304A-101010","7|-11|D8AC70-101010,15|28|303840-101010,-6|31|5D84D1-101010,-39|50|587BD0-101010,-61|33|101B20-101010"}}, _
+	{"Valkyrie", 8, 90, 1, {275, 1062}, {"1365FF-101010","-14|20|B0C9FB-101010,-13|44|0036A6-101010,-39|12|B5CBF8-101010,-39|36|A8BBF7-101010,-72|23|B0BBF8-101010"}}, _
+	{"Golem", 30, 300, 1, {145, 1062}, {"9BB9D8-101010","9|-37|90A8B8-101010,-22|-15|C880F0-101010,-15|17|526572-101010,-51|16|687F98-101010,-17|34|A0C1E0-101010"}}, _
+	{"Witch", 12, 180, 1, {275, 1194}, {"603838-101010","7|18|78484E-101010,-31|2|706C71-101010,-25|20|E8D8F0-101010,-44|37|4CF8FF-101010,-16|-5|AE47F8-101010"}}, _
+	{"LavaHound", 30, 300, 1, {145, 1194}, {"505E67-101010","22|-14|10B7F5-101010,-3|20|485758-101010,10|41|202827-101010,-6|45|0077FF-101010,-22|18|203424-101010"}}, _
+	{"Bowler", 6, 60, 1, {275, -1150}, {"E16871-101010","-6|-27|EA6F70-101010,-41|17|C88C58-101010,-33|-31|E86060-101010,-60|1|BD4445-101010,-69|-34|98A0B0-101010"}}, _
+	{"LightningSpell", 2, 360, 2, {279, 131}, {"", ""}, {"E85210-202020","19|-28|F3E066-202020,36|1|A7C6FF-202020,55|27|C34960-202020,6|20|F9FCE8-202020,-26|-3|EE2402-202020,-24|19|F8E840-202020,0|-11|E22008-202020,12|-5|F0A428-202020"}} _
+}
+
+
+Dim kTroopChineseName = {_
+  "野蛮人", "弓箭手", "巨人", "哥布林", "炸弹人", "气球兵", "法师", "天使", "飞龙", "皮卡超人", "飞龙宝宝", "矿工", _
+  "亡灵", "野猪骑士", "女武神", "戈仑石人", "女巫", "熔岩猎犬", "巨石投手" _
+}
+
+Dim kTroopTypeCount = GetLength(kTroopInfos)
+
+Function GetTroopType(name)
+	Dim result = -1
+	For i = 0 To kTroopTypeCount - 1
+		If kTroopInfos(i, 0) = Name Then 
+			result = i
+			Exit For
+		End If
+	Next
+	If result = -1 Then 
+		TracePrint "not found", name
+	End If
+	GetTroopType = result
+End Function
+
+Function GetTroopName(troop_type)
+	GetTroopName = kTroopInfos(troop_type, 0)
+End Function
+
+Function GetTroopSpace(troop_type)
+	GetTroopSpace = kTroopInfos(troop_type, 1)
+End Function
+
+Function GetTroopTrainingTime(troop_type)
+	GetTroopTrainingTime = kTroopInfos(troop_type, 2)
+End Function
+
+Function IsDarkTroop(troop_type)
+	IsDarkTroop = (kTroopInfos(troop_type, 3) = 1)
+End Function
+
+Function IsSpell(troop_type)
+	IsSpell = (kTroopInfos(troop_type, 3) >= 2)
+End Function
+
+Function GetTroopTrainingCoordinate(troop_type)
+	GetTroopTrainingCoordinate = kTroopInfos(troop_type, 4)
+End Function
+
+Function GetTroopColor(troop_type, index)
+	GetTroopColor = kTroopInfos(troop_type, 5, index)
+End Function
+
+Function GetTroopColorInWar(troop_type, index)
+	GetTroopColorInWar = kTroopInfos(troop_type, 6, index)
+End Function
+
+Dim kScreenCoordinates = { _
+	{"OpenTroopConfigurationPage", {196, 54}}, _
+	{"Barrack", {676, 465}}, _
+	{"SpellFactory", {677, 740}}, _
+	{"CancelTraining", {586, 1200}}, _
+	{"CancelSecondFirstTraining", {586, 1106}}, _
+	{"TroopStatus", {677, 190}}, _
+	{"CloseTroopConfigurationPage", {683, 1200}}, _
+	{"EndBattle", {180, 87}}, _
+	{"NextOpponent", {183, 1239}}, _
+	{"Attack", {87, 82}}, _
+	{"SearchOpponent", {214, 279}}, _
+	{"ReturnAfterWarEnd", {77, 647}}, _
+	{"AbortWar", {183, 90}}, _
+	{"AbortWarConfirm", {255, 777}}, _
+	{"RequestReinforcement", {99, 1065}}, _
+	{"SendReinforcementRequest", {380, 800}}, _
+	{"ReinforcementMessage", {535, 645}}, _
+	{"None"} _
+}
+
+Function GetCoordinate(item)
+	For i = 0 To Len(kScreenCoordinates) - 1
+		If kScreenCoordinates(i, 0) = item Then 
+			GetCoordinate = kScreenCoordinates(i, 1)
+			Exit For
+		End If
+	Next
+End Function
+
+Function GetCoordinateWithIndex(item, index)
+	For i = 0 To Len(kScreenCoordinates) - 1
+		If kScreenCoordinates(i, 0) = item Then 
+			GetCoordinateWithIndex = kScreenCoordinates(i, 1 + index)
+			Exit For
+		End If
+	Next
+End Function
+
+Function TapItem(item, delay_time)
+	Dim coordinate = GetCoordinate(item)
+	Tap coordinate(0), coordinate(1)
+	If delay_time > 0 Then 
+		Delay delay_time
+	End If
+End Function
+
+Function TapItemWithIndex(item, index, delay_time)
+	Dim coordinate = GetCoordinateWithIndex(item, index)
+	Tap coordinate(0), coordinate(1)
+	If delay_time > 0 Then 
+		Delay delay_time
+	End If
+End Function
+
+Function ZoomOutToMax()
+	For 2
+		Dim left_x = kCenterX * 0.8
+		Dim right_x = kCenterX * 1.3
+		TouchDown left_x, kCenterY, 1
+		TouchDown right_x, kCenterY, 2
+		For 4
+    		right_x = right_x - kCenterX * 0.1
+    		TouchMove right_x, kCenterY, 2, 100
+		Next
+		TouchUp 1
+		TouchUp 2
+		Delay 100
+	Next
+End Function
+
+Function FastZoomOut()
+	Dim left_x = kCenterX * 0.9
+	Dim right_x = kCenterX * 1.1
+	TouchDown left_x, kCenterY, 1
+	TouchDown right_x, kCenterY, 2
+	TouchMove kCenterX * 0.99, kCenterY, 1, 200
+	TouchMove kCenterX * 1.01, kCenterY, 2, 200
+	TouchUp 1
+	TouchUp 2
+	Delay 300
+End Function
+
+
+Function MoveToMapTop()
+	For 4
+		TouchDown kCenterX * 1.2, kCenterY * 0.95, 1
+		TouchMove kCenterX * 0.8, kCenterY * 0.95, 1, 200
+		TouchUp 1
+		//Swipe kCenterX * 1.2, kCenterY, kCenterX * 0.6, kCenterY, 200
+	Next
+End Function
+
+Function MoveToMapBottom()
+	For 4
+		TouchDown kCenterX * 0.8, kCenterY * 1.05, 2
+		TouchMove kCenterX * 1.2, kCenterY * 1.05, 2, 200
+		TouchUp 2
+		//Swipe kCenterX * 0.8, kCenterY, kCenterX * 1.4, kCenterY, 200
+	Next
+End Function
+
+Function CollectResources()
+	MoveToMapTop()
+	
+	Dim resources_data = { _
+		{"30B0D8","5|1|5CE9F0,2|5|40D2F2,5|4|68EFF8,3|4|38C5E8,10|-4|B7DBD7,9|11|B7DBD7,-5|10|7CBCB0,-5|-5|7FBCB0"}, _
+		{"D058E0","6|2|C928E1,-3|3|C03ED8,6|5|D01BE8,6|-6|B0D8D5,7|9|B8DCD7,-5|8|80BDB7,0|-7|98CCC5,-9|0|70B8B0"}, _
+		{"604458","-4|1|503346,4|1|301826,0|5|704E62,0|-4|2F1A25,1|-8|A8D4CC,8|-1|B8DCD8,-1|9|A0CEC8,-11|0|71B8B0"} _
+	}
+	Dim moved_to_bottom = False
+	For 2
+		For Each pair In resources_data
+			Dim x = 1, y = 1
+			Do
+				FindMultiColor 0,0,0,0,pair(0),pair(1),0,0.9,x,y
+				If x > -1 And y > -1 Then 
+    				Tap x, y
+					//TracePrint x
+					//TracePrint y
+					Delay 500
+				End If
+			Loop While x >= 0 and y >= 0
+		Next
+		If not moved_to_bottom Then
+			MoveToMapBottom()
+			moved_to_bottom = True
+		End If
+	Next
+End Function
+
+Function SmartDigitOCR(dict_index, x0, y0, x1, y1, color, similarity, convert_to_digit)
+	UseDict dict_index
+	SetRowsNumber(0)
+	Dim x = x0, y = y0
+	Dim result = ""
+	While y >= 0
+		FindStr(x0, y, x1, y1, "1", color, 1.2, x, y)
+		If x >= 0 And y >= 0 Then
+			result = result & Ocr(x0, y0, x1, y, color, similarity) & "1"
+			// TracePrint "found 1", result, x0, y0, x1, y
+			y = y + 4
+			y0 = y
+		End If
+	Wend
+	result = result & Ocr(x0, y0, x1, y1, color, similarity)
+	If not convert_to_digit Then 
+		SmartDigitOCR = result
+		Exit Function
+	End If
+	If Len(result) = 0 Then 
+		SmartDigitOCR = -1
+	Else 
+		SmartDigitOCR = Int(result)
+	End If	
+End Function
+
+Function RecognizeOwnAmount()
+    //LogInfo 3, "recognize own resource amount"
+    KeepCapture
+    Dim results = { _
+    	SmartDigitOCR(kResourceDigitIndex, 668, 1000, 695, 1210,"FFFFFF-202020", 0.9, True), _
+    	SmartDigitOCR(kResourceDigitIndex, 598, 1000, 625, 1210,"FFFFFF-202020", 0.9, True), _
+		SmartDigitOCR(kResourceDigitIndex, 533, 1070, 560, 1210, "FFFFFF-202020", 0.9, True), _
+		SmartDigitOCR(kResourceDigitIndex, 598, 90, 623, 160,"FFFFFF-202020", 0.9, True) _
+	}
+	//LogInfo(3, "gold " & CStr(results(0)))
+	//LogInfo(3, "elixir " & CStr(results(1)))
+	//LogInfo(3, "drak elixir " & CStr(results(2)))
+	//LogInfo 3, "trophy " & CStr(results(3))
+	RecognizeOwnAmount = results
+	ReleaseCapture
+End Function
+
+Function RecognizeRobableAmount()
+    //LogInfo 3, "recognize robable resource amount"
+    KeepCapture
+    Dim results = { _
+		SmartDigitOCR(kResourceDigitIndex, 605, 62, 630, 200,"CCFBFF-202020", 0.9, True), _
+		SmartDigitOCR(kResourceDigitIndex, 567, 60, 592, 200,"FDE8FF-202020", 0.9, True), _
+		SmartDigitOCR(kResourceDigitIndex, 530, 60, 555, 200,"F3F3F3-202020", 0.9, True) _
+	}
+	//LogInfo(3, "gold " & CStr(results(0)))
+	//LogInfo(3, "elixir " & CStr(results(1)))
+	//LogInfo 3, "drak elixir " & CStr(results(2))
+	ReleaseCapture
+	RecognizeRobableAmount = results
+End Function
+
+Function RecognizeRobbedAmount()
+    //LogInfo 3, "recognize own resource amount"
+    KeepCapture
+    Dim results = { _
+    	SmartDigitOCR(kResourceDigitIndex, 525, 785, 550, 920,"FFFFFF-202020", 0.9, True), _
+    	SmartDigitOCR(kResourceDigitIndex, 482, 785, 507, 920,"FFFFFF-202020", 0.9, True), _
+		SmartDigitOCR(kResourceDigitIndex, 437, 785, 462, 920, "FFFFFF-202020", 0.9, True), _
+		0 _
+	}
+	If CmpColorEx("444|602|C0C8C8-101010,448|605|C8D0D0-101010,443|607|C8CCC8-101010,446|609|C7C9C8-101010,445|604|C0C5C0-101010", 0.9) = 1 Then 
+		results(3) = 1
+		If CmpColorEx("442|636|C8CCC8-101010,449|640|D6D8D0-101010,441|643|C9D0CE-101010,447|645|CCD0CC-101010,446|639|C0C7C0-101010",0.9) = 1 Then
+			results(3) = 2
+			If CmpColorEx("441|671|C8CDC8-101010,446|670|C0C4C0-101010,450|674|D8DCD8-101010,440|678|CFD3D0-101010,446|679|C1CBC8-101010,445|674|C0C6C0-101010", 0.9) = 1 Then 
+				results(3) = 3
+			End If
+		End If
+	End If
+	//LogAndShow(3, "gold " & CStr(results(0)))
+	//LogAndShow(3, "elixir " & CStr(results(1)))
+	//LogAndShow(3, "drak elixir " & CStr(results(2)))
+	//LogAndShow 3, "star " & CStr(results(3))
+	RecognizeRobbedAmount = results
+	ReleaseCapture
+End Function
+
+Function RecognizeWarResultAmount()
+    //LogInfo 3, "recognize own resource amount"
+    KeepCapture
+    Dim results = { _
+    	SmartDigitOCR(kWarResultDigitIndex, 390, 440, 424, 656,"FFFFFF-303030", 0.92, True), _
+    	SmartDigitOCR(kWarResultDigitIndex, 340, 440, 374, 656,"FFFFFF-303030", 0.92, True), _
+		SmartDigitOCR(kWarResultDigitIndex, 290, 500, 324, 656, "FFFFFF-303030", 0.92, True), _
+		0 _
+	}
+	If CmpColorEx("310|684|5FDFE8-303030,312|687|6ADEF0-303030", 0.9) = 1 Then 
+		results(2) = 0  // it's trohpy
+	End If
+	// SmartDigitOCR(kWarResultDigitIndex, 242, 567, 274, 656, "FFFFFF-303030", 0.9, True) _
+	If CmpColorEx("444|602|C0C8C8-101010,448|605|C8D0D0-101010,443|607|C8CCC8-101010,446|609|C7C9C8-101010,445|604|C0C5C0-101010", 0.9) = 1 Then 
+		results(3) = 1
+		If CmpColorEx("442|636|C8CCC8-101010,449|640|D6D8D0-101010,441|643|C9D0CE-101010,447|645|CCD0CC-101010,446|639|C0C7C0-101010",0.9) = 1 Then
+			results(3) = 2
+			If CmpColorEx("441|671|C8CDC8-101010,446|670|C0C4C0-101010,450|674|D8DCD8-101010,440|678|CFD3D0-101010,446|679|C1CBC8-101010,445|674|C0C6C0-101010", 0.9) = 1 Then 
+				results(3) = 3
+			End If
+		End If
+	End If
+	//LogAndShow(3, "gold " & CStr(results(0)))
+	//LogAndShow(3, "elixir " & CStr(results(1)))
+	//LogAndShow(3, "drak elixir " & CStr(results(2)))
+	//LogAndShow 3, "star " & CStr(results(3))
+	RecognizeWarResultAmount = results
+	ReleaseCapture
+End Function
+/**************************************************************/
+/************************ Clan ********************************/
+/**************************************************************/
+Function InClan()
+	InClan = (CmpColorEx("679|838|FFFFFF-101010,687|830|00D7A8-101010,685|847|00D1A0-101010,672|847|008B48-101010,671|830|008B48-101010,684|838|FFFFFF-101010,675|837|FFFFFF-101010,678|833|FFFFFF-101010,678|844|FFFFFF-101010",0.9) = 1)
+End Function
+
+Function InAttackedPage()
+	InAttackedPage = (CmpColorEx("125|699|6FE8C9-101010,120|557|68E4C8-101010,367|377|50543F-101010,543|299|0D1C7D-101010,120|1049|D5E4E5-101010,77|323|879FFF-101010,144|365|555C40-101010,317|374|00B8FF-101010",0.9) = 1)
+End Function
+
+Function GoToClan()
+	For 5
+		Delay 500
+		If InClan() Then 
+			GoToClan = True
+			Exit Function
+		End If
+		If AnotherDeviceIsLoggingIn() Then 
+			GoToClan = False
+			Exit Function
+		End If
+		KeyPress "Back"
+		Delay 1500
+	Next
+	GoToClan = False
+End Function
+
+Function ReportProfile()
+	If CmpColorEx("539|525|B1948E-101010,500|552|AC8C86-101010,500|413|AC8C86-101010,552|512|B49893-101010",0.9) = 0 Then
+		ReportProfile = -1
+		Exit Function
+	End If
+	KeepCapture
+	Dim color_array(117)
+	For i = 499 To 615
+		Dim color_sub_array(317)
+		For j = 136 To 452
+			color_sub_array(j - 136) = GetPixelColor(i, j)
+		Next
+		color_array(i - 499) = Join(color_sub_array, "")
+	Next
+	Dim color_str = Join(color_array, ",")
+	ReleaseCapture
+	url.post("http://10.0.2.2:80/profile", color_str, 1)
+End Function
+
+/**************************************************************/
+/*************** Troop Configuration Page *********************/
+/**************************************************************/
+
+Function InTroopConfigurationPage()
+	InTroopConfigurationPage = (CmpColorEx("690|80|F8F8F8-101010,693|309|F8F8F8-101010,689|328|666B74-101010,686|1200|FFFFFF-101010,674|1182|0804DD-101010,687|1214|706CF0-101010", 0.98) = 1)
+End Function
+
+Function InTroopTrainingPage()
+	InTroopTrainingPage = (CmpColorEx("693|352|F8F8F8-101010,696|588|F3F4F4-101010,689|328|666B74-101010,686|1200|FFFFFF-101010,674|1182|0804DD-101010,687|1214|706CF0-101010",0.98) = 1)
+End Function
+
+Function InSpellTrainingPage()
+	InSpellTrainingPage = (CmpColorEx("696|629|F8F8F8-101010,697|865|EBF3F3-101010,689|328|666B74-101010,686|1200|FFFFFF-101010,674|1182|0804DD-101010,687|1214|706CF0-101010",0.98) = 1)
+End Function
+
+Function CanTrainTroop(troop_type)
+	Dim coordinate = GetTroopTrainingCoordinate(troop_type)
+	Dim color, r, g, b
+	For i = 0 To 2
+		For j = 0 To 2
+			color = GetPixelColor(coordinate(0) + (i - 1) * 5, coordinate(1) + (j - 1) * 5)
+			ColorToRGB color, r, g, b
+			If r - 16 > g or r - 16 > b or g - 16 > r or g - 16 > b or b - 16 > r or b - 16 > g Then 
+				CanTrainTroop = True
+				Exit Function
+			End If
+		Next
+	Next
+	Dim intX,intY
+	FindMultiColor coordinate(0) - 100,coordinate(1) - 100,coordinate(0),coordinate(1) + 100,"616161-060606","0|33|616161-060606,0|78|616161-060606,-4|-9|282828-060606,-4|29|282828-060606,-4|80|282828-060606,4|93|606060-060606,4|-26|606060-060606",0,0.96,intX,intY
+	If intX >= 0 Then
+		CanTrainTroop = True
+	Else
+		CanTrainTroop = False
+	End If
+End Function
+
+Function GetTroopTrainingAbility(is_dark_barrack)
+	Dim result(20)
+	KeepCapture
+	For i = 0 To kTroopTypeCount - 1
+		If not IsSpell(i) and IsDarkTroop(i) = is_dark_barrack and CanTrainTroop(i) Then
+			result(i) = True
+			TracePrint "can train ", i
+		Else 
+			result(i) = False
+		End If
+	Next
+	ReleaseCapture
+	GetTroopTrainingAbility = result
+End Function
+
+Function CancellAllTroopTraining()
+	Dim coordinate = GetCoordinate("CancelTraining")
+	Dim times = 0
+	While CmpColorEx("521|1203|C8CFCF-101010,586|1208|C8CFCF-101010,554|1207|C8CFCF-101010,590|1110|C8CFCF-101010,555|1105|A7C6B9-101010,519|1103|C8CFCF-101010",0.9) = 0
+		For 10
+			Tap coordinate(0), coordinate(1)
+			Delay 50
+		Next
+		times = times + 1
+		If times > 20 Then 
+			Exit While
+		End If
+		Delay 100
+	Wend
+End Function
+
+Function CancelAllTroopTrainingExceptFirst()
+	Dim coordinate = GetCoordinate("CancelSecondFirstTraining")
+	Dim times = 0
+	While CmpColorEx("590|1110|C8CFCF-101010,555|1105|A7C6B9-101010,519|1103|C8CFCF-101010",0.9) = 0
+		For 10
+			Tap coordinate(0), coordinate(1)
+			Delay 50
+		Next
+		times = times + 1
+		If times > 20 Then 
+			Exit While
+		End If
+		Delay 100
+	Wend
+	Dim first_training_troop_count = DetectFirstTrainingTroopCount()
+	If first_training_troop_count = -1 Then 
+		CancellAllTroopTraining()
+	Else
+		coordinate = GetCoordinate("CancelTraining")
+		For first_training_troop_count - 1
+			Tap coordinate(0), coordinate(1)
+			Delay 50
+		Next
+	End If
+End Function
+
+Function DetectTroopType(x0, y0, x1, y1)
+	Dim result = -1
+	For i = 0 to Len(kTroopInfos) - 1
+		Dim x, y
+		FindMultiColor x0, y0, x1, y1, GetTroopColor(i, 0), GetTroopColor(i, 1), 0, 0.9, x, y
+		If x > -1 and y > -1 Then 
+			result = i
+			Exit For
+		End If
+	Next
+	DetectTroopType = result
+End Function
+
+Function DetectTroopCount(x0, y0, x1, y1)
+    Dim result = SmartDigitOCR(kTroopCountDigitIndex, x1 - 25, y0, x1, y1, "FFFFFF-303030", 0.95, False)
+    //TracePrint result
+    If Len(result) = 0 or Mid(result, 1, 1) <> "x" Then 
+    	DetectTroopCount = -1
+    Else 
+    	DetectTroopCount = Int(Mid(result, 2, Len(result) - 1))
+    End If
+End Function
+
+Function DetectFirstTrainingTroopCount()
+    Dim result = SmartDigitOCR(kTrainingTroopDigitIndex, 576, 1130, 600, 1182, "FFFFFF-303030|D7D7FF-303030", 0.92, False)
+    TracePrint result
+    If Len(result) = 0 Then 
+    	DetectFirstTrainingTroopCount = -1
+    Else 
+     	If Mid(result, Len(result), 1) = "x" Then 
+     		result = Left(result,  Len(result) - 1)
+     	End If
+    	DetectFirstTrainingTroopCount = Int(result)
+    End If
+End Function
+
+Function DetectTotalTroopCount()
+	Dim intX,intY
+	FindMultiColor 600, 100, 602, 300, "E0E8E8-080808","6|0|DFE7E7-080808,11|0|E0E8E8-080808,16|1|E0E8E8-080808,23|1|E0E8E8-080808,0|4|E0E8E8-080808,6|4|E0E8E8-080808,11|4|E0E8E8-080808,16|4|E0E8E8-080808,23|4|E0E8E8-080808", 0, 1, intX, intY
+	If intX < 0 or intY < 0 Then
+		DetectTotalTroopCount = {-1, -1}
+		Exit Function
+	End If
+	Dim result = SmartDigitOCR(kTotalTroopCountDigitIndex, 600,intY,630,intY+150, "FFFFFF-101010", 0.9, False)
+	//TracePrint intY, result
+	Dim slash_position = InStr(1, result, "/")
+	If slash_position = null Then 
+		DetectTotalTroopCount = {-1, -1}
+	Else 
+		DetectTotalTroopCount = {Int(Mid(result, 1, slash_position - 1)), Int(Mid(result, slash_position + 1, Len(result) - slash_position))}
+	End If
+End Function
+
+Function CheckTrainedTroop(trained_troops_infos)
+	Dim l = GetLength(trained_troops_infos)
+	Dim str = ""
+	For i = 0 To l - 1
+		Dim trained_troops_info = trained_troops_infos(i)
+		str = str & kTroopChineseName(trained_troops_info(0)) & "x" & trained_troops_info(1) & " "
+		If trained_troops_info(1) < 0 Then 
+			TracePrint "**error** in parsing troop count of "&kTroopChineseName(trained_troops_info(0))
+			trained_troops_info(1) = 1
+		End If
+	Next
+	Report str
+End Function
+
+Function GetTrainedTroops()
+	If not InTroopConfigurationPage() Then
+		LogInfo(3, "not in troop configuration page")
+		Exit Function
+	End If
+	Tap 50, 250
+	Delay 100
+	//Swipe 540, 260, 540, 1040
+	//Delay 2000
+	Dim results(20)
+	Dim troop_class_count = 0
+	Dim width = 99
+	Dim x0 = 466, x1 = 590, y0 = 64
+	Dim last_troop_type = -1
+	Dim last_troop_index = 0
+	Dim troop_index = 0
+	KeepCapture
+	Do
+		Dim troop_type = DetectTroopType(x0, y0, x1, y0 + width)
+		If troop_type >= 0 Then 
+			last_troop_type = troop_type
+			last_troop_index = troop_index
+			Dim troop_count = DetectTroopCount(x0, y0 + 5, x1, y0 + width - 5)
+			results(troop_class_count) = {troop_type, troop_count, troop_index}
+			troop_class_count = troop_class_count + 1
+		End If
+		troop_index = troop_index + 1
+		y0 = y0 + width
+	Loop While y0 <= 1100
+	ReleaseCapture 
+	If CmpColorEx("526|1210|C8CFCF-101010",0.9) = 0 Then
+		Swipe 540, 1166, 540, 100
+		Delay 3000
+		KeepCapture
+		y0 = 1117
+		Dim left_troop_class_count = troop_class_count
+		Dim reverse_troop_index = -1
+		Do
+			troop_type = DetectTroopType(x0, y0, x1, y0 + width)
+			If troop_type = last_troop_type Then 
+				Exit Do
+			End If
+			If troop_type >= 0 Then 
+				troop_count = DetectTroopCount(x0, y0 + 5, x1, y0 + width - 5)
+				results(troop_class_count) = {troop_type, troop_count, reverse_troop_index}
+				troop_class_count = troop_class_count + 1
+			End If
+			reverse_troop_index = reverse_troop_index - 1
+			y0 = y0 - width
+		Loop While y0 >= 0
+		For troop_i = left_troop_class_count To troop_class_count - 1
+			Dim result = results(troop_i)
+			result(2) = last_troop_index + (result(2) - reverse_troop_index)
+		Next
+		
+		Dim total_troop_type_count = last_troop_index - reverse_troop_index
+		ReleaseCapture
+	End If
+	GetTrainedTroops = results
+//	For Each pair In results
+//		If pair(0) >= 0 Then 
+//			TracePrint kTroopInfos(pair(0), 0), pair(1), pair(2)
+//		End If
+//	Next
+//	Dim total_troop_count = DetectTotalTroopCount()
+//	LogInfo(3, CStr(total_troop_count(0)) & "/" &  CStr(total_troop_count(1)))
+End Function
+
+Function SetTroopCount(counts, troop_name, count)
+	Dim index = GetTroopType(troop_name)
+	counts(index) = count
+End Function
+
+Function GetTotalTrainingTime(counts)
+	Dim total_time = 0
+	For i = 0 To kTroopTypeCount - 1
+		If counts(i) > 0 Then
+			total_time = total_time + GetTroopTrainingTime(i) * counts(i)
+		End If
+	Next
+End Function
+
+Dim kDontCancelTraining = 0
+Dim kCancelAllTraining = 1
+Dim kCancelAllTrainingExceptFirst = 2
+Function GoToBarrackAndTrain(training_plan, cancel_training)
+	TapItem "Barrack", 1000
+	If cancel_training = kCancelAllTraining Then 
+		CancellAllTroopTraining()
+	Elseif cancel_training = kCancelAllTrainingExceptFirst Then 
+		CancelAllTroopTrainingExceptFirst()
+	End If
+	Dim non_zero_troop(20)
+	Dim non_zero_troop_count = 0
+	Dim total_population = 0
+	For i = 0 To kTroopTypeCount - 1
+		If training_plan(i) > 0 Then 
+			total_population = total_population + training_plan(i) * GetTroopSpace(i)
+			non_zero_troop(non_zero_troop_count) = i
+			non_zero_troop_count = non_zero_troop_count + 1
+		End If
+	Next
+
+	While total_population > 0
+		Dim cursor = Int(Rnd() * total_population)
+		For i = 0 To non_zero_troop_count - 1
+			Dim troop_type = non_zero_troop(i)
+			If training_plan(troop_type) > 0 Then 
+				Dim sub_total_population = GetTroopSpace(troop_type) * training_plan(troop_type)
+				If cursor < sub_total_population Then 
+					Dim trained_population = 0
+					Dim coordinate = GetTroopTrainingCoordinate(troop_type)
+					While trained_population < 5
+						Tap coordinate(0), coordinate(1)
+						Delay 20
+						training_plan(troop_type) = training_plan(troop_type) - 1
+						trained_population = trained_population + GetTroopSpace(troop_type)
+					Wend
+					total_population = total_population - trained_population	
+					Exit For
+				End If
+				cursor = cursor - sub_total_population
+			End If
+		Next
+	Wend
+	Delay 500
+End Function
+
+//Function GetAllBarrackAvailability()
+//	Dim barrack_availability(6, 20)
+//	Fill2DArray(barrack_availability, 6, 20, False)
+//	For i = 0 To 5
+//		TapItem("TroopStatus", 800)
+//		TapItemWithIndex("Barrack", i, 2000)
+//		If InTroopTrainingPage() Then 
+//			TracePrint "barrack", i
+//			Dim availability = GetTroopTrainingAbility(i >= 4)
+//			For j = 0 To kTroopTypeCount - 1
+//				barrack_availability(i, j) = availability(j)
+//				// If availability(j) Then 
+//				//	TracePrint "barrack", i, "can train " & GetTroopName(j)
+//				// End If
+//			Next	
+//		End If
+//	Next
+//	GetAllBarrackAvailability = barrack_availability
+//End Function
+
+Function GoToTroopConfigurationPage()
+	If not GoToClan() Then 
+		GoToTroopConfigurationPage = False
+		Exit Function
+	End If
+	For 20
+		TapItem "OpenTroopConfigurationPage", 500
+		If InTroopConfigurationPage() Then 
+			GoToTroopConfigurationPage = True
+			Exit Function
+		End if
+	Next
+	GoToTroopConfigurationPage = False
+End Function
+
+Function BrewSpell(spell, count)
+	//TapItem("TroopStatus", 500)
+	TapItem("SpellFactory", 500)
+	If InSpellTrainingPage() Then 
+		Dim coordinate = GetTroopTrainingCoordinate(GetTroopType(spell))
+		For count
+			Tap coordinate(0), coordinate(1)
+			Delay 100
+		Next
+		Delay 500
+	End If
+End Function
+
+//Dim g_barrack_availability
+//Dim g_last_update_barrack_availability = 0
+Dim g_last_train_troop_time = 0
+Dim g_max_population = 0
+
+Function TrainTroops(counts, cancel_training, force)
+	If not InTroopConfigurationPage() and not InTroopTrainingPage() Then 
+		TrainTroops = False
+		Exit Function
+	End If
+	Dim current_time = Time()
+
+	If not force and current_time - g_last_train_troop_time < g_max_population * 3 Then 
+		Report "No need to train, as last training was " & CStr(current_time - g_last_train_troop_time) & " seconds ago"
+		TrainTroops = True
+		Exit Function
+	End If
+	
+	Dim training_plan(30)
+    CopyArray(counts, 30, training_plan)
+	GoToBarrackAndTrain(training_plan, cancel_training)
+	
+	g_last_train_troop_time = Time()
+	TrainTroops = True
+End Function
+
+Function IsTrainingTroop()
+	IsTrainingTroop = (CmpColorEx("672|576|20B36C-303030,677|578|77D0A0-303030",0.9) = 1)
+End Function
+
+Function LeftTroopConfigurationPage()
+	TapItem "CloseTroopConfigurationPage", 500
+End Function
+
+/*********************************************************************/
+/**************************** War ************************************/
+/*********************************************************************/
+
+/*Function CountTumb()
+	Dim x = 0, y = 0
+	Dim result = 0
+	Dim pixels = GetPixels("Tumb")
+	KeepCapture
+	Do
+		FindMultiColor 0, y, kScreenWidth, kScreenHeight, pixels(0), pixels(1), 0, 0.95, x, y
+		If x >= 0 Then 
+			Dim next_x = x, next_y = y
+			Do
+				result = result + 1	
+				next_x = next_x + 5
+				FindMultiColor next_x, y-2, kScreenWidth, y+2, pixels(0), pixels(1), 0, 0.95, next_x, next_y
+			Loop While next_x >= 0
+			y = y + 3
+		Else 
+			Exit Do
+		End if
+	Loop
+	ReleaseCapture
+	CountTumb = result
+End Function*/
+
+
+Function CountItem(item_name)
+	Dim x = 0, y = 0
+	Dim result = 0
+	Dim pixels = GetPixels(item_name)
+	KeepCapture
+	Do
+		FindMultiColor 0, y, kScreenWidth, kScreenHeight, pixels(0), pixels(1), 0, 0.98, x, y
+		If x >= 0 Then 
+			Dim next_x = x, next_y = y
+			Do
+				//TracePrint next_x, next_y
+				result = result + 1	
+				next_x = next_x + 5
+				FindMultiColor next_x, y-3, kScreenWidth, y+3, pixels(0), pixels(1), 0, 0.98, next_x, next_y
+			Loop While next_x >= 0
+			y = y + 5
+		Else 
+			Exit Do
+		End if
+	Loop
+	ReleaseCapture
+	CountItem = result
+End Function
+
+Function CountItemInRange(item_name, x0, y0, x1, y1)
+	Dim x = x0, y = y0
+	Dim result = 0
+	Dim pixels = GetPixels(item_name)
+	KeepCapture
+	Do
+		FindMultiColor x0, y, x1, y1, pixels(0), pixels(1), 0, 0.9, x, y
+		If x >= 0 Then 
+			Dim next_x = x, next_y = y
+			Do
+				// TracePrint next_x, next_y
+				result = result + 1	
+				next_x = next_x + 5
+				FindMultiColor next_x, y-3, x1, y+3, pixels(0), pixels(1), 0, 0.9, next_x, next_y
+			Loop While next_x >= 0
+			y = y + 5
+		Else 
+			Exit Do
+		End if
+	Loop
+	ReleaseCapture
+	CountItem = result
+End Function
+
+Function FindItemWithAttachment(item_name, delta_x0, delta_y0, delta_x1, delta_y1, attachment_name_prefix, attachment_type_count, direction)
+	Dim kStartY = 80
+	Dim x = 0, y = kStartY
+	Dim kStartX = 137
+	Dim results(51)
+	Dim result_count = 0
+	Dim pixels = GetPixels(item_name)
+	Dim pixel_length = GetLength(pixels)
+	KeepCapture 
+	For pixel_index = 0 to pixel_length - 2 step 2
+	Do
+			FindMultiColor kStartX, y, kScreenWidth, kScreenHeight - kStartY, pixels(pixel_index), pixels(pixel_index + 1), 0, 0.98, x, y
+			If x >= 0 Then
+				Dim next_x = x, next_y = y
+				Do
+					Dim result = {next_x, next_y, -1}
+					//TracePrint item_name, next_x, next_y
+					If attachment_type_count > 0 Then 
+						Dim attachment_index = 0
+						If direction = -1 Then 
+							attachment_index = attachment_type_count - 1
+						End If
+						
+						While attachment_index >= 0 and attachment_index < attachment_type_count
+							// TracePrint attchment_index, attachment_type_count
+							Dim attachment_pixels = GetPixels(attachment_name_prefix & CStr(attachment_index))
+							Dim attachment_pixel_length = GetLength(attachment_pixels)
+							For attachment_pixel_index = 0 to attachment_pixel_length - 1 step 2
+								Dim attachment_x, attachment_y
+								FindMultiColor next_x + delta_x0, next_y + delta_y0, _
+								   			next_x + delta_x1, next_y + delta_y1, _
+								   			attachment_pixels(attachment_pixel_index), attachment_pixels(attachment_pixel_index + 1), 0, 0.95, attachment_x, attachment_y
+								If attachment_x >= 0 Then 
+									//TracePrint attachment_name_prefix & CStr(attachment_index), attachment_x, attachment_y
+									//TracePrint attchment_index
+									result(2) = attachment_index
+									Exit While
+								End If
+							Next
+							attachment_index = attachment_index + direction
+						Wend
+					End If
+					results(result_count) = result
+					result_count = result_count + 1
+					next_x = next_x + 10
+					FindMultiColor next_x, y-3, kScreenWidth, y+3, pixels(0), pixels(1), 0, 0.98, next_x, next_y
+				Loop While next_x >= 0
+				y = y + 8
+			Else 
+				Exit Do
+			End if
+		Loop While result_count < 50
+	Next
+	ReleaseCapture
+	FindItemWithAttachment = results
+End Function
+
+Function FindAllBuildings()
+	Dim all_types = {0, 1, 2, 3}
+	FindAllBuildings = FindBuildings(all_types)
+End Function
+
+Dim kBuildingNames = {"townhall", "gold_mine", "elixir_collector", "dark_elixir_drill", "air_defense"}
+Dim g_interesting_building_types = {0, 1, 2, 3}
+
+Function FindInterestingBuilding()
+	//Dim start_time = Time()
+	FindInterestingBuilding = FindBuildings(g_interesting_building_types)
+	//TracePrint "FindInterestingBuilding:", Time() - start_time()
+End Function
+
+Function FindInterestingBuildingTypes(config, criterias)
+	Dim types(4)
+	Dim type_count = 0
+	Dim selected(4) = {false, false, false, false}
+	If config <> null
+		For i = 0 To 3
+			If config[kBuildingNames(i)] <> null Then 
+				selected(i) = true
+			End If
+		Next
+	End If
+
+	For i = 0 To GetLength(criterias) - 1
+		Dim criteria = criterias(i)
+		If criteria["estimated"] Then 
+			If criteria["gold"] > 0 or criteria["gold_and_elixir"] > 0 Then 
+				selected(1) = true
+			End If
+			If criteria["elixir"] > 0 or criteria["gold_and_elixir"] > 0 Then 
+				selected(2) = true
+			End If
+			If criteria["dark_elixir"] > 0 Then 
+				selected(3) = true
+			End If
+		End If
+	Next
+	
+	For i = 0 To 3
+		If selected(i) Then 
+			types(type_count) = i
+			type_count = type_count + 1
+		End If
+	Next
+	FindInterestingBuildingTypes = types
+End Function
+
+Function FindBuildings(types)
+	Dim building_infos(101)
+	Dim building_info_count = 0
+	SetZoomRatio (g_zoom_ratio)
+	//MoveToMapTop() 
+	Dim at_top = True
+	Dim type_count = GetLength(types)
+	Do
+		For type_i = 0 To type_count - 1
+			Dim type = types(type_i)
+			Dim resource_type = "ElixirCollector"
+			Dim resource_level_type = "ElixirLevel"
+			Dim resource_level_count = 5
+			Dim direction = 1
+			Dim level_start = 8
+			Dim level_end = 12
+			Dim x0=-40, y0=-40, x1=40, y1=40
+			Dim level_step = 1
+			If type = 0 Then 
+				resource_type = "Townhall"
+				resource_level_type = ""
+				resource_level_count = 0
+				level_start = 6
+				level_end = 11
+			Elseif type = 1 Then 
+				resource_type = "GoldMine"
+				resource_level_type = ""
+				resource_level_count = 0
+			Elseif type = 3 Then 
+				resource_type = "DarkElixirDrill"
+				resource_level_type = "DarkElixirLevel"
+				resource_level_count = 4
+				direction = -1
+				level_start = 1
+				level_end = 6
+				x0 = 0
+				x1 = 7
+				y0 = -10
+				y1 = 0
+			Elseif type = 4 Then 
+				resource_type = "AirDefense"
+				resource_level_type = ""
+				resource_level_count = 0
+				level_start = 8
+				level_end = 2
+				level_step = -1
+			End If
+
+			For level = level_start To level_end step level_step
+    			Dim results = FindItemWithAttachment(resource_type&CStr(level), x0, y0, x1, y1, resource_level_type, resource_level_count, direction)
+    			Delay 50
+				Dim j = 0
+				While results(j) <> null and building_info_count < 100
+					//TracePrint type, level, results(j,0), results(j,1), results(j,2)
+					Dim duplicated = False
+					If not at_top Then 
+						results(j,0) = results(j,0) - kButtomScreenOffset	
+					End If
+					
+					Dim position = GetGridPosition(results(j,0), results(j,1))
+					Dim building_width_in_grid = 3
+					If type = 0 Then 
+						building_width_in_grid = 4
+					End If
+						//TracePrint building_infos(k, 2), building_infos(k, 3)
+					position(1) = position(1) - (building_width_in_grid - 1)
+					
+					If position(0) > 0 and position(0) + building_width_in_grid < 46 and position(1) > 0 and position(1) + building_width_in_grid < 46 Then 
+						For k = 0 To building_info_count - 1
+							Dim building_info = building_infos(k)
+							If Abs(building_info["x"] - results(j, 0)) <= 12 and Abs(building_info["y"] - results(j, 1)) <= 12 Then 
+								duplicated = True
+								If results(j, 2) >= 0 and (building_info["fullness"] = -1 or results(j, 2) < building_info["fullness"]) Then 
+									building_infos(k) = {"type":type, "level":level, "x":results(j,0), "y":results(j,1), "fullness":results(j,2), _
+								                     	"has":0, "selected":false, "close_grids":null, "row": position(0), "column": position(1)}
+								End If
+							End If
+						Next
+						If not duplicated Then 
+							building_infos(building_info_count) = {"type":type, "level":level, "x":results(j,0), "y":results(j,1), "fullness":results(j,2), _
+						                                       	"has":0, "selected":false, "close_grids":null, "row": position(0), "column": position(1)}
+							building_info_count = building_info_count + 1
+						End If
+					Else 
+						TracePrint "error building at ", results(j,0), results(j,1), ", type ", type
+					End If
+					j = j + 1
+				Wend
+//				End If	
+			Next
+		Next
+		
+		If at_top Then 
+			MoveToMapBottom() 
+			at_top = False
+		Else 
+			Exit Do
+		End If
+	Loop
+	
+	SetZoomRatio(1)
+	FindBuildings = building_infos
+End Function
+
+Function FindTownhall(building_infos)
+	Dim building_info_count = GetLength(building_infos)
+	For i = 0 To building_info_count - 1
+		Dim building_info = building_infos(i)
+		If building_info["type"] = 0 Then
+			FindTownhall = building_info
+			Exit Function
+		End If
+	Next
+	FindTownhall = null
+End Function
+
+Function FindTownHallAtBottomLeft(building_infos)
+	Swipe 294, 180, 294 - 65, 180, 1000
+	Delay 1000
+	SetZoomRatio(g_zoom_ratio)
+	Dim intX,intY
+	FindMultiColor 0,363,350,365,"5295C4-202020","-3|0|7B8284-202020,-16|11|5294C2-202020,-15|8|6B767B-202020,-56|-8|51758A-202020,-52|-8|52595A-202020,-24|-34|447599-202020,-27|-32|7B8684-202020,-31|5|418B78-202020,-26|4|71797B-202020",0,0.9,intX,intY
+	If intX <= 0 or intY <= 0 Then 
+		SetZoomRatio(1)
+		FindTownHallAtBottomLeft = false
+	End If
+	Dim building_info_count = GetLength(building_infos)
+	For level = 6 To 11
+    	Dim results = FindItemWithAttachment("Townhall"&CStr(level), 0, 0, 0, 0, "", 0, 1)
+		Dim j = 0
+		While results(j) <> null and building_info_count < 100
+			Dim duplicated = False
+			results(j, 0) = results(j, 0) - intX + (310 - kButtomScreenOffset)
+			
+			Dim position = GetGridPosition(results(j,0), results(j,1))
+			Dim building_width_in_grid = 4
+			position(1) = position(1) - (building_width_in_grid - 1)
+			
+			If position(0) > 0 and position(0) + building_width_in_grid < 46 and position(1) > 0 and position(1) + building_width_in_grid < 46 Then
+				For k = 0 To building_info_count - 1
+					Dim building_info = building_infos(k)
+					If Abs(building_info["x"] - results(j, 0)) <= 12 and Abs(building_info["y"] - results(j, 1)) <= 12 Then 
+						duplicated = True
+						If results(j, 2) >= 0 and (building_info["fullness"] = -1 or results(j, 2) < building_info["fullness"]) Then 
+							building_infos(k) = {"type":0, "level":level, "x":results(j,0), "y":results(j,1), "fullness":results(j,2), _
+								             	"has":0, "selected":false, "close_grids":null, "row": position(0), "column": position(1)}
+						End If
+					End If
+				Next
+				If not duplicated Then 
+					building_infos(building_info_count) = {"type":0, "level":level, "x":results(j,0), "y":results(j,1), "fullness":results(j,2), _
+						                               	"has":0, "selected":false, "close_grids":null, "row": position(0), "column": position(1)}
+					building_info_count = building_info_count + 1
+				End If
+			End If
+			j = j + 1
+		Wend
+	Next
+	SetZoomRatio(1)
+	FindTownHallAtBottomLeft = true
+End Function
+
+Dim kCollectorCapacity = {200000, 150000, 100000, 75000, 50000}
+Dim kCollectorFullness = {0.02, 0.2, 0.5, 0.8, 0.98}
+Dim kLowerCollectorFullness = {0.00, 0.10, 0.40, 0.70, 0.96}
+Dim kHigherCollectorFullness = {0.04, 0.30, 0.60, 0.9, 1}
+
+Dim kDarkElixirDrillCapacity = {1800, 1280, 840, 540, 300, 160}
+Dim kDarkElixirDrillFullness = {0.05, 0.175, 0.375, 0.75}  // 0-10% 10%-25% 25%-50% 50%-100%
+Dim kLowerDarkElixirDrillFullness = {0.00, 0.145, 0.325, 0.65}
+Dim kHigherDarkElixirDrillFullness = {0.08, 0.22, 0.45, 0.90}
+Dim resource_type_name = {"", "gold", "elixir", "dark_elixir"}
+// type, level, x, y, resource_level
+Function EstimateRobableResourcesFromBuildings(building_infos)
+	Dim i = 0
+	Dim maximum_undetected_gold = 0
+	Dim maximum_undetected_elixir = 0
+	Dim robable_gold = 0
+	Dim robable_elixir = 0
+	Dim robable_dark_elixir = 0
+	Dim detected_elixir_fullness_count = 0
+	Dim detected_elixir_fullness_sum = 0
+	Dim highest_elixir = 0
+	Dim highest_dark_elixir = 0
+	Dim has_error = false
+	While building_infos(i) <> null
+		Dim building_info = building_infos(i)
+		If building_info["type"] = 2 and building_info["fullness"] <> -1 Then 
+			Dim t = kCollectorCapacity(12 - building_info["level"]) * kLowerCollectorFullness(building_info["fullness"])
+			If t > highest_elixir Then 
+				highest_elixir = t
+			End If
+		End If
+		If building_info["type"] = 3 and building_info["fullness"] <> -1 Then 
+			t = kDarkElixirDrillCapacity(6 - building_info["level"]) * kLowerDarkElixirDrillFullness(building_info["fullness"])
+			If t > highest_dark_elixir Then 
+				highest_dark_elixir = t
+			End If
+		End If 
+		i=i+1
+	Wend
+	i=0
+	While building_infos(i) <> null
+		building_info = building_infos(i)
+		If building_info["type"] = 1 Then
+			maximum_undetected_gold = maximum_undetected_gold + kCollectorCapacity(12 - building_info["level"]) 
+		Elseif building_info["type"] = 2 Then
+			If building_info["fullness"] <> -1 Then 
+				Dim fullness = kCollectorFullness(building_info["fullness"])
+				Dim capacity = kCollectorCapacity(12 - building_info["level"])
+				If capacity * fullness >= highest_elixir Then 
+					fullness = kLowerCollectorFullness(building_info["fullness"])
+				Else 
+					fullness = kCollectorFullness(building_info["fullness"])
+				End If
+				robable_elixir = robable_elixir + capacity * fullness
+				building_info["has"] = capacity * fullness * 0.5 // record estimated amount
+				detected_elixir_fullness_sum = detected_elixir_fullness_sum + fullness
+				detected_elixir_fullness_count = detected_elixir_fullness_count + 1
+			Else 
+				has_error = true
+				maximum_undetected_elixir = maximum_undetected_elixir + kCollectorCapacity(12 - building_info["level"])
+			End If
+		Elseif building_info["type"] = 3 Then
+			If building_info["fullness"] <> -1 Then 
+				fullness = kDarkElixirDrillFullness(building_info["fullness"])
+				capacity = kDarkElixirDrillCapacity(6 - building_info["level"])
+				If capacity * fullness >= highest_dark_elixir Then 
+					fullness = kLowerDarkElixirDrillFullness(building_info["fullness"])
+				Else 
+					fullness = kHigherDarkElixirDrillFullness(building_info["fullness"])
+				End If
+				robable_dark_elixir = robable_dark_elixir + capacity * fullness
+				building_info["has"] = capacity * fullness * 0.75 // record estimated amount
+			Else 
+				has_error = true
+			End If
+		End If
+		i = i + 1
+	Wend		
+			
+	Dim result = {0, 0, 0, true}
+	If detected_elixir_fullness_count <> 0 Then 
+		i = 0
+		While building_infos(i) <> null
+			building_info = building_infos(i)
+			If building_info["type"] = 1 Then
+				building_info["has"] = kCollectorCapacity(12 - building_info["level"]) * (detected_elixir_fullness_sum / detected_elixir_fullness_count) * 0.5 // record estimated amount
+			End If
+			//TracePrint resource_type_name(collector(0)), "level", collector(1), " fullness", collector(4), " volume", collector(5)
+			i=i+1
+		Wend
+		//TracePrint "max gold", maximum_undetected_gold
+		//TracePrint "ratio",  (detected_elixir_fullness_sum / detected_elixir_fullness_count)
+		result(0) = ((detected_elixir_fullness_sum / detected_elixir_fullness_count) * maximum_undetected_gold) * 0.5
+		result(1) = (robable_elixir + (detected_elixir_fullness_sum / detected_elixir_fullness_count) * maximum_undetected_elixir) * 0.5
+		result(2) = robable_dark_elixir * 0.75
+		result(3) = has_error
+	End If
+	EstimateRobableResourcesFromBuildings = result
+End Function
+
+Function SumRobableResourcesFromSelectedBuildings(building_infos, total_resources, estimated_resources)
+	Dim building_cout = GetLength(building_infos)
+	Dim results = {0, 0, 0}
+	For i = 0 To building_cout - 1
+		Dim building_info = building_infos(i)
+		If building_info["selected"] Then 
+			Dim type = building_info["type"]
+			If type = 0 Then 
+				If not estimated_resources(3) Then 
+					results(0) = results(0) + (total_resources(0) - estimated_resources(0)) * 0.2
+					results(1) = results(1) + (total_resources(1) - estimated_resources(1)) * 0.2
+					results(2) = results(2) + (total_resources(2) - estimated_resources(2)) * 0.2
+				End If
+			ElseIf type >= 1 and type <= 3 Then
+				results(type - 1) = results(type - 1) + building_info["has"]
+			End If
+		End If
+	Next
+	SumRobableResourcesFromSelectedBuildings = results
+End Function
+
+Function IsLookingForCloud()
+	IsLookingForCloud = (CmpColorEx("531|276|FFFDFA-202020,540|337|F7FBFF-202020,534|397|F8FFFF-202020,606|683|F7FCFD-202020,580|763|F8FEFF-202020,580|806|FAFFFE-202020", 0.9) = 1)
+End Function
+
+Function HasNextOpponentButton()
+	HasNextOpponentButton = (CmpColorEx("176|1082|0044D8-202020,225|1074|28ACEF-202020,183|1243|38C6E8-202020,237|1254|28B0F0-202020", 0.9) = 1)
+End Function
+
+Function CheckOpponentResourceCriteria(criterias, resources, estimated)
+	Dim i = 0
+	Dim checked_rules = 0
+	While criterias(i) <> null
+		Dim criteria = criterias(i)
+		If (estimated and criteria["estimated"]) or not estimated Then 
+			checked_rules = checked_rules + 1
+			If resources(0) >= criteria["gold"] and resources(1) >= criteria["elixir"] and _ 
+				resources(2) >= criteria["dark_elixir"] and resources(0) + resources(1) >= criteria["gold_and_elixir"] Then
+				CheckOpponentResourceCriteria = True
+				Exit Function
+			End If
+		End If
+		i=i+1
+	Wend
+	CheckOpponentResourceCriteria = (checked_rules = 0)
+End Function
+
+Function HasZoomedOutToMaxInWar()
+	Dim x, y
+	FindMultiColor 0, 9, 360, 11,"2F4E6B-202020","5|47|386688-202020,-3|40|455662-202020,16|4|2B4959-202020,5|4|474A4C-202020,11|43|51585E-202020,-3|15|586063-202020,11|24|304D65-202020", 0, 1, x, y
+	If x < 0 Then 
+		FindMultiColor 0, 165, 500, 220, "4D7796-202020","38|10|579CCC-202020,22|-21|466E8B-202020,29|-18|4C80A3-202020,22|21|436F8B-202020,24|-17|5E6467-202020,5|-6|4F5758-202020,25|19|71777A-202020,37|4|6F7A79-202020", 0, 1, x, y
+		HasZoomedOutToMaxInWar = (x > 0)
+	Else
+		HasZoomedOutToMaxInWar = true
+	End If
+End Function
+
+Dim g_zoom_ratio = 1
+Function DetectZoomRatio()
+	For 2
+		TouchDown kCenterX * 1.2, kCenterY * 1.2, 1
+		TouchDown kCenterX * 0.7, kCenterY * 0.7, 2
+		TouchMove kCenterX * 0.72, kCenterY * 0.72, 1, 100
+		TouchUp 1
+		TouchUp 2
+	Next
+	TouchDown kCenterX * 1.2, kCenterY * 1.2, 1
+	TouchMove kCenterX * 0.72, kCenterY * 0.72, 1, 100
+	TouchUp 1
+	Delay 1500
+	Dim offset = 17
+	Dim line_count = 23
+	Dim base_str(23)
+	Dim others_str(23)
+	Dim results(23)
+	Dim start_x = 160
+	Dim max_offset = 300
+	
+	KeepCapture 
+	For i = 0 To line_count - 1
+		base_str(i) = GetPixelColor(kCenterX + offset * i, kCenterY - 300)&"-101010"
+	Next
+	For i = 1 To 600 Step 3
+		For j=0 to line_count - 1
+			If i <> 1 Then 
+				others_str(j) = others_str(j) & ","
+			End If
+			others_str(j) = others_str(j) & CStr(i mod 3)&"|" & CStr(i) & "|" & GetPixelColor(kCenterX + offset * j + (i mod 3), kCenterY - 300 + i)&"-101010"
+		Next
+	Next
+	ReleaseCapture 
+
+	TouchDown kCenterX, kCenterY, 1
+	TouchMove kCenterX, kCenterY * 1.3, 1, 100
+	TouchUp 1
+	Delay 1500
+	
+	KeepCapture
+	For i=0 to line_count - 1
+		Dim x = -1, y = -1
+		Dim line_x = kCenterX + offset * i
+		If line_x < 235 or line_x > 275 Then
+			FindMultiColor line_x, kCenterY - 300, line_x, kCenterY - 300 + max_offset, base_str(i), others_str(i), 2, 0.8, x, y
+		End If
+		If y >= 0 Then 
+			//TracePrint i, y - (kCenterY - 300)
+			results(i) = y - (kCenterY - 300)
+		Else 
+			results(i) = -99
+		End If
+	Next
+	
+	Sort (results)
+//	For i = 0 To line_count-1
+//		TracePrint ">", results(i)
+//	Next
+	
+	Dim a=0, b=0
+	g_zoom_ratio = null
+	DetectZoomRatio = null
+	While b < line_count
+		b=b+1
+		While b < line_count and results(b) - results(a) < 2
+			b=b+1
+		Wend
+		If results(a) >= 0 and b - a >= 3 Then 
+			g_zoom_ratio = 1200 / (1200 + (results(b - 1) + results(a)) / 2)
+			DetectZoomRatio = g_zoom_ratio
+			TracePrint (results(b - 1) + results(a)) / 2
+			Exit While
+		End If
+		a=b
+	Wend
+	ReleaseCapture
+End Function
+
+Dim g_search_opponent = 0
+Dim g_search_start_time = 0
+// criteria=(gold, elixir, dark_elixir, gold + elixir, use_estimated)+
+Function SearchOpponent(overall_criteria, own_resources, stretagy)
+    If g_search_opponent = 0 Then 
+    	g_search_start_time = Time()
+    End If
+    Dim lightning_spell_card_coordinate = null
+    Dim seeked_lightning_spell_card = false
+    Dim last_stuck_in_cloud_time = 0
+	Dim last_update = Time()
+	Report "Start to search opponent"
+	Do
+		Delay 500
+		g_search_opponent = g_search_opponent + 1
+		Dim current = Time()
+		If current - last_update > 60 Then 
+			last_update = current
+			Report "Seen " & CStr(g_search_opponent - 1) & " villages but not found a good target"
+		End If
+		
+		Dim stuck_in_cloud = True
+		For i = 0 to 60
+			if not IsLookingForCloud() Then 
+				stuck_in_cloud = False
+				Exit For
+			End If
+			Delay 1000
+			If i mod 10 = 2 and last_stuck_in_cloud_time > i + 5 Then 
+				WaitAndShowJoke(5)
+			End If
+			// LogAndShow 3, "stuck in cloud for "&CStr(i + 1)&" seconds.."
+		Next
+ 
+		If stuck_in_cloud Then 
+			SearchOpponent = {-1, null, null, null}
+			Exit Function
+		End If
+		last_stuck_in_cloud_time = Time() - current
+		For i = 0 To 10
+			If CmpColorEx("618|41|5BEAF0-101010,571|39|B840C0-101010", 0.9) = 1 Then 
+				Delay 300
+				Exit For
+			End If
+			Delay 500
+		Next
+		If g_spell_lightning_at_dark_elixir_drill and not g_spell_lightning_at_dark_elixir_drill_only_when_attack and not seeked_lightning_spell_card Then 
+			seeked_lightning_spell_card = true
+			lightning_spell_card_coordinate = FindLightningSpellCard()
+		End If
+		
+		// TracePrint g_search_opponent, HasZoomedOutToMaxInWar()
+		//If g_search_opponent Mod 20 = 1 and not HasZoomedOutToMaxInWar() Then 
+		//	Report "zoom out to max in war"
+		//	ZoomOutToMax()
+		//End If
+		
+		Dim opponent_resources = RecognizeRobableAmount()
+		For 3
+			If opponent_resources(0) < 0 or opponent_resources(1) < 0 Then 
+				LogAndShow 3, "can not find opponent resource numbers"
+				Delay 2000
+				opponent_resources = RecognizeRobableAmount()
+			End If
+		Next
+		If opponent_resources(0) < 0 or opponent_resources(1) < 0 Then 
+			SearchOpponent = {-2, null, null, null}
+			Exit Function
+		End If
+		If opponent_resources(2) < 0 Then 
+			opponent_resources(2) = 0  // no dark elixir
+		End If
+		
+		//Report "a village: gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir"&CStr(opponent_resources(2))
+		Dim passed = True
+		
+		LogAndShow 3, "Village: Gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir "&CStr(opponent_resources(2))
+		If not CheckOpponentResourceCriteria(overall_criteria, opponent_resources, false) Then 
+			passed = False
+			LogAndShow 3, "Maximum possible resources are not enough.. Gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir "&CStr(opponent_resources(2))
+		End If
+		
+		Dim pass_dead_fish_check = (not g_only_attack_dead_fish)
+		If passed and g_only_attack_dead_fish Then 
+			Dim tumb_count = CountItem("Tumb")
+			If tumb_count < 10 Then 
+				LogAndShow 3, "Didn't see enough tumbs.."
+				passed = False
+			Else 
+				pass_dead_fish_check = true
+			End If
+		End If
+		
+		Dim estimated_resources
+		Dim building_infos = null
+		Dim map = null
+		If passed Then 
+			TracePrint DetectZoomRatio()
+			If g_zoom_ratio = null Then 
+				LogAndShow 3, "not able to detect zoom ratio.."
+				passed = false
+			Else
+				building_infos = FindInterestingBuilding()
+				estimated_resources = EstimateRobableResourcesFromBuildings(building_infos)
+				// Adjust estimated resources
+				For i = 0 To 2
+					If estimated_resources(i) > opponent_resources(i) Then 
+						estimated_resources(i) = opponent_resources(i)
+					End If
+				Next
+				LogAndShow 3, "Estimated Gold " & CStr(estimated_resources(0)) & ", Elixir " & CStr(estimated_resources(1)) & ", DarkElixir " & CStr(estimated_resources(2))
+	
+				If not CheckOpponentResourceCriteria(overall_criteria, estimated_resources, true) Then 
+					passed = False
+					LogAndShow 3, "Estimated resources are not enough.. Gold " & CStr(estimated_resources(0)) & ", Elixir " & CStr(estimated_resources(1)) & ", DarkElixir " & CStr(estimated_resources(2))
+				End If
+			End If
+			
+			If passed and stretagy["type"] = 1 Then 
+				If FindTownhall(building_infos) = null Then 
+					FindTownHallAtBottomLeft(building_infos)	
+				End If
+				Dim results = FindAndMarkTargetBuilding(building_infos, map, stretagy["target_building"], false, own_resources, opponent_resources, estimated_resources)
+				map = results(1)
+				If not results(0) Then 
+					passed = False
+					LogAndShow 3, "Not found target building.."
+				End If
+				
+				Dim selected_building_resources = SumRobableResourcesFromSelectedBuildings(building_infos, opponent_resources, estimated_resources)
+				TracePrint "selected building:", selected_building_resources(0), selected_building_resources(1), selected_building_resources(2)
+				
+				If not CheckOpponentResourceCriteria(overall_criteria, selected_building_resources, true) Then 
+					passed = False
+					LogAndShow 3, "Attackable buildings don't have enought resources.. Gold "&CStr(selected_building_resources(0)) & ", Elixir " & CStr(selected_building_resources(1)) & ", DarkElixir " & CStr(selected_building_resources(2))
+				End If
+			End If
+		End If
+		
+		If passed Then 
+			Report("Find a opponent after seeing " & CStr(g_search_opponent) &" villages using " & CStr(Time() - g_search_start_time) & " seconds, total gold: " & _
+			       CStr(opponent_resources(0)) & " elixir: " & CStr(opponent_resources(1)) & " dark elixir: " & CStr(opponent_resources(2)) & ", estimated gold: " & _
+			       CStr(estimated_resources(0)) & " elixir: " & CStr(estimated_resources(1)) & " dark elixir: " & CStr(estimated_resources(2)))
+			TracePrint "Estimated reources in townhall: ", (opponent_resources(0) - estimated_resources(0)) / 5, _
+					(opponent_resources(1) - estimated_resources(1)) / 5, (opponent_resources(2) - estimated_resources(2)) / 5
+			SearchOpponent = {0, map, building_infos, opponent_resources, estimated_resources}
+			Exit Function
+		End If
+		
+		If g_spell_lightning_at_dark_elixir_drill and not g_spell_lightning_at_dark_elixir_drill_only_when_attack and pass_dead_fish_check Then 
+			//Report "estimated dark elixir by lightning is " & CStr(opponent_resources(2) * 0.3)
+			//TracePrint g_spell_lightning_at_dark_elixir_drill_if_dark_elixir
+			If lightning_spell_card_coordinate <> null and opponent_resources(2) * 0.4 > g_spell_lightning_at_dark_elixir_drill_if_dark_elixir Then 
+				If building_infos = null Then 
+					LogAndShow 3, "Check for lightning"
+					TracePrint DetectZoomRatio()
+					If g_zoom_ratio = null Then 
+						LogAndShow 3, "not able to detect zoom ratio.."
+					Else
+						building_infos = FindBuildings({3})
+						EstimateRobableResourcesFromBuildings(building_infos)
+					End If
+				End If
+				If building_infos<> null and SpellLightningAtDarkElixir(building_infos, lightning_spell_card_coordinate) Then 
+					SearchOpponent = {1, map, building_infos, opponent_resources, estimated_resources}
+					Exit Function
+				End If
+			End If
+		End If
+		
+		Delay 1000
+		//LogAndShow 3, "not a good target, let's go..."
+		//Delay Int(Rnd() * 1000) + 500
+
+		Dim see_cloud = False
+		If not HasNextOpponentButton() Then 
+			SearchOpponent = {-4, null, null, null}
+			Exit Function
+		End If
+		For i=1 to 5
+			TapItem "NextOpponent", 500
+			For j = 1 to 10
+				If not HasNextOpponentButton() Then 
+					see_cloud = True
+					Exit For
+				End If
+				Delay 500
+			Next
+			If see_cloud Then 
+				Exit For
+			End If
+		Next
+
+		If not see_cloud Then 
+			SearchOpponent = {-3, null, null, null}
+			Exit Function
+		End If
+	Loop
+End Function
+
+Function FindTroopCardsStart()
+	Dim x = -1, y = -1
+	FindMultiColor 114, 0, 116, 1280,"BE8440-404040","2|4|C18841-404040,0|3|BD8440-404040,1|4|C08541-404040", 0, 0.98, x, y
+	If y >= 0 Then 
+		FindTroopCardsStart = y
+	Else
+		FindTroopCardsStart = -1
+	End If
+End Function
+
+Function FindLightningSpellCard()
+	Dim x = -1, y = -1
+	Dim troop_type = GetTroopType("LightningSpell")
+	FindMultiColor 0, 0, 130, 1280, GetTroopColorInWar(troop_type, 0), GetTroopColorInWar(troop_type, 1), 0, 0.98, x, y
+	If y > 0 Then 
+		FindLightningSpellCard = {x, y}
+	Else 
+		FindLightningSpellCard = null
+	End If
+End Function
+
+Function FindKingCard()
+	Dim x = -1, y = -1
+	FindMultiColor 0, 0, 130, 1280, "7EECFF-202020","-18|0|C0C8FF-202020,35|-1|DCEEFF-202020,23|-4|70E4F8-202020,22|7|61E3FB-202020,13|2|ABC6FF-202020,-43|29|403AA5-202020,27|36|CE2128-202020,29|-36|C81C28-202020",0,0.9,x,y
+	If x > -1 And y > -1 Then
+		FindKingCard = {x, y}
+	Else 
+		FindKingCard = null
+	End If
+End Function
+
+Function FindQueenCard()
+	Dim x = -1, y = -1
+	FindMultiColor 0, 0, 130, 1280, "B0C5FB-202020","22|-1|D02858-202020,35|-13|28B4F6-202020,-34|4|508880-202020,-2|-40|081CA8-202020,-1|22|602038-202020,11|6|F8F8F8-202020",0,0.9,x,y
+	If x > -1 And y > -1 Then
+		FindQueenCard = {x, y}
+	Else 
+		FindQueenCard = null
+	End If
+End Function
+
+
+Function SelectTroop(troop_cards_start, troop_index)
+	Tap 60, troop_cards_start + (troop_index + 0.5) * 97
+	Delay 100
+End Function
+
+Function FindTrainedTroopInfo(troop_type, trained_troop_infos)
+	Dim trained_troop_count = GetLength(trained_troop_infos)
+	For i = 0 To trained_troop_count - 1
+		If trained_troop_infos(i, 0) = troop_type Then 
+			FindTrainedTroopInfo = trained_troop_infos(i)
+			Exit Function
+		End If
+	Next
+	FindTrainedTroopInfo = null
+End Function
+
+Function GetSpecifiedTroopCount(troop_type, troop_count, remaining_troop_counts)
+	If troop_count >= 0 Then 
+		If troop_count > remaining_troop_counts(troop_type) Then 
+			troop_count = remaining_troop_counts(troop_type)
+		End If
+		GetSpecifiedTroopCount = troop_count
+		Exit Function
+	End If
+	GetSpecifiedTroopCount = remaining_troop_counts(troop_type) * (-troop_count)
+End Function
+
+// deploy_strategy = (troop_type, ratio, delay)+
+Function DeployTroopsAlongLine(deployments, from_ratio, to_ratio, trained_troop_infos, troop_cards_start, interval, x0, y0, x1, y1)
+	Dim trained_troop_counts(30)
+	FillArray(trained_troop_counts, 30, 0)
+	For i = 0 To GetLength(trained_troop_infos) - 1
+		Dim trained_troop_info = trained_troop_infos(i)
+		trained_troop_counts(trained_troop_info(0)) = trained_troop_info(1)
+	Next
+	
+	Dim l = GetLength(deployments)
+	For i = 0 To l - 1
+		Dim deployment = deployments(i)
+		Dim troop_count = GetSpecifiedTroopCount(deployment["troop_type"], deployment["troop_count"], trained_troop_counts)
+		Dim partial_troop_count = Int(troop_count * to_ratio) - Int (troop_count * from_ratio)
+		If partial_troop_count > 0 Then 
+			trained_troop_info = FindTrainedTroopInfo(deployment["troop_type"], trained_troop_infos)
+			SelectTroop(troop_cards_start, trained_troop_info(2))
+			For k = 1 To partial_troop_count
+				If interval > 0 Then 
+					Delay interval / 2 + (Rnd() Mod interval / 2)
+				End If
+				Tap x0 + (x1 - x0) / (partial_troop_count + 1) * k, y0 + (y1 - y0) / (partial_troop_count + 1) * k
+			Next
+		End If
+		If deployment["delay"] > 0 Then 
+			Delay deployment["delay"]
+		End If
+	Next
+End Function
+
+Function FromAllSidesStrategy(deployments, trained_troop_info, interval)
+	Dim troop_cards_start = FindTroopCardsStart()
+	If troop_cards_start < 0 Then 
+		FromAllSidesStrategy = -1
+		Exit Function
+	End If
+	MoveToMapTop 
+	Delay 300
+	DeployTroopsAlongLine deployments, 0, 0.25, trained_troop_info, troop_cards_start, interval, 267, 118, 632, 600
+	DeployTroopsAlongLine deployments, 0.25, 0.5, trained_troop_info, troop_cards_start, interval, 633, 668, 276, 1160
+	Delay 300
+	MoveToMapBottom 
+	Delay 300
+	DeployTroopsAlongLine deployments, 0.5, 0.75, trained_troop_info, troop_cards_start, interval, 590, 113, 210, 610
+	DeployTroopsAlongLine deployments, 0.75, 1, trained_troop_info, troop_cards_start, interval, 179, 709, 569, 1227
+	If g_deploy_king and g_king_card_coordinate <> null Then 
+		Tap g_king_card_coordinate(0), g_king_card_coordinate(1)
+		Delay 300
+		Tap 426, 996
+	End If
+	If g_deploy_queen and g_queen_card_coordinate <> null Then 
+		Tap g_queen_card_coordinate(0), g_queen_card_coordinate(1)
+		Delay 300
+		Tap 426, 996
+	End If
+	
+	WaitAndBurstHeros(10)
+	
+	FromAllSidesStrategy = 0
+End Function
+
+Function SpellLightningAtDarkElixir(building_infos, lightning_spell_card_coordinate)
+	Dim l=GetLength(building_infos)
+	Dim spelled = False
+	Dim selected_lightning = false
+	For i = 0 To l - 1
+		Dim building_info = building_infos(i)
+		//If building_info(0) = 3 Then 
+		//	LogAndShow 3, "dark elixir drill, level"&CStr(building_info(1))&", estimated"& CStr(building_info(5))
+		//End If
+		If building_info["type"] = 3 and building_info["has"] * 0.4 >= g_spell_lightning_at_dark_elixir_drill_if_dark_elixir Then 
+			Dim x = building_info["x"]
+			Dim y = building_info["y"]
+			Dim at_top = true
+			If (GetRealScreenX(x, at_top) > 170 and GetRealScreenY(y, at_top) < 1000) or GetRealScreenX(x, at_top) > 280 Then 
+				MoveToMapTop()
+			Else 
+				MoveToMapBottom() 
+				at_top = false
+				// x = x + kButtomScreenOffset
+			End If
+			ReportAndShowOnTop "lightning for " & CStr(building_info["has"] * 0.4) & ", at " &CStr(x - 10) & " " & CStr(y)
+			If not selected_lightning Then
+				//TracePrint lightning_spell_card_coordinate(0), lightning_spell_card_coordinate(1)
+				Tap lightning_spell_card_coordinate(0), lightning_spell_card_coordinate(1)
+				selected_lightning = true
+			End If
+			Delay 1000
+			Dim robable = RecognizeRobableAmount()
+			TapOnRealScreen(x - 15, y, at_top)
+			Delay 5000
+			Dim new_robable = RecognizeRobableAmount()
+			ReportAndShowOnTop "Earned "&CStr(robable(2) - new_robable(2))
+			If robable(2) - new_robable(2) > g_spell_lightning_at_dark_elixir_drill_if_dark_elixir Then 
+				//LogAndShow 3, x - 15, y
+				TapOnRealScreen(x - 15, y, at_top)
+				Delay 5000
+				Dim new_new_robable = RecognizeRobableAmount()
+				Report "Spell again, earned "&CStr(new_robable(2) - new_new_robable(2))
+			End If
+			spelled = true
+		End If
+	Next
+	If spelled Then 
+		TapItem "AbortWar", 2000
+		If CmpColorEx("292|707|7FECD0-101010,217|713|10AD60-101010,293|864|80ECD0-101010,217|863|10AD60-101010", 0.9) = 1 Then 
+			TapItem "AbortWarConfirm", 1000
+		End If
+	End If
+	SpellLightningAtDarkElixir = spelled
+End Function
+
+Function GetClosestVacantGrids(map, top_left_row, top_left_column, side, max_grid_count, max_distance)
+	Dim di={0, 1, 0, -1}
+	Dim dj={1, 0, -1, 0}
+	Dim grids(101)
+	Dim direction = 0
+	Dim step_in_direction = 0
+	Dim grid_count = 0
+	Dim distance = 1
+	If max_grid_count > 100 Then 
+		max_grid_count = 100
+	End If
+	Dim row_index = top_left_row - 1
+	Dim column_index = top_left_column - 1
+	Dim side_length = side + 2
+	Dim max_r = 0
+	While grid_count < max_grid_count
+		If row_index >= 0 and column_index >= 0 and row_index <= 45 and column_index <= 45 and map(row_index, column_index) = "_" Then 
+			Dim r = Int(Abs(top_left_row + (side - 1) / 2 - row_index) + Abs(top_left_column + (side - 1) / 2 - column_index))
+			If r <= max_distance * 2 Then 
+				If r > max_r Then 
+					max_r = r
+				End If
+				grids(grid_count) = {row_index, column_index, r}
+				grid_count = grid_count + 1
+			End If
+		End If
+		step_in_direction = step_in_direction + 1
+		row_index = row_index + di(direction)
+		column_index = column_index + dj(direction)
+		If step_in_direction = side_length - 1 Then
+			direction = direction + 1
+			If direction >= 4 Then 
+				distance = distance + 1
+				If distance > max_distance Then 
+					Exit While
+				End If
+				direction = 0
+				row_index = row_index - 1
+				column_index = column_index - 1
+				side_length = side_length + 2
+			End If
+			step_in_direction = 0
+		End If
+	Wend
+	Dim results(101)
+	Dim result_count = 0
+	For r = 1 To max_r
+		For i = 0 To grid_count - 1
+			Dim grid = grids(i)
+			If grid(2) = r Then 
+				results(result_count) = grid
+				result_count = result_count + 1
+			End If
+		Next
+	Next
+	GetClosestVacantGrids = results
+End Function
+
+Function BuildingIsWorthAttacting(building_info, config, own_resources, total_resources, estimated_resources)
+	Dim building_type = building_info["type"]
+	If building_type = 0 and config["townhall"] <> null Then 
+		//TracePrint "has estimated error: ", estimated_resources(3)
+		//TracePrint required(0), required(1), required(2)
+		//TracePrint total_resources(0), total_resources(1), total_resources(2)
+		//TracePrint estimated_resources(0), estimated_resources(1), estimated_resources(2)
+		If config["townhall_resources"] <> null Then 
+			Dim required = config["townhall_resources"]	
+	 		If not estimated_resources(3) and ((total_resources(0) - estimated_resources(0)) * 0.2 >= required(0) and _
+				(total_resources(1) - estimated_resources(1)) * 0.2 >= required(1) and _
+				(total_resources(2) - estimated_resources(2)) * 0.2 >= required(2)) Then
+				BuildingIsWorthAttacting = true
+				Exit Function
+			End If
+		End If
+		If config["townhall_trophy"] <> null Then 
+			If own_resources(3) < config["townhall_trophy"] Then 
+				BuildingIsWorthAttacting = true
+				Exit Function			
+			End If
+		End If
+	End If
+	If building_type = 1 and config["gold_mine"] <> null Then 
+		BuildingIsWorthAttacting = (building_info["has"] >= config["gold_mine"])
+		Exit Function
+	End If
+	If building_type = 2 and config["elixir_collector"] <> null Then 
+		BuildingIsWorthAttacting = (building_info["has"] >= config["elixir_collector"])
+		Exit Function
+	End If
+	If building_type = 3 and config["dark_elixir_drill"] <> null Then 
+		BuildingIsWorthAttacting = (building_info["has"] >= config["dark_elixir_drill"])
+		Exit Function
+	End If
+	BuildingIsWorthAttacting = False
+End Function
+
+Function FindAndMarkTargetBuilding(building_infos, map, config, attacked, own_resources, opponent_resources, estimated_resources)
+	Dim found_target_building = False
+	Dim townhall = null
+	For i = 0 To GetLength(building_infos) - 1
+		building_info = building_infos(i)
+		building_info["selected"] = false
+		If building_info["type"] = 0 Then 
+			townhall = building_info
+			If config["townhall_attack_others"] and attacked Then 
+				found_target_building = true
+			End If
+		End If
+	Next
+	If not found_target_building
+		For i = 0 To GetLength(building_infos) - 1
+			Dim building_info = building_infos(i)
+			If BuildingIsWorthAttacting(building_info, config, own_resources, opponent_resources, estimated_resources) Then 
+				found_target_building = True
+				Exit For
+			End If
+		Next
+	End If
+	If found_target_building Then 
+		If map = null Then 
+			map = DetectVacantGrids(true)
+			MarkAndUpdateBuildings map, building_infos
+			If log_level >= 3 Then 
+				PrintMap(map, building_infos)
+			End If
+		End If
+		found_target_building = False
+		For i = 0 To GetLength(building_infos) - 1
+			building_info = building_infos(i)
+			If (building_info["type"] = 0 and config["townhall_attack_others"] and attacked) or _
+					BuildingIsWorthAttacting(building_info, config, own_resources, opponent_resources, estimated_resources) Then 
+				Dim side = 3
+				Dim building_type = building_info["type"]
+				If building_type = 0 Then 
+					side = 4
+				End If
+				If building_info["close_grids"] = null Then 
+					building_info["close_grids"] = GetClosestVacantGrids(map, building_info["row"], building_info["column"], side, 100, config[kBuildingNames(building_type)&CStr("_max_distance")])
+				End If
+				
+				Dim grid_count = GetLength(building_info["close_grids"])
+				If grid_count > 0 and grid_count >= config[kBuildingNames(building_type)&"_vacant_grids"] Then 
+					found_target_building = True
+					building_info["selected"] = true
+				End If
+			End If
+		Next
+		If townhall <> null and (found_target_building or attacked) and config["townhall_attack_others"] and not townhall["selected"] Then 
+			If townhall["close_grids"] = null Then 
+				townhall["close_grids"] = GetClosestVacantGrids(map, townhall["row"], townhall["column"], 4, 100, config["townhall_max_distance"])
+			End If
+			grid_count = GetLength(townhall["close_grids"])
+			If grid_count > 0 and grid_count >= config["townhall_vacant_grids"] Then 
+				townhall["selected"] = true
+			End If
+		End If
+	End If
+	FindAndMarkTargetBuilding = {found_target_building, map}
+End Function
+
+Function DistanceToMapEdge(row, column)
+	Dim d1 = row
+	If d1 > 45 - row Then 
+		d1 = 45 - row
+	End If
+	Dim d2 = column
+	If d2 > 45 - column Then 
+		d2 = 45 - column
+	End If
+	If d1 <= 4 and d2 <= 4 Then 
+		DistanceToMapEdge = d1 + d2 - 5
+	ElseIf d1 < d2 Then
+	 	DistanceToMapEdge = d1
+	Else
+		DistanceToMapEdge = d2
+	End If
+End Function
+
+Function TargetBuildingStrategy(map, building_infos, own_resources, total_resources, estimated_resources, _
+								config, trained_troop_infos, deployment_interval)
+	Dim troop_cards_start = FindTroopCardsStart()
+	If troop_cards_start < 0 Then 
+		TargetBuildingStrategy = -1
+		Exit Function
+	End If
+	
+	Dim deployments = config["deployments"]
+	Dim deployment_count = GetLength(deployments)
+	Dim deployment_start = 0
+	Dim deployment_end = 0
+	Dim deployment_points(501)
+	Dim king_deployed = false
+	Dim queen_deployed = false
+	Dim last_selected_index = -1
+	Dim deployment_point_index = 0
+	Dim troop_counts(30)
+	FillArray(troop_counts, 30, 0)
+	For i = 0 To GetLength(trained_troop_infos) - 1
+		Dim trained_troop_info = trained_troop_infos(i)
+		troop_counts(trained_troop_info(0)) = trained_troop_info(1)
+	Next
+	
+	While deployment_end < deployment_count
+		While deployment_end + 1 < deployment_count
+			Dim deployment = deployments(deployment_end)
+			If deployment["wait"] <> null Then 
+				Exit While
+			End If
+			deployment_end = deployment_end + 1
+		Wend
+		
+		deployment_point_index = 0
+		Dim selected_building = 0
+		Dim building_count = GetLength(building_infos)
+		For building_index = 0 To building_count - 1
+			Dim building_info = building_infos(building_index)
+			If building_info["selected"] Then 
+				selected_building = selected_building + 1
+			End If
+		Next
+		
+		Dim new_troop_counts(30)
+		Dim selected_building_index = 0
+		For building_index=0 to building_count - 1
+			building_info = building_infos(building_index)
+			Dim building_type = building_info["type"]
+			Dim row_index = building_info["row"]
+			Dim column_index = building_info["column"]
+			Dim side = 3
+			If building_type = 0 Then 
+				side = 4
+			End If
+			
+			If building_info["selected"] Then 
+				CopyArray(troop_counts, 30, new_troop_counts)
+				// TracePrint "building type ", building_info["type"], " row ", building_info["row"], " column ", building_info["column"]
+				Dim grids = building_info["close_grids"]
+				Dim grid_count = GetLength(grids)
+				For deployment_index = deployment_start To deployment_end
+					deployment = deployments(deployment_index)
+					Dim troop_type = deployment["troop_type"]
+					trained_troop_info = FindTrainedTroopInfo(troop_type, trained_troop_infos)
+					
+					If trained_troop_info <> null Then 
+						Dim set_troop_count = GetSpecifiedTroopCount(troop_type, deployment["troop_count"], new_troop_counts)
+						Dim troop_count = set_troop_count
+						
+						If deployment["is_overall"] Then 
+							troop_count = Int(set_troop_count / selected_building)
+							If selected_building_index < (set_troop_count Mod selected_building) Then 
+								troop_count = troop_count + 1
+							End If
+							new_troop_counts(troop_type) = new_troop_counts(troop_type) - set_troop_count
+						Else 
+							new_troop_counts(troop_type) = new_troop_counts(troop_type) - troop_count * selected_building
+						End If
+						
+						If new_troop_counts(troop_type) <= 0 Then 
+							new_troop_counts(troop_type) = 0
+						End If
+						
+						If troop_count > 0 Then 
+							Dim troop_index = trained_troop_info(2)
+							Dim deployment_type = deployment["deployment_type"]
+							If deployment_type = 0 Then //集中
+								For troop_count
+									If deployment_point_index >= 500 Then 
+										Exit For
+									End If
+									deployment_points(deployment_point_index) = {grids(0, 0), grids(0, 1), troop_index}
+									deployment_point_index = deployment_point_index + 1
+								Next
+							ElseIf deployment_type = 1 Then //均匀
+								Dim grid_step = Int(grid_count / troop_count)
+								If grid_step <= 0 Then 
+									grid_step = 1
+								End If
+								Dim index = 0
+								For troop_count
+									If deployment_point_index >= 500 Then 
+										Exit For
+									End If
+									deployment_points(deployment_point_index) = {grids(index, 0), grids(index, 1), troop_index}
+									deployment_point_index = deployment_point_index + 1
+									index = index + grid_step
+									If index >= grid_count Then 
+										index = index - grid_count
+									End If
+								Next
+							ElseIf deployment_type = 2 Then //近处
+								index = 0
+								For troop_count
+									If deployment_point_index >= 500 Then 
+										Exit For
+									End If
+									deployment_points(deployment_point_index) = {grids(index, 0), grids(index, 1), troop_index}
+									deployment_point_index = deployment_point_index + 1
+									index = index + 1
+									If index >= grid_count Then 
+										index = 0
+									End If
+								Next
+							ElseIf deployment_type = 3 Then //随机
+								For troop_count
+									If deployment_point_index >= 500 Then 
+										Exit For
+									End If
+									index = Int(Rnd() * grid_count)
+									deployment_points(deployment_point_index) = {grids(index, 0), grids(index, 1), troop_index}
+									deployment_point_index = deployment_point_index + 1
+								Next
+							ElseIf deployment_type = 4 Then //贴边
+								Dim distance_to_edge = 999
+								For index = 0 To grid_count - 1
+									Dim t = DistanceToMapEdge(grids(index, 0), grids(index, 1))
+									If t < distance_to_edge Then 
+										distance_to_edge = t
+									End If
+								Next
+								Dim deployed_grid_index = 0
+								Dim deployed_troop = 0
+								While true
+									For index = 0 To grid_count - 1
+										If DistanceToMapEdge(grids(index, 0), grids(index, 1)) = distance_to_edge Then 
+											For Int(troop_count / grid_count)
+												deployment_points(deployment_point_index) = {grids(index, 0), grids(index, 1), troop_index}
+												deployment_point_index = deployment_point_index + 1
+												deployed_troop = deployed_troop + 1
+											Next
+											If deployed_grid_index < troop_count Mod grid_count Then 
+												deployment_points(deployment_point_index) = {grids(index, 0), grids(index, 1), troop_index}
+												deployment_point_index = deployment_point_index + 1
+												deployed_troop = deployed_troop + 1
+											End If
+											deployed_grid_index = deployed_grid_index + 1
+											If deployed_troop >= troop_count Then 
+												Exit While
+											End If
+										End If
+									Next
+									distance_to_edge = distance_to_edge + 1
+								Wend
+							End If
+						End If
+					End If  // if train_troop_info <> null
+				Next
+				
+				If selected_building_index = selected_building - 1 Then // deploy king/queen with last target
+					If g_deploy_king and not king_deployed and g_king_card_coordinate <> null and config["deploy_king_with"] <= deployment_end Then 
+						If deployment_point_index < 500 Then 
+							deployment_points(deployment_point_index) = {grids(index, 0), grids(index, 1), -1}
+							deployment_point_index = deployment_point_index + 1
+						End If
+						king_deployed = true
+					End If
+					If g_deploy_queen and not queen_deployed and g_queen_card_coordinate <> null and config["deploy_queen_with"] <= deployment_end  Then 
+						If deployment_point_index < 500 Then 
+							deployment_points(deployment_point_index) = {grids(index, 0), grids(index, 1), -2}
+							deployment_point_index = deployment_point_index + 1
+						End If
+						queen_deployed = true
+					End If
+				End If
+				selected_building_index = selected_building_index + 1
+			End If
+		Next
+		troop_counts = new_troop_counts
+		
+		If deployment_point_index = 0 Then 
+			TargetBuildingStrategy = 0
+			Exit Function
+		End If
+		
+		Dim deployed_points = 0
+		Dim at_top = true
+		For k = 0 To 1
+			If k = 0 Then 
+				MoveToMapTop
+			Else 
+		 		MoveToMapBottom
+			End if
+			For i = 0 To deployment_point_index - 1
+				Dim position = deployment_points(i)
+				row_index = position(0)
+				column_index = position(1)
+				If (k = 0 and column_index >= row_index + 5) or (k = 1 and column_index < row_index + 5) Then 
+					If row_index = 0 Then 
+						row_index = -1
+					End If
+					If row_index = 45 Then 
+						row_index = 46
+					End If
+					If column_index = 0 Then 
+						column_index = -1
+					End If
+					If column_index = 45 Then 
+						column_index = 46
+					End If
+					Dim coordinate = GetGridCenterCoordinate(row_index, column_index)
+//					If k = 1 Then 
+//						coordinate(0) = coordinate(0) + kButtomScreenOffset
+//					End If
+					If last_selected_index <> position(2) Then 
+						If position(2) = -1 Then 
+							Tap g_king_card_coordinate(0), g_king_card_coordinate(1)
+						ElseIf position(2) = -2 Then
+							Tap g_queen_card_coordinate(0), g_queen_card_coordinate(1)
+						Else 
+							SelectTroop(troop_cards_start, position(2))
+						End If
+						last_selected_index = position(2)
+						Delay int(RND() * 200 + 50)
+					End If
+					// TracePrint row_index, column_index
+					TapOnRealScreen(Int(coordinate(0) + (Rnd() - 0.5) * kHalfGridWidth), Int(coordinate(1) + (Rnd() - 0.5) * kHalfGridHeight), at_top)
+					deployed_points = deployed_points + 1
+					Delay Int(deployment_interval / 2 + Rnd() * deployment_interval)
+				End If
+			Next
+			If deployed_points >= deployment_point_index Then 
+				Exit For
+			End If
+			at_top = false
+		Next
+		
+		If deployment["wait"] <> null Then 
+			WaitAndBurstHeros(deployment["wait"])
+		End If
+		
+		deployment_end = deployment_end + 1
+		deployment_start = deployment_end
+		
+		If deployment_end < deployment_count Then 
+			MoveToMapTop()
+			building_infos = FindInterestingBuilding()
+			EstimateRobableResourcesFromBuildings(building_infos)
+			UnmarkMap(map)
+			MarkAndUpdateBuildings(map, building_infos)
+			Dim results = FindAndMarkTargetBuilding(building_infos, map, config, true, own_resources, total_resources, estimated_resources)
+			If log_level >= 3 Then 
+				PrintMap(map, building_infos)
+			End if
+			If not results(0) Then 
+				deployment_point_index = 0
+				Exit While
+			End If
+		End If
+	Wend
+	
+	If deployment_point_index <> 0 Then 
+		WaitAndBurstHeros(10)
+	End If
+	//PrintMap(map, building_infos)
+	TargetBuildingStrategy = 0
+End Function
+
+Dim kBoundaryColor = "3F9F91-080808|46AC9A-080808|46BBAE-080808|4AB39C-080808|4BCABA-080808|4CC0AE-080808"
+Dim kButtomScreenOffset = 361
+Dim kHalfGridWidth = 9.09
+Dim kHalfGridHeight = 12.09
+Dim kOriginX = 223
+Dim kOriginY = 108 - kHalfGridHeight * 2
+Dim kUnitValue = kHalfGridWidth * kHalfGridHeight * 2
+
+Function SetZoomRatio(zoom_ratio)
+	If zoom_ratio = 1 Then 
+		ResetScreenScale()
+	Else 
+		SetScreenScale Int(g_zoom_ratio * kScreenWidth), Int(g_zoom_ratio * kScreenHeight), 1
+	End If
+	Dim delta_x = (kScreenWidth  - Int(g_zoom_ratio * kScreenWidth))
+	kButtomScreenOffset = 361 + delta_x //(361 + kScreenWidth) - g_zoom_ratio * kScreenWidth
+	kOriginX = 223 - delta_x
+End Function
+
+Function GetRealScreenX(x, at_top)
+	If at_top Then 
+		GetRealScreenX = Int(x / g_zoom_ratio)
+	Else 
+		GetRealScreenX = Int((x + kButtomScreenOffset) / g_zoom_ratio)
+	End If
+End Function
+
+Function GetRealScreenY(x, at_top)
+	GetRealScreenY = Int(x / g_zoom_ratio)
+End Function
+
+Function TapOnRealScreen(x, y, at_top)
+	Dim real_x = GetRealScreenX(x, at_top)
+	Dim real_y = GetRealScreenY(y, at_top)
+	Tap real_x, real_y
+End Function
+
+Function GetGridCenterCoordinate(row_index, column_index)
+	GetGridCenterCoordinate = {_
+		kOriginX - (row_index - column_index) * kHalfGridWidth, _
+		kOriginY + kHalfGridHeight + (row_index + column_index) * kHalfGridHeight _
+	}
+End Function
+
+Function GetGridPosition(x, y)
+	GetGridPosition = {_
+	  int(((x - kOriginX) * -kHalfGridHeight + (y - kOriginY) * kHalfGridWidth) / kUnitValue), _
+	  int(((x - kOriginX) * kHalfGridHeight + (y - kOriginY) * kHalfGridWidth) / kUnitValue) _
+	}
+End Function
+
+Function IgnoreDecoration(map)
+	For i = 1 To 45
+		For j = 1 To 45
+			If map(i, j) = "x" Then
+				If map(i - 1, j) = "_" Then 
+					If map(i + 1, j) = "_" Then 
+						map(i, j) = "_"
+					End If
+				 	If i < 44 and i > 1 and map(i + 1, j) = "x" and map(i + 2, j) = "_" Then 
+						map(i + 1, j) = "_"
+						map(i, j) = "_"
+					End If
+				End If
+				If map(i, j - 1) = "_" Then 
+					If map(i, j + 1) = "_" Then 
+						map(i, j) = "_"
+					End If
+					If j < 44 and j > 1 and map(i, j + 1) = "x" and map(i, j + 2) = "_" Then 
+						map(i, j) = "_"
+						map(i, j + 1) = "_"
+					End If
+				End If
+			End If
+		Next
+	Next
+End Function
+
+Function DetectVacantGrids(ignore_decorations)
+	Dim map(46, 46)
+	Fill2DArray map, 46, 46, "x"
+	SetZoomRatio(g_zoom_ratio)
+	MoveToMapTop()
+	KeepCapture 
+	DetectUpHalfVacantGrids(map)
+	ReleaseCapture 
+	MoveToMapBottom()
+	KeepCapture 
+	DetectDownHalfVacantGrids(map)
+	ReleaseCapture 
+	SetZoomRatio(1)
+	If not ignore_decorations Then 
+		Exit Function
+	End If
+	IgnoreDecoration(map)
+	DetectVacantGrids = map
+End Function
+
+Function PrintMap(map, building_infos)
+	Dim building_type_count = GetLength(kBuildingLabels)
+	For i = 0 To 45
+		Dim t(47)
+		For j = 0 To 45
+			t(j) = map(i, j)
+			For k = 0 To building_type_count - 1
+				If t(j) = kBuildingLabels(k) Then 
+					t(j) = CStr(k)
+					Exit For
+				End If
+			Next
+			If t(j) = "_" Then 
+				t(j) = "v"
+			ElseIf t(j) = "x" Then
+				t(j) = "$"
+			End If
+		Next
+		t(46) = "|"
+		TracePrint Join(t, "")
+	Next
+	Dim i = 0
+	
+	While building_infos(i) <> null
+		Dim building_info = building_infos(i)
+		TracePrint kBuildingNames(building_info["type"]), ", level", building_info["level"], _
+				", position", building_info["row"], building_info["column"], "(", building_info["x"], building_info["y"], ")", _
+				", fullness", building_info["fullness"], ", has",  building_info["has"]
+		i=i+1
+	Wend
+End Function
+
+Function DetectUpHalfVacantGrids(map)
+	For i = 0 To 45
+		Dim start_x = kOriginX
+		Dim start_y = kOriginY + kHalfGridHeight + kHalfGridHeight * 2 * i
+		Dim j=i-5
+		If j < 0 Then 
+			j=0
+		End If
+		While j <= 45
+			Dim x = start_x + kHalfGridWidth * (j - i)
+			Dim y = start_y + kHalfGridHeight * (j - i)
+			Dim x0 = GetRealScreenX(x-4, true)
+			Dim x1 = GetRealScreenX(x+4, true)
+			Dim y0 = GetRealScreenY(y-4, true)
+			Dim y1 = GetRealScreenY(y+4, true)
+			If i=0 or i=45 or j=0 or j=45 or GetColorNum(x0, y0, x1, y1, kBoundaryColor, 1) > 35 Then
+				map(i, j) = "_"
+			End If
+			j=j+1
+		Wend
+	Next
+End Function
+
+Function DetectDownHalfVacantGrids(map)
+	For i = 0 To 45
+		Dim start_x = kOriginX// + kButtomScreenOffset
+		Dim start_y = kOriginY + kHalfGridHeight + kHalfGridHeight * 2 * i
+		Dim j=0		
+		While j<=45 and j <= i+5
+			Dim x = start_x + kHalfGridWidth * (j - i)
+			Dim y = start_y + kHalfGridHeight * (j - i)
+			Dim x0 = GetRealScreenX(x-4, false)
+			Dim x1 = GetRealScreenX(x+4, false)
+			Dim y0 = GetRealScreenY(y-4, false)
+			Dim y1 = GetRealScreenY(y+4, false)
+			If i=0 or i=45 or j=0 or j=45 or GetColorNum(x0, y0, x1, y1, kBoundaryColor, 1) > 35 Then 
+				map(i,j) = "_"
+			End If
+			j=j+1
+		Wend
+	Next
+End Function
+
+
+Dim kBuildingLabels = {"T", "G", "E", "D", "A"}
+Function MarkAndUpdateBuildings(map, building_infos)
+	Dim k=0
+	While building_infos(k) <> null
+		Dim building_info = building_infos(k)
+		//TracePrint building_infos(k,0), building_infos(k,1), building_infos(k,2), building_infos(k,3), building_infos(k,4)
+//		Dim position = GetGridPosition(building_info["x"], building_info["y"])
+		// TracePrint resource_collectors(k,2), resource_collectors(k,3), position(0), position(1)
+		Dim type = building_info["type"]
+		Dim label = kBuildingLabels(type)
+		If type = 0 Then 
+			//TracePrint building_infos(k, 2), building_infos(k, 3)
+//			building_info["row"] =  position(0)
+//			building_info["column"] = position(1) - 3
+			For i = 0 To 3
+				For j = 0 To 3
+					map(building_info["row"] + i, building_info["column"] + j) = label
+				Next
+			Next
+		Else 
+//			building_info["row"] = position(0)
+//			building_info["column"] = position(1) - 2
+			For i = 0 To 2
+				For j = 0 To 2
+					map(building_info["row"] + i, building_info["column"] + j) = label
+				Next
+			Next
+		End If
+		k=k+1
+	Wend
+End Function
+
+
+Function UnmarkMap(map)
+	For i = 0 To 45
+		For j = 0 To 45
+			If map(i, j) <> "_"
+				map(i, j) = "x"
+			End If
+		Next
+	Next
+End Function
+
+/**********************************************/
+/**************  Robot Logic  *****************/
+/**********************************************/
+
+Function RestartApp(first_run)
+	If not first_run Then
+		For i=5 to 1 step -1
+			ShowMsg 1, "重启辅助倒计时..." & CStr(i)
+			Delay 1000
+		Next
+	End If
+	LogAndShow 1, "重启辅助..."
+
+	Report "Restart App"
+	StartApp()
+	WaitForLoading()
+End Function
+
+Function WaitForLoading()
+	For 30
+		If InClan() or InAttackedPage() Then 
+			Exit For 
+		End If
+		
+		If AnotherDeviceIsLoggingIn() Then 
+			WaitForAnotherDevice() 
+			Exit For
+		End If
+		ShowMsg 1, "等待载入..."
+		Delay 5000
+	Next
+End Function
+
+Function InWarPreparationPage()
+	InWarPreparationPage = (CmpColorEx("217|399|28B0F0-101010,694|1233|8880F8-101010,682|1232|FFFFFF-101010,658|1233|160FC0-101010",0.9) = 1)
+End Function
+
+Function InWarResultPage()
+	InWarResultPage = (CmpColorEx("93|566|68E6C8-202020,96|710|70E8C8-202020,101|638|76EBD0-202020,52|637|10AC5D-202020,534|374|90E6FF-202020,418|263|07100D-202020,422|311|0B1512-202020,160|1019|050B08", 0.96) = 1)
+End Function
+
+Function KingIsHurt()
+	If not g_deploy_king or g_king_card_coordinate = null Then 
+		KingIsHurt = false
+		Exit Function
+	End If
+	Dim x, y
+	FindMultiColor 0, 0, 140, 1280, "758389-202020", "4|1|616962-202020,3|10|B9364D-202020,1|15|959FA2-202020,3|28|50001F-202020,-14|-4|67E4FA-202020,-23|-9|B8CFFF-202020,-87|-22|A0FFFF-202020", 0, 0.9, x, y
+	KingIsHurt = (x >= 0)
+End Function
+
+Function QueenIsHurt()
+	If not g_deploy_queen or g_queen_card_coordinate = null Then 
+		QueenIsHurt = false
+		Exit Function
+	End If
+	Dim x, y
+	FindMultiColor 0, 0, 140, 1280, "275D7C-202020","3|13|3279A6-202020,-22|-6|D8285F-202020,-18|14|4C1830-202020,-46|-43|081CA8-202020,-43|-2|BACAFC-202020,5|29|500020-202020,-34|2|F5F4F5-202020,13|9|3E0410,11|-10|CF1C38", 0, 0.9, x, y
+	QueenIsHurt = (x >= 0)
+End Function
+
+Function WaitAndBurstHeros(seconds)
+	Dim start_time = Time()
+	While true
+		If not king_bursted and KingIsHurt() Then 
+			Tap g_king_card_coordinate(0), g_king_card_coordinate(1)
+			king_bursted = true
+		End If
+		If not queen_bursted and QueenIsHurt() Then 
+			Tap g_queen_card_coordinate(0), g_queen_card_coordinate(1)
+			queen_bursted = true
+		End If
+		Delay 500
+		If Time() - start_time >= seconds Then 
+			Exit While
+		End If
+	Wend
+End Function
+		
+Dim g_king_card_coordinate = null
+Dim g_queen_card_coordinate = null
+Dim king_bursted = false
+Dim queen_bursted = false
+Function GoToWar(overall_criteria, strategy, trained_troop_infos)
+	If not GoToClan() Then 
+		Report "Failed to go back to clan"
+		GoToWar = False
+		Exit Function
+	End If
+	Dim own_resources_before_war = RecognizeOwnAmount()
+	For 5
+		TapItem "Attack", 1000
+		If InWarPreparationPage() Then 
+			Exit For
+		End If
+		Delay 2000
+	Next
+	If not InWarPreparationPage() Then 
+		Report "Failed to go to war preparation page clan"
+		GoToWar = False
+		Exit Function
+	End If
+	For 5
+		TapItem "SearchOpponent", 500
+		If not InWarPreparationPage() Then 
+			Exit For
+		End If
+		Delay 2000
+	Next
+	If InWarPreparationPage() Then 
+		Report "Failed to start searching opponents"
+		GoToWar = False
+		Exit Function
+	End If
+	
+	Dim strategy_result_code = -1
+	Dim war_start = 0
+	Dim building_infos
+
+	Dim search_opponent_result = SearchOpponent(overall_criteria, own_resources_before_war, strategy)
+	Dim search_opponent_result_code = search_opponent_result(0)
+	Dim map = search_opponent_result(1)
+	building_infos = search_opponent_result(2)
+	Dim total_resources = search_opponent_result(3)
+	Dim estimated_resources = search_opponent_result(4)
+
+	If search_opponent_result_code < 0 Then 
+		Report "Failed to search opponents, error: " & CStr(search_opponent_result_code)
+		GoToWar = False
+		Exit Function
+	End If
+	
+	If search_opponent_result_code = 0 Then 
+		g_king_card_coordinate = FindKingCard()
+		g_queen_card_coordinate = FindQueenCard()
+		king_bursted = false
+		queen_bursted = false
+		//Dim last_robable_resources = RecognizeRobableAmount()
+		war_start = Time()
+		strategy_result_code = -1
+		If strategy["type"] = 0 Then 
+			strategy_result_code = FromAllSidesStrategy(strategy["from_all_sides"], trained_troop_infos, strategy["deployment_interval"])
+		ElseIf strategy["type"] = 1 Then	
+			strategy_result_code = TargetBuildingStrategy(map, building_infos, own_resources_before_war, total_resources, estimated_resources, _
+													  		strategy["target_building"], trained_troop_infos, strategy["deployment_interval"])
+		End If
+	
+		g_search_opponent = 0
+		If strategy_result_code <> 0 Then 
+			Report "Failed to use " & CStr(strategy["type"]) & ", error: " & CStr(strategy_result_code)
+			GoToWar = False
+			Exit Function
+		End If
+		g_last_train_troop_time = g_last_train_troop_time - 400  // probably retrain troop after war
+	End If
+	
+	Dim last_robable_resources = RecognizeRobableAmount()
+	Dim last_update = Time()
+	Dim war_result_amounts = {-1, -1, -1, -1}
+	While True
+		If InWarResultPage() Then 
+			Report "War end"
+			Delay 1000
+			war_result_amounts = RecognizeWarResultAmount()
+			TapItem "ReturnAfterWarEnd", 1000
+			Exit While
+		End If
+		If AnotherDeviceIsLoggingIn() Then 
+			Report "Another device is logging in, abort"
+			GoToWar = False
+			Exit Function
+		End If
+		Report "War is ongoing"		
+		
+		WaitAndBurstHeros(3)
+		Dim current_time = Time()
+		Dim robable_resources = RecognizeRobableAmount()
+		if (robable_resources(0) <> last_robable_resources(0) and robable_resources(0) >= 0) or _
+			(robable_resources(1) <> last_robable_resources(1) and robable_resources(1) >= 0) or _
+			(robable_resources(2) <> last_robable_resources(2) and robable_resources(2) >= 0) Then 
+			Report "Remaining gold " & CStr(robable_resources(0)) & ", elixir " & CStr(robable_resources(1)) & ", dark elixir " & CStr(robable_resources(2))
+			last_update = current_time
+			last_robable_resources = robable_resources
+		End If
+			
+		If current_time - war_start >= 40 and current_time - last_update >= 20 Then 
+			If CmpColorEx("165|36|0000C0-101010,196|31|5850F0-101010,164|153|0000C8-101010,197|151|5550EF-101010", 0.9) = 1 Then 
+				Dim aborted_war = false
+				If g_spell_lightning_at_dark_elixir_drill Then 
+				   	If robable_resources(2) < 0 or robable_resources(2) * 0.4 > g_spell_lightning_at_dark_elixir_drill_if_dark_elixir Then 
+						Dim lightning_spell_card_coordinate = FindLightningSpellCard()
+						If lightning_spell_card_coordinate <> null Then 
+							LogAndShow 3, "Check for lightning"
+							MoveToMapTop()
+							building_infos = FindBuildings({3})  // always need to update buildings
+							EstimateRobableResourcesFromBuildings(building_infos)
+							If (SpellLightningAtDarkElixir(building_infos, lightning_spell_card_coordinate)) Then 
+								aborted_war = true
+							End If
+						End If
+					End If
+				End If
+				If not aborted_war Then 
+					TapItem "AbortWar", 1500
+					If CmpColorEx("292|707|7FECD0-101010,217|713|10AD60-101010,293|864|80ECD0-101010,217|863|10AD60-101010", 0.9) = 1 Then 
+						TapItem "AbortWarConfirm", 1000
+					End If	
+				End If
+			End If
+		End If
+		
+		If current_time - war_start > 4 * 60 Then 
+			Report "War cannot end"
+			GoToWar = False
+			Exit Function
+		End If
+	Wend
+	
+	For 20
+		If InClan() Then 
+			Exit For
+		End If
+		Delay 500
+	Next
+	If not InClan() Then 
+		Report "Failed to quite war"
+		GoToWar = False
+		Exit Function
+	End If
+	Delay 500
+	g_total_robbed_gold = g_total_robbed_gold + war_result_amounts(0)
+	g_total_robbed_elixir = g_total_robbed_elixir + war_result_amounts(1)
+	g_total_robbed_dark_elixir = g_total_robbed_dark_elixir + war_result_amounts(2)
+	g_total_attack_count = g_total_attack_count + 1
+	
+	Dim own_resources_after_war = RecognizeOwnAmount()
+	Dim win_or_lose = "Win!"
+	If own_resources_after_war(3) < own_resources_before_war(3) Then 
+		win_or_lose = "Lose!"
+	End If
+	Report win_or_lose & " net income: gold " & CStr(war_result_amounts(0)) & _
+	       ", elixir " & CStr(war_result_amounts(1)) & _
+	       ", dark elixir " & CStr(war_result_amounts(2)) & _
+	       ", trophy " & CStr(own_resources_after_war(3) - own_resources_before_war(3))
+	GoToWar = True
+End Function
+
+Dim g_last_collect_resource_time = 0
+Function CollectResourcesAndReport()
+    Dim current_time = Time()
+    If current_time - g_last_collect_resource_time >= 30 * 60 Then 
+        g_last_collect_resource_time = current_time
+    	Report "collecting resources"
+		CollectResources()
+    End If
+	Dim resources = RecognizeOwnAmount()
+	ReportInfo resources(0), resources(1), resources(2), resources(3)
+End Function
+
+Function NeedReinforcement()
+	NeedReinforcement = (CmpColorEx("99|1066|989592-101010,109|1017|68E0C0-101010,109|1130|68E0C0-101010",0.9) = 1)
+End Function
+
+Function NeedGemsToRequestReinforcement()
+	NeedGemsToRequestReinforcement = (CmpColorEx("72|1120|005428-101010,80|1117|88F0D8-101010,93|1022|767572-101010", 0.98) = 1)
+End Function
+
+//Function IsTraining()
+//	IsTraining = (CmpColorEx("622|1070|FFFFFF-101010,616|1074|4AB889-101010,626|1074|44B88A-101010,621|1065|46B888-101010",0.9) = 1)
+//End Function
+
+Function RandomJokeIndex()
+	RandomJokeIndex = Int(Rnd() * g_joke_count)
+End Function
+Function ShowJoke(index)
+	ShowMessage g_jokes(index), 5000, 900, 500
+End Function
+
+Function WaitAndShowJoke(seconds)
+	If seconds >= 6 and Rnd() <= 0.3 Then 
+		Dim index = RandomJokeIndex()
+		Dim shown_time = 0
+		While seconds >= 3 and shown_time < 8
+			ShowJoke(index) 
+			Delay 2000
+			seconds = seconds - 2
+			shown_time = shown_time + 2
+		Wend
+	End If
+	Delay seconds
+End Function
+
+Function CalculateProperTrainingTroopCounts(planed_troop_counts, total_population, counts)
+	Dim set_population = 0
+	For i = 0 To kTroopTypeCount - 1
+		If planed_troop_counts(i) < 0 Then 
+			counts(i) = -planed_troop_counts(i) * total_population / GetTroopSpace(i)
+		Else 
+			counts(i) = planed_troop_counts(i)
+		End If
+		set_population = set_population + counts(i) * GetTroopSpace(i)
+	Next
+	Dim scale = 0
+	If set_population <> 0 Then 
+		scale = total_population / set_population
+	End If
+	For i = 0 To kTroopTypeCount - 1
+		counts(i) = Int(Round(counts(i) * scale))
+	Next
+End Function
+
+//Dim g_last_clear_memory_time = 0
+Function StartRobot(planed_troop_counts, overall_criteria, strategy)
+	Report "Robot Started"
+	If InAttackedPage() Then 
+		KeyPress "Back"
+		Delay 1000
+	End If
+	Delay 1000
+	While True
+		If not GoToClan() Then
+			Report "Failed to go to clan"
+			Exit Function
+		End If
+		ZoomOutToMax() 
+		Delay 300
+		CollectResourcesAndReport()
+		
+		Delay 300
+		Dim trained_troops_info
+		Dim first_train = True
+			
+		While True
+//			If Time() - g_last_clear_memory_time >= 60 * 60 Then 
+//				Sys.ClearMemory() 
+//				g_last_clear_memory_time = Time()
+//			End If
+			Dim ready_to_fight = False
+			For i = 1 To 10
+				If not GoToTroopConfigurationPage() Then 
+					Report "Failed to go to TroopConfigurationPage"
+					Exit Function 
+				End If
+				If g_reinforcement_request <> null and NeedReinforcement() and not NeedGemsToRequestReinforcement() Then 
+					TapItem "RequestReinforcement", 1000
+					TapItem "ReinforcementMessage", 500
+					InputText g_reinforcement_request
+					TapItem "SendReinforcementRequest", 300
+				End If
+				Dim total_count = DetectTotalTroopCount()
+				Dim force_to_train = false
+				g_max_population = total_count(1)
+				If total_count(0) >= total_count(1) * strategy["troop_trained_percentage"] or (total_count(1) - total_count(0) < 30 and Time() - g_last_train_troop_time < 120 and not IsTrainingTroop()) Then
+					Report "Troops are ready! " & CStr(total_count(0)) & "/" & CStr(total_count(1))
+					trained_troops_info = GetTrainedTroops()
+					If trained_troops_info = null Then 
+						Report "Failed to get trained troops"
+						Exit Function
+					End If
+ 					CheckTrainedTroop(trained_troops_info)
+					ready_to_fight = True
+				Else 
+					//Report "Troops not ready, " & CStr(total_count(0)) & "/" & CStr(total_count(1))
+					If not IsTrainingTroop() Then 
+						force_to_train = true
+					End If
+				End If
+				
+				If i = 1 Then 
+					Dim counts(30)
+					FillArray(counts, 30, 0)
+					CalculateProperTrainingTroopCounts(planed_troop_counts, g_max_population, counts)
+					
+					Report "training troops"
+					If first_train Then 
+						trained_troops_info = GetTrainedTroops()
+						If trained_troops_info = null Then 
+							Report "Failed to get trained troops"
+							Exit Function
+						End If
+//						Dim remaining_counts(20)
+//						CopyArray(counts, 20, remaining_counts)
+//						// Excluded trained troops
+//						Dim trained_troop_count = GetLength(trained_troops_info)
+//						For j = 0 To trained_troop_count - 1
+//							remaining_counts(trained_troops_info(j, 0)) = remaining_counts(trained_troops_info(j, 0)) - trained_troops_info(j, 1)
+//							If remaining_counts(trained_troops_info(j, 0)) < 0 Then 
+//								remaining_counts(trained_troops_info(j, 0)) = 0
+//							End If
+//						Next
+						
+						//Dim cancel_training = kCancelAllTrainingExceptFirst
+						//If g_last_train_troop_time = 0 Then 
+						//	cancel_training = kCancelAllTraining
+						//End If
+						If not TrainTroops(counts, kDontCancelTraining, force_to_train) Then 
+							Report "Failed to train troops"
+							Exit Function
+						End If
+						If Time() - g_last_train_troop_time < 5 Then
+							If not TrainTroops(counts, kDontCancelTraining, true) Then 
+								Report "Failed to train troops"
+								Exit Function
+							End If
+							If g_spell_lightning_at_dark_elixir_drill Then 
+								BrewSpell("LightningSpell", 5)
+							End If
+						End If
+						
+						LeftTroopConfigurationPage()
+						first_train = False
+					Else 
+						If not TrainTroops(counts, kDontCancelTraining, force_to_train) Then 
+							Report "Failed to train troops"
+							Exit Function
+						End If
+						If g_spell_lightning_at_dark_elixir_drill Then 
+							BrewSpell("LightningSpell", 5)
+						End If
+						LeftTroopConfigurationPage()
+					End If
+				End If
+				
+				If not GoToClan() Then 
+					Report "Failed to go back from TroopConfigurationPage"
+					Exit Function
+				End If
+				If ready_to_fight Then 
+					Exit For
+				End If
+				Delay 5000
+				WaitAndShowJoke(10000)
+				Dim span_minite = Int((Time() - g_bot_start_time) / 60)
+				ShowMsg(1, "运行时间"&CStr(Int(span_minite / 60))&"小时"&(span_minite Mod 60)&"分,进攻次数"&CStr(g_total_attack_count)&_
+						",共获得金"&CStr(g_total_robbed_gold)&"水"&CStr(g_total_robbed_elixir)&"黑"&CStr(g_total_robbed_dark_elixir))
+				Delay 5000
+			Next
+			
+			If ready_to_fight Then 
+				Exit While
+			End If
+
+			ZoomOutToMax()
+			CollectResourcesAndReport()
+			Delay 1000
+		Wend
+
+		If not GoToWar(overall_criteria, strategy, trained_troops_info) Then 
+			Exit Function
+		End If
+	Wend
+End Function
+
+//TracePrint InWarPreparationPage()
+Function ReportStrategy()
+	Dim log_str = "_NL_type: " & CStr(g_strategy["type"])&"_NL_deployment-interval:"&CStr(g_strategy["deployment_interval"])
+	log_str = log_str & "_NL_troop_trained_percentage: "&CStr(g_strategy["troop_trained_percentage"])
+	If g_strategy["type"] = 0 Then 
+		Dim l=GetLength(g_strategy["from_all_sides"])
+		Dim t=g_strategy["from_all_sides"]
+		log_str = log_str &"_NL_from-all-sides:{"
+		For i = 0 To l - 1
+			Dim deployment = t(i)
+			log_str = log_str &"_NL_ "&GetTroopName(deployment["troop_type"]) & ":" & CStr(deployment["troop_count"]) & ":" & CStr(deployment["delay"])
+		Next
+		log_str = log_str &"_NL_}"
+	ElseIf g_strategy["type"] = 1 Then 
+		Dim config=g_strategy["target_building"]
+		log_str = log_str & "_NL_target-building:{"
+		log_str = log_str & "_NL_ deploy_king_with" & CStr(config["deploy_king_with"])
+		log_str = log_str & "_NL_ deploy_queen_with" & CStr(config["deploy_queen_with"])
+		If config["townhall"] <> null Then 
+			log_str = log_str & "_NL_ "&"townhall:"&CStr(config["townhall"])
+			log_str = log_str & "_NL_ "&"townhall-max-distance:"&CStr(config["townhall_max_distance"])
+			log_str = log_str & "_NL_ "&"townhall-vacant-grids:"&CStr(config["townhall_vacant_grids"])
+			If config["townhall_resources"] <> null Then 
+				Dim townhall_requirements = config["townhall_resources"]
+				log_str = log_str &"_NL_ "&"townhall-resources:" & CStr(townhall_requirements(0)) & "," & CStr(townhall_requirements(1)) & "," & CStr(townhall_requirements(2))
+			End If
+			If config["townhall_trophy"] <> null Then 
+				log_str = log_str &"_NL_ "&"townhall-trophy:" & CStr(config["townhall_trophy"])
+			End If
+			If config["townhall_attack_others"] Then 
+				log_str = log_str &"_NL_ "&"townhall-attack-others:" & CStr(config["townhall_attack_others"])
+			End If
+		End If
+		If config["dark_elixir_drill"] <> null Then 
+			log_str = log_str & "_NL_ "&"dark-elixir-drill-max-distance:"&CStr(config["dark_elixir_drill_max_distance"])
+			log_str = log_str & "_NL_ "&"dark-elixir-drill-vacant-grids:"&CStr(config["dark_elixir_drill_vacant_grids"])
+			log_str = log_str & "_NL_ "&"dark-elixir-drill:" & CStr(config["dark_elixir_drill"])
+		End If
+		If config["gold_mine"] <> null Then 
+			log_str = log_str & "_NL_ "&"gold-mine-max-distance:"&CStr(config["gold_mine_max_distance"])
+			log_str = log_str & "_NL_ "&"gold-mine-vacant-grids:"&CStr(config["gold_mine_vacant_grids"])
+			log_str = log_str & "_NL_ "&"gold-mine:" & CStr(config["gold_mine"])
+		End If
+		If config["elixir_collector"] <> null Then 
+			log_str = log_str & "_NL_ "&"elixir-collector-max-distance:"&CStr(config["elixir_collector_max_distance"])
+			log_str = log_str & "_NL_ "&"elixir-collector-vacant-grids:"&CStr(config["elixir_collector_vacant_grids"])
+			log_str = log_str & "_NL_ "&"elixir-collector:" & CStr(config["elixir_collector"])
+		End If
+		Dim deployments = config["deployments"]
+		l = GetLength(deployments)
+		log_str = log_str&"_NL_ deployments:{"
+		For i = 0 To l - 1
+			deployment = deployments(i)
+			log_str = log_str &"_NL_  "&kTroopChineseName(deployment["troop_type"]) & " count:" & CStr(deployment["troop_count"]) & " wait:" & CStr(deployment["wait"]) &" deployment-type:" & CStr(deployment["deployment_type"])&" is-overall:"& CStr(deployment["is_overall"])
+		Next
+		log_str = log_str & "_NL_ }"
+		log_str = log_str &"_NL_}"
+	End If
+	Report(log_str)
+End Function
+
+Function LoadDefaultStrategy(strategy_index)
+	Dim strategy = null
+	If strategy_index = 0 Then // 弓法打鱼
+		strategy = {_
+			"type": 1, _
+			"deployment_interval": 100, _
+			"troop_trained_percentage": 0.8, _
+			"target_building" : {_
+				"townhall": true, _
+				"townhall_trophy": 1200, _
+				"townhall_max_distance": 4, _
+				"townhall_vacant_grids": 20, _
+				"townhall_resources": {10000, 10000}, _
+				"townhall_attack_others": true, _
+				"gold_mine": 10000, _
+				"gold_mine_max_distance": 5, _
+				"gold_mine_vacant_grids": 10, _
+				"elixir_collector": 10000, _
+				"elixir_collector_max_distance": 5, _
+				"elixir_collector_vacant_grids": 10, _
+				"dark_elixir_drill": 200, _
+				"dark_elixir_drill_max_distance": 5, _
+				"dark_elixir_drill_vacant_grids": 10, _
+				"deploy_king_with": 2, _
+				"deploy_queen_with": 2, _
+				"deployments" : { _
+					{"troop_type" : 0, "troop_count" : -0.5, "deployment_type" : 3, "wait" : null, "is_overall": true }, _
+					{"troop_type" : 1, "troop_count" : -0.5, "deployment_type" : 4, "wait" : null, "is_overall": true }, _
+					{"troop_type" : 0, "troop_count" : -1, "deployment_type" : 3, "wait" : null, "is_overall": true }, _
+					{"troop_type" : 1, "troop_count" : -1, "deployment_type" : 3, "wait" : null, "is_overall": true } _
+				}_
+			} _
+		}
+		g_troop_plan(0) = -0.3
+		g_troop_plan(1) = -0.7
+		g_only_attack_dead_fish = true
+		g_overall_criteria(0) = {"gold":100000, "elixir":100000, "dark_elixir":0, "gold_and_elixir":0, "estimated":true}
+	ElseIf strategy_index = 1 Then // 弓法巨打鱼
+		strategy = {_
+			"type": 1, _
+			"deployment_interval": 100, _
+			"troop_trained_percentage": 0.95, _
+			"target_building" : {_
+				"townhall": true, _
+				"townhall_trophy": 1200, _
+				"townhall_max_distance": 4, _
+				"townhall_vacant_grids": 20, _
+				"townhall_resources": {10000,10000,200}, _
+				"townhall_attack_others": true, _
+				"gold_mine": 10000, _
+				"gold_mine_max_distance": 6, _
+				"gold_mine_vacant_grids": 10, _
+				"elixir_collector": 10000, _
+				"elixir_collector_max_distance": 6, _
+				"elixir_collector_vacant_grids": 10, _
+				"dark_elixir_drill": 200, _
+				"dark_elixir_drill_max_distance": 7, _
+				"dark_elixir_drill_vacant_grids": 15, _
+				"deploy_king_with": 1, _
+				"deploy_queen_with": 1, _
+				"deployments" : { _
+					{"troop_type" : 0, "troop_count" : -1, "deployment_type" : 4, "wait" : null, "is_overall": true }, _
+					{"troop_type" : 2, "troop_count" : 1, "deployment_type" : 2, "wait" : null, "is_overall": false }, _
+					{"troop_type" : 1, "troop_count" : -0.5, "deployment_type" : 3, "wait" : null, "is_overall": true }, _
+					{"troop_type" : 2, "troop_count" : -1, "deployment_type" : 4, "wait" : null, "is_overall": true }, _
+					{"troop_type" : 1, "troop_count" : -1, "deployment_type" : 1, "wait" : null, "is_overall": true } _
+				}_
+			} _
+		}
+		g_troop_plan(0) = 20
+		g_troop_plan(1) = 150
+		g_troop_plan(2) = 10
+		g_only_attack_dead_fish = true
+		g_overall_criteria(0) = {"gold":120000, "elixir":120000, "dark_elixir":0, "gold_and_elixir":0, "estimated":true}
+		g_overall_criteria(1) = {"gold":0, "elixir":0, "dark_elixir":1000, "gold_and_elixir":0, "estimated":true}
+	ElseIf strategy_index = 2 Then // 全力打黑
+		strategy = {_
+			"type": 1, _
+			"deployment_interval": 200, _
+			"troop_trained_percentage": 0.7, _
+			"target_building" : {_
+				"townhall": true, _
+				"townhall_trophy": 1200, _
+				"townhall_max_distance": /*4*/5, _
+				"townhall_vacant_grids": 20, _
+				"townhall_resources": {20000,20000,200}, _
+				"townhall_attack_others": true, _
+				"elixir_collector": 25000, _
+				"elixir_collector_max_distance": 5, _
+				"elixir_collector_vacant_grids": 10, _
+				"dark_elixir_drill": 180, _
+				"dark_elixir_drill_max_distance": 7, _
+				"dark_elixir_drill_vacant_grids": /*15*/10, _
+				"deploy_king_with": 1, _
+				"deploy_queen_with": 1, _
+				"deployments" : { _
+					{"troop_type" : 1, "troop_count" : 10, "deployment_type" : 4, "wait" : 45, "is_overall": false }, _
+					{"troop_type" : 0, "troop_count" : 10, "deployment_type" : 3, "wait" : null, "is_overall": false }, _
+					{"troop_type" : 2, "troop_count" : 2, "deployment_type" : 2, "wait" : null, "is_overall": false }, _
+					{"troop_type" : 1, "troop_count" : 15, "deployment_type" : 2, "wait" : null, "is_overall": false }, _
+					{"troop_type" : 1, "troop_count" : 15, "deployment_type" : 3, "wait" : null, "is_overall": false } _
+				}_
+			} _
+		}
+		g_troop_plan(0) = 10
+		g_troop_plan(1) = 50
+		g_troop_plan(2) = 2
+		g_only_attack_dead_fish = true
+		g_overall_criteria(0) = {"gold":0, "elixir":0, "dark_elixir":500, "gold_and_elixir":0, "estimated":true}
+	End If
+	LoadDefaultStrategy = strategy
+End Function
+	
+Function TestStrategy()
+	g_strategy = {_
+		"type": 1, _
+		"deployment_interval": 100, _
+		"troop_trained_percentage": 0.95, _
+		"from_all_sides": { _
+			{"troop_type": 2, "troop_count": -1, "delay": 1000}, _
+			{"troop_type": 1, "troop_count": -0.5, "delay": 2000}, _
+			{"troop_type": 0, "troop_count": 20, "delay": 1000} _
+		},_
+		"target_building" : {_
+			"townhall": true, _
+			"townhall_trophy": 1200, _
+			"townhall_max_distance": 4, _
+			"townhall_vacant_grids": 20, _
+			"townhall_resources": {10000,10000,200}, _
+			"townhall_attack_others": true, _
+			"gold_mine": 0, _
+			"gold_mine_max_distance": 6, _
+			"gold_mine_vacant_grids": 10, _
+			"elixir_collector": 0, _
+			"elixir_collector_max_distance": 6, _
+			"elixir_collector_vacant_grids": 10, _
+			"dark_elixir_drill": 0, _
+			"dark_elixir_drill_max_distance": 7, _
+			"dark_elixir_drill_vacant_grids": 15, _
+			"deploy_king_with": 1, _
+			"deploy_queen_with": 1, _
+			"deployments" : { _
+				{"troop_type" : 0, "troop_count" : -1, "deployment_type" : 4, "wait" : null, "is_overall": true }, _
+				{"troop_type" : 2, "troop_count" : 1, "deployment_type" : 2, "wait" : null, "is_overall": false }, _
+				{"troop_type" : 1, "troop_count" : -0.5, "deployment_type" : 3, "wait" : null, "is_overall": true }, _
+				{"troop_type" : 2, "troop_count" : -1, "deployment_type" : 4, "wait" : null, "is_overall": true }, _
+				{"troop_type" : 1, "troop_count" : -1, "deployment_type" : 1, "wait" : null, "is_overall": true } _
+			}_
+		} _
+	}
+End Function
+
+Function AnotherDeviceIsLoggingIn()
+	Dim intX,intY
+	FindMultiColor 270,143,457,512,"282828-101010","-1|13|282828-101010,-5|11|F3F3F3-101010,4|12|F3F3F3-101010,-1|23|F3F3F3-101010,-12|11|F3F3F3-101010,-15|6|282828-101010,-18|17|282828-101010,-19|7|F3F3F3-101010,-20|25|F3F3F3-101010",0,0.95,intX,intY
+	AnotherDeviceIsLoggingIn = (intX > -1 And intY > -1)
+	//(CmpColorEx("467|266|282828-101010,346|264|282828-101010,408|289|E5B533-101010,408|610|E5B533-101010,409|620|E5B533-101010,362|304|F3F3F3-101010,370|297|F3F3F3-101010,378|316|F3F3F3-101010,350|294|F3F3F3-101010",0.9) = 1)
+End Function
+
+Function Test()
+	FillArray(g_troop_plan, 20, 0)
+	g_troop_plan(0) = 50
+	g_troop_plan(1) = 150
+	g_troop_plan(2) = 16
+	//g_troop_plan(2) = 20
+	g_overall_criteria(0) = {"gold":0, "elixir":0, "dark_elixir":99990, "gold_and_elixir":0, "estimated":false}
+	g_only_attack_dead_fish = false
+	TestStrategy()
+	ReportStrategy()
+
+	//ShowCriteriaConfig()
+	//SimpleFromAllSideStrategy()
+	//SyncTroopPlan 
+	// overall_criteria, strategy, trained_troop_infos)
+	//GoToWar(g_overall_criteria, g_strategy, {{0, 50, 0}, {1, 150, 1}, {2, 11, 2}})
+	StartRobot(g_troop_plan, g_overall_criteria, g_strategy)
+	RestartApp(true)
+	While True
+		StartRobot(g_troop_plan, g_overall_criteria, g_strategy)
+		RestartApp(false)
+	Wend
+End Function
+
+Function WaitForAnotherDevice()
+	LogAndShow(3, "另一个设备登录")
+	For i=0 to g_wait_for_another_device
+		ShowMsg(1, "等待另一个设备退出," & CStr(g_wait_for_another_device - i) &"秒")
+		Delay 1000
+	Next
+End Function
+
+Function Run()
+	If DEVICE.GetDPI() <> 320 or abs(GetScreenX() - 720) > 80 or abs(GetScreenY() - 1280) > 100 Then 
+		For 5
+			ShowMsg 1, "目前仅支持 720x1280 DPI320 设备，建议使用电脑上的安卓模拟器"
+			Delay 1000
+		Next
+		Exit Function
+	End If
+	
+	Log.Open 
+	Report "Write log to " & GetTempDir()
+	If not StartApp() Then 
+		Exit Function
+	End If
+	
+	LoadSettingFromDefaultConfigPage()
+	ReportStrategy()
+	
+	WaitForLoading()
+	
+	StartRobot(g_troop_plan, g_overall_criteria, g_strategy)
+	If AnotherDeviceIsLoggingIn() Then 
+		WaitForAnotherDevice()
+	End If
+	RestartApp (true)
+	
+	While True
+		StartRobot(g_troop_plan, g_overall_criteria, g_strategy)
+		If AnotherDeviceIsLoggingIn() Then 
+			WaitForAnotherDevice()
+		End If
+		RestartApp(false)
+	Wend
+End Function
+
+/********************************************************************/
+/****************************  UI        ****************************/
+/********************************************************************/
+Dim g_overall_criteria(20)
+Dim g_troop_plan(30)
+FillArray(g_troop_plan, 30, 0)
+Dim g_strategy = {"type": -1}
+Dim g_only_attack_dead_fish = true
+Dim g_reinforcement_request
+Dim g_spell_lightning_at_dark_elixir_drill = false
+Dim g_spell_lightning_at_dark_elixir_drill_only_when_attack = false
+Dim g_spell_lightning_at_dark_elixir_drill_if_dark_elixir = 0
+//Dim g_troop_trained_percentage = 1
+Dim g_wait_for_another_device = 60
+Dim g_deploy_king = false
+Dim g_deploy_queen = false
+
+//Function GetTextEditValueInt(name)
+//	Dim data = UI.GetValue(name)
+//	GetTextEditValueInt = Int(data[name])
+//End Function
+//Function GetTextEditValue(name)
+//	Dim data = UI.GetValue(name)
+//	GetTextEditValue = data[name]
+//End Function
+//
+//Function SyncCriteria()
+//	Dim overall_criteria_count = GetLength(g_overall_criteria)
+//	For i = 0 To overall_criteria_count - 1
+//		g_overall_criteria(i) = {_
+//			GetTextEditValueInt("gold_"&CStr(i)),_
+//			GetTextEditValueInt("elixir_"&CStr(i)),_
+//			GetTextEditValueInt("dark_elixir_"&CStr(i)), _
+//			GetTextEditValueInt("gold_and_elixir_"&CStr(i)),_
+//			GetTextEditValue("estimated_"&CStr(i))_
+//		}
+//	Next
+//	ShowTroopPlan
+//End Function
+//
+//Function ShowCriteriaConfig()
+//    //UI.Close "搜鱼条件"
+//	UI.NewLayout "搜鱼条件"
+//	Dim criteria_count = GetLength(g_overall_criteria)
+//	For i = 0 To 5
+//		Dim criteria_item = g_overall_criteria(i)
+//		Dim row_name = "criteria_"&CStr(i)
+//		UI.NewRow "搜鱼条件", row_name
+//		UI.AddTextView row_name, "", "金"
+//		UI.AddEditText row_name, "gold_"&CStr(i), CStr(criteria_item(0)), 150, 40
+//		UI.AddTextView row_name, "", "水"
+//		UI.AddEditText row_name, "elixir_"&CStr(i), CStr(criteria_item(1)), 150, 40
+//		UI.AddTextView row_name, "", "黑"
+//		UI.AddEditText row_name, "dark_elixir_"&CStr(i), CStr(criteria_item(2)), 150, 40
+//		row_name = "criteria_" & CStr(i)&"_2"
+//		UI.NewRow "搜鱼条件", row_name	
+//		UI.AddTextView row_name, "", "金+水"
+//		UI.AddEditText row_name, "gold_and_elixir_"&CStr(i), CStr(criteria_item(3)), 150, 40
+//		UI.AddTextView row_name, "", "       "
+//		UI.AddCheckBox row_name, "estimated_"&CStr(i), "采集器",criteria_item(4)
+//		UI.AddTextView row_name, "", "  "
+//		//UI.AddButton row_name, "delete_"&CStr(i), "删除", 80, 50
+//		UI.NewRow "搜鱼条件", ""
+//		ui.AddLine "搜鱼条件", ""
+//	Next
+//	UI.SetOnClose "搜鱼条件", SyncCriteria
+//	UI.Show "搜鱼条件"
+//End Function
+//
+//Function SyncTroopPlan()
+//	Dim troop_type_count =kTroopTypeCount
+//	For i = 0 To troop_type_count - 1
+//		g_troop_plan(i) = GetTextEditValueInt("troop_" & CStr(i))
+//	Next
+//End Function
+//
+//Function SimpleFromAllSideStrategy()
+//	g_deploy_strategy(0) = {2, 1, 0}
+//	g_deploy_strategy(1) = {0, 1, 0}
+//	g_deploy_strategy(2) = {1, 1, 0}
+//End Function
+//
+//Function ShowTroopPlan()
+//	UI.NewLayout "兵种配置"
+//	Dim troop_type_count =kTroopTypeCount
+//	For i = 0 To troop_type_count - 1
+//		If i Mod 3 = 0 Then 
+//			UI.NewRow "兵种配置", ""
+//			UI.AddLine "兵种配置", ""
+//			UI.NewRow "兵种配置", ""
+//		End If
+//		UI.AddTextView "兵种配置", "", kTroopChineseName(i)
+//		UI.AddEditText "兵种配置", "troop_"&CStr(i), CStr(g_troop_plan(i)), 100, 40
+//	Next
+//	UI.SetOnClose "兵种配置", SyncTroopPlan
+//	UI.Show "兵种配置"
+//End Function
+
+Function GetNumberOrPercentageValue(name)
+	Dim str = ReadUIConfig(name, "0")
+	Dim l = Len(str)
+	If l > 0 and Right(str, 1) = "%" Then 
+		GetNumberOrPercentageValue = -Int(Left(str, l - 1)) / 100
+	Else 
+		GetNumberOrPercentageValue = Int(str)
+	End If
+End Function
+
+Function LoadSettingFromDefaultConfigPage()
+	If ReadUIConfig("request_reinforcement", false) Then 
+		g_reinforcement_request = ReadUIConfig("request_reinforcement_message", "")
+	Else 
+		g_reinforcement_request = null
+	End If
+	Dim log_str = "_NL_reinforcement-request: "&CStr(g_reinforcement_request)
+
+	g_wait_for_another_device = Int(ReadUIConfig("wait_for_another_device", 60))
+	log_str = log_str & "_NL_wait-for-another-device: "&CStr(g_wait_for_another_device)
+		
+	g_spell_lightning_at_dark_elixir_drill = ReadUIConfig("spell_lightning_at_dark_elixir_drill", false)
+	g_spell_lightning_at_dark_elixir_drill_only_when_attack = ReadUIConfig("spell_lightning_at_dark_elixir_drill_only_when_attack", false)
+	g_spell_lightning_at_dark_elixir_drill_if_dark_elixir = Int(ReadUIConfig("spell_lightning_at_dark_elixir_drill_if_dark_elixir", 0))
+	// TracePrint g_spell_lightning_at_dark_elixir_drill, g_spell_lightning_at_dark_elixir_drill_only_when_attack, g_spell_lightning_at_dark_elixir_drill_if_dark_elixir
+	log_str = log_str & "_NL_lightning-spell:" & CStr(g_spell_lightning_at_dark_elixir_drill) & ", only-after-war:" & CStr(g_spell_lightning_at_dark_elixir_drill_only_when_attack) & ", threshold:" & CStr(g_spell_lightning_at_dark_elixir_drill_if_dark_elixir)
+	
+	//Dim troop_trained_percentages = {0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 0.95, 1}
+	//g_troop_trained_percentage = troop_trained_percentages(Int(ReadUIConfig("troop_trained_percentage", 7)))
+	//log_str = log_str & "_NL_troop_trained_percentage "&CStr(g_troop_trained_percentage)
+	
+	g_deploy_king = ReadUIConfig("deploy_king", false)
+	g_deploy_queen = ReadUIConfig("deploy_queen", false)
+	log_str = log_str & "_NL_deploy-king: "&CStr(g_deploy_king) & "_NL_deploy-queen: "&CStr(g_deploy_queen)
+	
+		
+	//Dim kAttackConfig = {"弓蛮打鱼（造兵便宜）", "弓蛮巨打鱼（金水黑均衡）", "全力抢黑（打黑快）", "自定义"}
+	Dim overall_config = Int(ReadUIConfig("overall_config", 1))
+	If overall_config <> 3 Then 
+		g_strategy = LoadDefaultStrategy(overall_config)
+	End If
+	
+	If not ReadUIConfig("auto_calculate_training_troop_counts", false) Then 
+		FillArray(g_troop_plan, kTroopTypeCount, 0)
+		For i = 0 To 6
+			Dim troop_type = ReadUIConfig("troop_"&CStr(i), 0) - 1
+			//TracePrint troop_type
+			If troop_type > -1 Then 
+				g_troop_plan(troop_type) = GetNumberOrPercentageValue("troop_count_"&CStr(i))
+			End If
+		Next
+	End If
+	
+	If overall_config = 3 Then 
+		g_only_attack_dead_fish = ReadUIConfig("only_attack_dead_fish", true)
+		Dim criteria_count = 0
+		For i = 0 To 3
+			Dim criteria = {_
+				"gold": INT(ReadUIConfig("gold_"&CStr(i), "0")), _
+				"elixir": INT(ReadUIConfig("elixir_"&CStr(i), "0")), _
+				"dark_elixir": INT(ReadUIConfig("dark_elixir_"&CStr(i), "0")), _
+				"gold_and_elixir": INT(ReadUIConfig("gold_and_elixir_"&CStr(i), "0")), _
+				"estimated": ReadUIConfig("estimated_"&CStr(i), false) _
+			}
+			If criteria["gold"] > 0 or criteria["elixir"] > 0 or criteria["dark_elixir"] > 0 or _
+					criteria["gold_and_elixir"] > 0
+				g_overall_criteria(criteria_count) = criteria
+				criteria_count = criteria_count + 1
+			End If
+		Next
+		
+		g_strategy = { _
+			"type": ReadUIConfig("strategy", 0), _
+			"deployment_interval": Int(ReadUIConfig("deployment_interval", 200)) _
+		}
+		Dim troop_trained_percentages = {0.1, 0.3, 0.5, 0.7, 0.8, 0.9, 0.95, 1}
+		g_strategy["troop_trained_percentage"] = troop_trained_percentages(Int(ReadUIConfig("troop_trained_percentage", 7)))
+		// log_str = log_str & "_NL_troop_trained_percentage " & CStr(g_troop_trained_percentage)
+		
+		If g_strategy["type"] = 0 Then 
+			Dim from_all_side_configs(4)
+			Dim from_all_side_config_count = 0
+			For i = 0 To 4
+				troop_type = ReadUIConfig("from_all_sides_troop_"&CStr(i), 0) - 1
+				If troop_type >= 0 Then 
+					Dim troop_deployment = {"troop_type" : troop_type}
+					troop_deployment["troop_count"] = GetNumberOrPercentageValue("from_all_sides_troop_count_" & CStr(i))
+					troop_deployment["delay"] = Int(ReadUIConfig("from_all_sides_wait_" & CStr(i), "0"))
+					from_all_side_configs(from_all_side_config_count) = troop_deployment
+					from_all_side_config_count = from_all_side_config_count + 1
+				End If
+			Next
+			g_strategy["from_all_sides"] = from_all_side_configs
+		ElseIf g_strategy["type"] = 1 Then
+			Dim config = {"enable" : true}
+			config["deploy_king_with"] = Int(ReadUIConfig("target_building_deploy_king_with", 0))
+			config["deploy_queen_with"] = Int(ReadUIConfig("target_building_deploy_queen_with", 0))
+			//config["max_distance"] = Int(ReadUIConfig("target_building_max_distance", 5)) + 2
+			//config["vacant_grids"] = Int(ReadUIConfig("target_building_vacant_grids", 10))
+			If ReadUIConfig("target_building_attack_townhall", false) Then 
+				config["townhall"] = true
+				If ReadUIConfig("target_building_attack_townhall_if_resources", false) Then 
+					config["townhall_resources"] = {_
+						Int(ReadUIConfig("target_building_attack_townhall_if_gold", "0")),_
+						Int(ReadUIConfig("target_building_attack_townhall_if_elixir", "0")),_
+						Int(ReadUIConfig("target_building_attack_townhall_if_dark_elixir", 0))_
+					}
+				Else 
+					config["townhall_resources"] = null
+				End If
+				
+				If ReadUIConfig("target_building_attack_townhall_if_trophy", false) Then 
+					config["townhall_trophy"] = Int (ReadUIConfig("target_building_attack_townhall_if_trophy_count", "0"))
+				Else 
+					config["townhall_trophy"] = null
+				End If
+				
+				config["townhall_attack_others"] = ReadUIConfig("target_building_attack_if_attack_others", false)
+				
+				config["townhall_max_distance"] = Int(ReadUIConfig("target_building_attack_townhall_max_distance", 5))
+				config["townhall_vacant_grids"] = Int(ReadUIConfig("target_building_attack_townhall_vacant_grids", 15))
+			Else 
+				config["townhall"] = null
+			End If
+			
+			If ReadUIConfig("target_building_attack_elixir_collector", false) Then 
+				config["elixir_collector"] = Int(ReadUIConfig("target_building_attack_elixir_collector_if_elixir", 0))
+				config["elixir_collector_max_distance"] = Int(ReadUIConfig("target_building_attack_elixir_collector_max_distance", 5))
+				config["elixir_collector_vacant_grids"] = Int(ReadUIConfig("target_building_attack_elixir_collector_vacant_grids", 15))
+			Else 
+				config["elixir_collector"] = null
+			End If	
+			
+			If ReadUIConfig("target_building_attack_gold_mine", false) Then 
+				config["gold_mine"] = Int(ReadUIConfig("target_building_attack_gold_mine_if_gold", 0))
+				config["gold_mine_max_distance"] = Int(ReadUIConfig("target_building_attack_gold_mine_max_distance", 5))
+				config["gold_mine_vacant_grids"] = Int(ReadUIConfig("target_building_attack_gold_mine_vacant_grids", 15))
+			Else 
+				config["gold_mine"] = null
+			End If
+			
+			If ReadUIConfig("target_building_attack_dark_elixir_drill", false) Then 
+				config["dark_elixir_drill"] = Int(ReadUIConfig("target_building_attack_dark_elixir_drill_if_dark_elixir", 0))
+				config["dark_elixir_drill_max_distance"] = Int(ReadUIConfig("target_building_attack_dark_elixir_drill_max_distance", 5))
+				config["dark_elixir_drill_vacant_grids"] = Int(ReadUIConfig("target_building_attack_dark_elixir_drill_vacant_grids", 15))
+			Else 
+				config["dark_elixir_drill"] = null
+			End If
+			
+			Dim troop_deployments(4)
+			Dim troop_deployment_count = 0
+			For i = 0 To 8
+				troop_type = ReadUIConfig("target_building_troop_"&CStr(i), 0) - 1
+				If troop_type >= 0 Then 
+					troop_deployment = {"troop_type" : troop_type}
+					troop_deployment["deployment_type"] = ReadUIConfig("target_building_troop_deployment_type_"&CStr(i), -1)
+					troop_deployment["troop_count"] = GetNumberOrPercentageValue("target_building_troop_count_" & CStr(i))
+					troop_deployment["is_overall"] = ReadUIConfig("target_building_is_overall_"&CStr(i), false)
+					If ReadUIConfig("target_building_wait_" & CStr(i), false) Then
+						troop_deployment["wait"] = Int(ReadUIConfig("target_building_waiting_seconds_" & CStr(i), "0"))
+					Else 
+						troop_deployment["wait"] = null
+					End If
+					troop_deployments(troop_deployment_count) = troop_deployment
+					troop_deployment_count = troop_deployment_count + 1
+				End If
+			Next
+			config["deployments"] = troop_deployments
+			g_strategy["target_building"] = config
+		End If
+	End If
+	
+	For i = 0 To GetLength(g_troop_plan) - 1
+		If g_troop_plan(i) > 0 Then 
+			log_str = log_str & "_NL_Train "&kTroopChineseName(i)&" "&CStr(g_troop_plan(i))
+		End If
+	Next
+	
+	log_str = log_str & "_NL_only-attack-dead-fish:" & CStr(g_only_attack_dead_fish)
+	For i = 0 To GetLength(g_overall_criteria) - 1
+		criteria = g_overall_criteria(i)
+		log_str = log_str & "_NL_criteria: gold "&CStr(criteria["gold"])&",elixir "&CStr(criteria["elixir"])&",dark_elixir "&CStr(criteria["dark_elixir"])&",gold_and_elixir "&CStr(criteria["gold_and_elixir"])&",estimated "&CStr(criteria["estimated"])
+	Next
+
+	Report log_str
+	
+	If g_strategy["type"] = 0 Then 
+		g_interesting_building_types = FindInterestingBuildingTypes(null, g_overall_criteria)
+	ElseIf g_strategy["type"] = 1 Then 
+		g_interesting_building_types = FindInterestingBuildingTypes(g_strategy["target_building"], g_overall_criteria)
+	End If
+	Dim interesting_building_type_str = ""
+	For i = 0 To GetLength(g_interesting_building_types) - 1
+		interesting_building_type_str = interesting_building_type_str & " " & CStr(g_interesting_building_types(i))
+	Next
+	TracePrint "interesting_building_type:", interesting_building_type_str
+End Function
+
+//LoadSettingFromDefaultConfigPage 
+//Delay 3000
+//While True
+//	TracePrint "====="
+//
+//	Dim building_types = {4}
+//	MoveToMapTop()
+//	TracePrint DetectZoomRatio()
+//	Dim buildings = FindBuildings(building_types)
+//	For i = 0 To GetLength(buildings) - 1
+//		Dim building = buildings(i)
+//		TracePrint building["type"], building["level"], building["x"], building["y"]
+//	Next
+//	Exit While
+//	Delay 5000
+//Wend
+
+ //Dim results = EstimateRobableResourcesFromCollectors(FindCollectorAndMine())
+ //TracePrint "gold", results(0), "elixir", results(1), "dark_elixir", results(2)
+
+//KillApp kRunningApp
+//TracePrint InWarPreparationPage()
+
+//Dim t= DetectTotalTroopCount()
+//TracePrint t(0), t(1)
+//TracePrint InWarPreparationPage()
+//TracePrint InWarResultPage()
+//Test()
+
+//LoadSettingFromDefaultConfigPage()
+//ReportStrategy()
+//TracePrint AnotherDeviceIsLoggingIn()
+
+//CancelAllTroopTrainingExceptFirst()
+
+//Run()
+
+//g_deploy_queen = true
+//g_queen_card_coordinate = FindQueenCard()
+//TracePrint g_queen_card_coordinate(0), g_queen_card_coordinate(1)
+//Dim tapped = false
+//While True
+//	If QueenIsHurt() Then 
+//		TracePrint "queen hurts"
+//	End If
+//	Delay 1000
+//Wend
+
+//TracePrint NeedReinforcement()
+//TracePrint NeedGemsToRequestReinforcement()
+//ShowUI 
+
+//ShowCriteriaConfig 
+//ShowTroopPlan
+//TracePrint InTroopTrainingPage()
+
+//GetTrainedTroops()
+//
+//Dim deploy_strategy = {{0, 1, 0}, {1, 1, 0}, {4, 1, 0}, {-1}}
+//TracePrint FromAllSidesStrategy(deploy_strategy, trained_troop_info, 20)
+
+//RecognizRobbedAmount 
+//Delay 5000
+
+//Dim criteria = {{150000, 150000, 0, 0}}
+//TracePrint SearchOpponent(criteria)
+//ReportProfile()
+//Call shanhai.ControlWifi(false)
+
+//Delay 4000
+
+Function Challenge()
+	Delay 4000
+	//g_strategy = LoadDefaultStrategy(1)
+	TestStrategy 
+	Dim trained_troop_infos = {{0, 20, 0}, {1, 150, 1}, {2, 10, 2}}
+	Dim own_resources = {100, 100, 0, 1000}
+	Dim start_time = Time()
+	TracePrint DetectZoomRatio()
+	Dim building_infos = FindAllBuildings()
+	//FindTownHallAtBottomLeft(building_infos)
+	Dim total_resources = RecognizeRobableAmount()
+	Dim estimated_resources = EstimateRobableResourcesFromBuildings(building_infos)
+	Dim map = DetectVacantGrids(true)
+	MarkAndUpdateBuildings map, building_infos
+	FindAndMarkTargetBuilding building_infos, map, g_strategy["target_building"], false, own_resources, total_resources, estimated_resources
+	TracePrint "total detection time:", Time() - start_time
+	PrintMap(map, building_infos)
+	Exit Function
+	
+
+	g_deploy_queen = true
+	g_spell_lightning_at_dark_elixir_drill = true
+	g_spell_lightning_at_dark_elixir_drill_only_when_attack = true
+	g_spell_lightning_at_dark_elixir_drill_if_dark_elixir = 0
+	
+	g_queen_card_coordinate = FindQueenCard()
+	
+	//TargetBuildingStrategy(map, building_infos, own_resources, total_resources, estimated_resources, g_strategy["target_building"], trained_troop_infos, g_strategy["deployment_interval"])
+	FromAllSidesStrategy(g_strategy["from_all_sides"], trained_troop_infos, 100)
+	WaitAndBurstHeros (60)
+	
+	Dim lightning_spell_card_coordinate = FindLightningSpellCard()
+	If lightning_spell_card_coordinate <> null Then 
+		LogAndShow 3, "Check for lightning"
+		MoveToMapTop()
+		building_infos = FindBuildings({3})  // always need to update buildings
+		EstimateRobableResourcesFromBuildings(building_infos)
+		SpellLightningAtDarkElixir(building_infos, lightning_spell_card_coordinate)
+	End If	
+End Function
+
+Function DragonChallenge()
+	TracePrint DetectZoomRatio()
+	Dim interesting_building_types = {0, 4}
+	Dim building_infos = FindBuildings(interesting_building_types)
+	Dim townhall = FindTownhall(building_infos)
+	If townhall = null Then 
+		FindTownHallAtBottomLeft (building_infos)
+		townhall = FindTownhall(building_infos)
+	End If
+	Dim map = DetectVacantGrids(true)
+	MarkAndUpdateBuildings map, building_infos
+	PrintMap(map, building_infos)
+	Dim grids = GetClosestVacantGrids(map, townhall["row"], townhall["column"], 4, 200, 24)
+	Dim start_grid = grids(0)
+	Dim grid_count = GetLength(grids)
+	Dim selected_grids(20)
+	selected_grids(0) = start_grid
+	Dim selected_grid_count = 1
+	For i = 1 To grid_count - 1
+		Dim grid = grids(i)
+		Dim distance_to_start = MDistance(grid, start_grid)
+		If distance_to_start >= 4 and distance_to_start <= 30 Then 
+			Dim passed = true
+			For j = 1 To selected_grid_count - 1
+				Dim previous_grid = selected_grids(j)
+				If MDistance(grid, previous_grid) < 4 Then 
+					passed = false
+					Exit For
+				End If
+			Next
+			If passed Then 
+				selected_grids(selected_grid_count) = grid
+				selected_grid_count = selected_grid_count + 1
+				If selected_grid_count > 12 Then 
+					Exit For
+				End If
+			End If
+		End If
+	Next
+	
+	Dim dragon_type = GetTroopType("Dragon")
+	Dim trained_troop_infos = {{dragon_type, 10, 0}}
+	Dim troop_cards_start = FindTroopCardsStart()
+	SelectTroop(troop_cards_start, 0)
+	Dim deployment_interval = 300
+	
+	Dim deployed_points = 0
+	Dim at_top = true
+	For k = 0 To 1
+		If k = 0 Then 
+			MoveToMapTop
+		Else 
+		 	MoveToMapBottom
+		End if
+		For i = 0 To selected_grid_count - 1
+			Dim position = selected_grids(i)
+			Dim row_index = position(0)
+			Dim column_index = position(1)
+			If (k = 0 and column_index >= row_index + 5) or (k = 1 and column_index < row_index + 5) Then 
+				If row_index = 0 Then 
+					row_index = -1
+				End If
+				If row_index = 45 Then 
+					row_index = 46
+				End If
+				If column_index = 0 Then 
+					column_index = -1
+				End If
+				If column_index = 45 Then 
+					column_index = 46
+				End If
+				Dim coordinate = GetGridCenterCoordinate(row_index, column_index)
+				TapOnRealScreen(Int(coordinate(0) + (Rnd() - 0.5) * kHalfGridWidth), Int(coordinate(1) + (Rnd() - 0.5) * kHalfGridHeight), at_top)
+				deployed_points = deployed_points + 1
+				Delay Int(deployment_interval / 2 + Rnd() * deployment_interval)
+			End If
+		Next
+		If deployed_points >= selected_grid_count Then 
+			Exit For
+		End If
+		at_top = false
+	Next
+End Function
+DragonChallenge 
+
+//TracePrint AnotherDeviceIsLoggingIn()
+//TracePrint HasNextOpponentButton()
+//While true
+//	MoveToMapTop()
+//	Dim building_infos = FindAllBuildings()
+//	url.get("http://10.0.2.2:80/info?", 1)
+//	//MoveToMapBottom()
+//	//KeepCapture 
+//	//traceprint "memory:"&ShanHai.GetRAM()
+//Wend
+// Challenge()
+//Delay 4000
+//Challenge()
+//MoveToMapTop()
+//CancellAllTroopTraining()
+//KeyPress "Back"
+//TracePrint NeedReinforcement()
+//TracePrint NeedGemsToRequestReinforcement()
+//Run() 
+
+//Dim results = RecognizeRobableAmount()
+//TracePrint(results(0), results(1), results(2))
+
+//Dim total = DetectTotalTroopCount()
+//TracePrint total(0), total(1)
+//Dim t = GetTrainedTroops()
+//Dim l = GetLength(t)
+//For i = 0 To l - 1
+//	Dim x = t(i)
+//	TracePrint kTroopChineseName(x(0)), x(1), x(2)
+//Next
+//While True
+//	Dim total = DetectTotalTroopCount()
+//	TracePrint total(0), total(1)
+//	Dim t = GetTrainedTroops()
+//	Dim l = GetLength(t)
+//	For i = 0 To l - 1
+//		Dim x = t(i)
+//		TracePrint kTroopChineseName(x(0)), x(1), x(2)
+//	Next
+//	Delay 2000
+//Wend
+
+//Dim counts(30)
+//FillArray(counts, 30, 0)
+//counts(0) = 19
+//counts(1) = 19
+//counts(2) = 10
+//counts(11) = 1
+//CancelAllTroopTrainingExceptFirst()
+//TrainTroops(counts, kDontCancelTraining, true)
+//BrewSpell("LightningSpell", 5)
+//Test()
+
+
+//Dim king_bursted = false
+//While True
+//	If InWarResultPage() Then 
+//		Report "War end"
+//		TapItem "ReturnAfterWarEnd", 1000
+//		Exit While
+//	End If
+//	Report "War is ongoing"
+//	For 5
+//		If not king_bursted and KingIsHurt() Then 
+//			Tap g_king_card_coordinate(0), g_king_card_coordinate(1)
+//			king_bursted = true
+//		End If
+//		Delay 2000
+//	Next
+//Wend
+
+//Dim r = RecognizeWarResultAmount()
+//TracePrint r(0), r(1), r(2), r(3)
+
+//Dim opponent_resources = RecognizeOwnAmount()
+//TracePrint opponent_resources(0), opponent_resources(1), opponent_resources(2)
+//GoToWar({{0, 0, 300, 0, false}}, {999999, 999999, 100}, "TargetBuilding", null, {{0, 50, 0}, {1, 150, 1}}, 200)
+
+//Test()
+//TracePrint HasZoomedOutToMaxInWar()
+//Dim resource_amount = EstimateRobableResourcesFromCollectors(collectors)
+//TracePrint resource_amount(0), resource_amount(1)
+//RecognizeRobableAmount()
+//RecognizeOwnAmount 
+//For 1000
+//	ListAllTroops 
+//	Delay 3000
+//Next
+//CollectResources()
+//CancellAllTroopTraining 
+//ListAllTroops
