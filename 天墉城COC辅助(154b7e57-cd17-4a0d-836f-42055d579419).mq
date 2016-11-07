@@ -355,16 +355,6 @@ Dim kObjectPixels = { _
 
 Dim kObjecteCount = Len(kObjectPixels)
 
-Dim kWallInfos = {_
-    {"level":6, "cost":200000, "first_pixel":"9031B6-101010", "other_pixels":"1|1|9230B8-101010,2|1|9033B8-101010,3|1|9434B8-101010,-1|2|C734E7-101010,0|2|C734E7-101010,1|2|C734E6-101010,2|2|C734E3-101010,1|3|D034EF-101010,1|0|9332B8-101010", _
-     "verification":"512|360|612449-101010,512|374|985C80-101010,532|372|E79CC0-101010,287|295|D0E4E0,344|539|D0E4E0,572|233|D0E4E0,357|927|D0E4E0,576|571|5F51DD-101010,570|583|604CDC-101010,124|550|71E8D0-101010,56|735|10B063-101010,63|547|10AC60-101010,134|744|81ECD8-101010"}, _
-    {"level":7, "cost":500000, "first_pixel":"6F3957-101010", "other_pixels":"0|-1|64244A-101010,1|-1|632850-101010,2|-1|683050-101010,2|0|77435F-101010,0|1|9F6083-101010,1|1|A86B8D-101010,3|1|E49CC0-101010,1|2|A36588-101010,0|1|9F6083-101010", _
-     "verification":"523|364|91A0B1-101010,477|372|262120-101010,485|348|303028-101010,252|348|D0E4E0-101010,465|600|D0E4E0-101010,571|237|D1E4E0-101010,345|854|D0E4E0-101010,576|571|5F51DD-101010,570|583|604CDC-101010,124|550|71E8D0-101010,56|735|10B063-101010,63|547|10AC60-101010,134|744|81ECD8-101010"}, _
-    {"level":8, "cost":1000000, "first_pixel":"B5C0D0-202020", "other_pixels":"0|1|B0BCC9-202020,1|0|B6C0D1-202020,1|1|C0CEE0-202020,-7|1|2A2727-202020,-8|1|252323-202020,-9|1|241F1C-202020,-10|1|251C1D-202020", _
-     "verification":"511|357|181510-101010,466|359|383028-101010,521|367|706968-101010,498|397|484848-101010,284|299|D0E4E0-101010,563|256|D4E5E2-101010,332|477|D0E4E0-101010,550|494|D0E4E0-101010,576|571|5F51DD-101010,570|583|604CDC-101010,124|550|71E8D0-101010,56|735|10B063-101010,63|547|10AC60-101010,134|744|81ECD8-101010"} _
-}
-Dim kWallInfoCount = Len(kWallInfos)
-
 // dark elixir drill 1 {"304858-101010","16|7|888A9B-101010,19|9|828090-101010,26|6|898B9E-101010,-4|4|C0CADC-101010,-12|18|598AC1-101010,9|21|C4D0DC-101010"}}, _
 // dark elixir drill 6 {"60C4F8-202020","6|10|60C0F8-202020,17|4|828595-202020,12|18|62C5F8-202020,-17|5|202025-202020,-18|6|202328-202020,-19|-4|184C68-202020,-11|0|2E4654-202020"}
 
@@ -2663,7 +2653,7 @@ Function PrintMap(map, building_infos)
 		TracePrint Join(t, "")
 	Next
 	Dim i = 0
-	
+
 	While building_infos(i) <> null
 		Dim building_info = building_infos(i)
 		TracePrint kBuildingNames(building_info["type"]), ", level", building_info["level"], _
@@ -3054,61 +3044,110 @@ End Function
 
 Dim g_upgraded_walls(15)
 FillArray g_upgraded_walls, 15, 0
+Dim kUpgradeButtonPixels = "124|550|71E8D0-101010,56|735|10B063-101010,63|547|10AC60-101010,134|744|81ECD8-101010"
+Dim kWallInfos = {_
+    {"level":6, "cost":200000, "pixels":{"9332B8-202020","-1|0|9332B7-202020,0|0|9332B8-202020,0|1|CB37E3-202020,-1|1|CB34E6-202020,0|1|CB37E3-202020"}, _
+     "verification":"512|360|612449-101010,512|374|985C80-101010,532|372|E79CC0-101010,287|295|D0E4E0,344|539|D0E4E0,572|233|D0E4E0,357|927|D0E4E0,576|571|5F51DD-101010,570|583|604CDC-101010"}, _
+    {"level":7, "cost":500000, "pixels":{"642A4C-101010","1|1|B07192-202020,2|0|683450-101010,-1|0|602548-101010,0|1|A46488-303030,1|2|A86688-303030"}, _
+     "verification":"523|364|91A0B1-101010,477|372|262120-101010,485|348|303028-101010,252|348|D0E4E0-101010,465|600|D0E4E0-101010,571|237|D1E4E0-101010,345|854|D0E4E0-101010,576|571|5F51DD-101010,570|583|604CDC-101010"}, _
+    {"level":8, "cost":1000000, "pixels":{"C4CFD9-101010","2|0|494548-202020,-1|3|515C61-101010,-1|4|575C68-101010,-1|4|575C68-101010"}, _
+     "verification":"511|357|181510-101010,466|359|383028-101010,521|367|706968-101010,498|397|484848-101010,284|299|D0E4E0-101010,563|256|D4E5E2-101010,332|477|D0E4E0-101010,550|494|D0E4E0-101010,576|571|5F51DD-101010,570|583|604CDC-101010"} _
+}
+Dim kWallInfoCount = Len(kWallInfos)
+Dim kmap(46, 46)
+Fill2DArray kmap, 46, 46, "_"
 
-Function UpgradeWall(current_gold, current_elixir, kept_gold, kept_elixir, max_wall_level)
+Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_threshold, min_wall_level, max_wall_level)
 	ShowMsg 1, "Ë¢Ç½¼ì²â"
-	For wall_info_index = 0 To kWallInfoCount - 1
+	Dim kYMargin = 80
+	Dim kXMargin = 60
+	Dim minmal_remaining_resource = 300000
+	For wall_info_index = 1 To 1 //kWallInfoCount - 1
 		Dim wall_info = kWallInfos(wall_info_index)
+		Dim pixels = wall_info["pixels"]
 		TracePrint "Test level", wall_info["level"]
 		If wall_info["level"] > max_wall_level Then 
 			Exit For
 		End If
-		Dim scaned_x = 0
-		While True
-			If (kept_gold = null or kept_gold + wall_info["cost"] > current_gold) and (kept_elixir = null or kept_elixir + wall_info["cost"] > current_elixir) Then 
-				Exit For
+		Dim scaned_y = kYMargin
+		Dim able_to_upgrade = true
+		While able_to_upgrade and scaned_y < kScreenHeight - kYMargin
+			If wall_info["level"] < min_wall_level Then 
+				Exit While
+			End If
+			If (gold_threshold = null or current_gold < gold_threshold or current_gold < wall_info["cost"] + minmal_remaining_resource) and _
+				 (elixir_threshold = null or current_elixir < elixir_threshold or current_elixir < wall_info["cost"] + minmal_remaining_resource) Then 
+				Exit While  // not enough resources for walls
 			End If
 			Dim wall_x = -1, wall_y = -1
-			FindMultiColor scaned_x, 0, kScreenWidth, kScreenHeight, wall_info["first_pixel"], wall_info["other_pixels"], 0, 0.9, wall_x, wall_y
+			FindMultiColor kXMargin, scaned_y, kScreenWidth - kXMargin, kScreenHeight - kYMargin, pixels(0), pixels(1), 0, 1, wall_x, wall_y
 			If wall_x < 0 and wall_y < 0 Then 
 				Exit While
 			End If
-			scaned_x = wall_x
+			scaned_y = wall_y
 			Dim upgrade_success = false
-			While wall_x > 0 and wall_y > 0
-				TracePrint wall_x, wall_y
-				Tap wall_x, wall_y
-				Delay 1000
-				Dim upgrade_button_x, upgrade_button_y
-				If kept_gold <> null and kept_gold + wall_info["cost"] <= current_gold Then 
-					FindMultiColor 14, 358, 163, 934, "D8D8E8-202020", "8|9|C8CBD8-202020,-16|2|949EA8-202020,7|-11|243A75-202020,8|-9|162E63-202020,-11|14|426CD3-202020,-18|25|5078E0-202020,-27|40|3F77DF-202020,37|60|53E8F0-202020,34|63|38CAEC-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
-				ElseIf kept_elixir <> null and kept_elixir + wall_info["cost"] <= current_elixir Then
-					FindMultiColor 14, 358, 163, 934, "D8D8E8-202020", "8|9|C8CBD8-202020,-16|2|949EA8-202020,7|-11|243A75-202020,8|-9|162E63-202020,-11|14|426CD3-202020,-18|25|5078E0-202020,-27|40|3F77DF-202020,37|60|EA60F5-202020,34|63|E023FF-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
+			While wall_x > 0 and wall_y > 0 and wall_x < kScreenWidth - kXMargin
+				//TracePrint wall_x, wall_y
+				Dim p = GetGridPosition(wall_x - 10, wall_y)
+				If p(0) >= 0 and p(0) < 46 and p(1) >= 0 and p(1) < 46 Then 
+					kmap(p(0), p(1)) = CStr(wall_info_index)
 				End If
-				If upgrade_button_x > 0 and upgrade_button_y > 0 Then 
-					Tap upgrade_button_x, upgrade_button_y
-					Delay 1000
-					If CmpColorEx(wall_info["verification"], 0.95) = 1 Then 
-						//TapItem "Upgrade", 1000
-						KeyPress "Back"
-						//upgrade_success = true
-						g_upgraded_walls[wall_info["level"]] = g_upgraded_walls[wall_info["level"]] + 1
-					Else 
-						KeyPress "Back"
-					End If
-					Delay 1000
-				End If
+
+//				Tap wall_x, wall_y
+//				Delay 500
+//				Tap 700, 350
+//				Delay 1500
+				
+//				Dim upgrade_button_x, upgrade_button_y
+//				Dim use_gold = true
+//				If gold_threshold <> null and current_gold >= gold_threshold and current_gold >= wall_info["cost"] + minmal_remaining_resource Then 
+//					FindMultiColor 14, 358, 163, 934, "D8D8E8-202020", "8|9|C8CBD8-202020,-16|2|949EA8-202020,7|-11|243A75-202020,8|-9|162E63-202020,-11|14|426CD3-202020,-18|25|5078E0-202020,-27|40|3F77DF-202020,37|60|53E8F0-202020,34|63|38CAEC-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
+//				ElseIf elixir_threshold <> null and current_elixir >= elixir_threshold and current_elixir >= wall_info["cost"] + minmal_remaining_resource Then
+//					use_gold = false
+//					FindMultiColor 14, 358, 163, 934, "D8D8E8-202020", "8|9|C8CBD8-202020,-16|2|949EA8-202020,7|-11|243A75-202020,8|-9|162E63-202020,-11|14|426CD3-202020,-18|25|5078E0-202020,-27|40|3F77DF-202020,37|60|EA60F5-202020,34|63|E023FF-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
+//				End If
+//				If upgrade_button_x > 0 and upgrade_button_y > 0 Then 
+//					Tap upgrade_button_x, upgrade_button_y
+//					Delay 1000
+//					If CmpColorEx(wall_info["verification"], 0.95) = 1 Then 
+//						TracePrint "wall at ", wall_x, wall_y
+//						If CmpColorEx(kUpgradeButtonPixels, 0.95) = 0 Then 
+//							TracePrint "not able to upgrade"
+//							able_to_upgrade = false
+//							Exit While
+//						End If
+//						
+//						//TapItem "Upgrade", 1000
+//						KeyPress "Back"
+//
+//						If use_gold Then 
+//							current_gold = current_gold - wall_info["cost"]
+//							TracePrint current_gold
+//						Else 
+//							current_elixir = current_elixir - wall_info["cost"]
+//						End If
+//						//upgrade_success = true
+//						g_upgraded_walls[wall_info["level"]] = g_upgraded_walls[wall_info["level"]] + 1
+//					Else 
+//						TracePrint "not a wall at ", wall_x, wall_y
+//						KeyPress "Back"
+//					End If
+//					Delay 1000
+//				End If
 				If upgrade_success Then 
 					Exit While
-				Else
-					FindMultiColor wall_x, wall_y + 5, wall_x, kScreenHeight, wall_info["first_pixel"], wall_info["other_pixels"], 0, 0.9, wall_x, wall_y
+				Else 
+					wall_x = wall_x + 8
+					FindMultiColor wall_x, wall_y-1, kScreenWidth - kXMargin, wall_y + 1, pixels(0), pixels(1), 0, 1, wall_x, wall_y
 				End If
 			Wend
 			If not upgrade_success Then 
-				scaned_x = scaned_x + 5
+				scaned_y = scaned_y + 1
 			End If
 		Wend
 	Next
+	Dim t={null}
+	PrintMap(kmap, t)
 End Function
 
 
@@ -4055,7 +4094,8 @@ Function DragonChallenge()
 	Next
 End Function
 //DragonChallenge 
-UpgradeWall(2000000, 10, 10, null, 11)
+Delay 4000
+UpgradeWall(2000000000, 10, 10, null, 6, 11)
 //TracePrint AnotherDeviceIsLoggingIn()
 //TracePrint HasNextOpponentButton()
 //While true
