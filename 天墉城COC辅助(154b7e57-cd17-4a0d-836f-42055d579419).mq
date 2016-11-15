@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.0.7.1"
+Dim g_version = "1.0.7.2"
 Dim log_level = 3
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
@@ -3208,6 +3208,7 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 					InputText g_reinforcement_request
 					TapItem "SendReinforcementRequest", 300
 				End If
+				trained_troops_info = null
 				Dim total_count = DetectTotalTroopCount()
 				Dim force_to_train = false
 				g_max_population = total_count(1)
@@ -3234,10 +3235,12 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 					
 					Report "training troops"
 					If first_train Then 
-						trained_troops_info = GetTrainedTroops()
 						If trained_troops_info = null Then 
-							Report "Failed to get trained troops"
-							Exit Function
+							trained_troops_info = GetTrainedTroops()
+							If trained_troops_info = null Then 
+								Report "Failed to get trained troops"
+								Exit Function
+							End If
 						End If
 //						Dim remaining_counts(20)
 //						CopyArray(counts, 20, remaining_counts)
@@ -4094,8 +4097,8 @@ Function DragonChallenge()
 	Next
 End Function
 //DragonChallenge 
-Delay 4000
-UpgradeWall(2000000000, 10, 10, null, 6, 11)
+//Delay 4000
+//UpgradeWall(2000000000, 10, 10, null, 6, 11)
 //TracePrint AnotherDeviceIsLoggingIn()
 //TracePrint HasNextOpponentButton()
 //While true
@@ -4114,7 +4117,7 @@ UpgradeWall(2000000000, 10, 10, null, 6, 11)
 //KeyPress "Back"
 //TracePrint NeedReinforcement()
 //TracePrint NeedGemsToRequestReinforcement()
-//Run() 
+Run() 
 
 //Dim results = RecognizeRobableAmount()
 //TracePrint(results(0), results(1), results(2))
