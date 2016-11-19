@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.0.7.2"
+Dim g_version = "1.0.8.0"
 Dim log_level = 3
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
@@ -2998,15 +2998,25 @@ Function GoToWar(overall_criteria, strategy, trained_troop_infos)
 End Function
 
 Dim g_last_collect_resource_time = 0
-Function CollectResourcesAndReport()
+Function CollectResourcesAndUpgradeWall()
     Dim current_time = Time()
+    Dim resources = RecognizeOwnAmount()
+	ReportInfo resources(0), resources(1), resources(2), resources(3)
     If current_time - g_last_collect_resource_time >= 30 * 60 Then 
         g_last_collect_resource_time = current_time
     	Report "collecting resources"
-		CollectResources()
+		CollectResources 
+		If g_upgrade_wall_gold_threshold <> null or g_upgrade_wall_elixir_threshold <> null Then 
+			If UpgradeWall(resources(0), resources(1), g_upgrade_wall_gold_threshold, g_upgrade_wall_elixir_threshold, _
+			               g_minimal_upgraded_wall_level, g_maximum_upgraded_wall_level) < 0 Then
+			    If not GoToClan Then 
+			    	CollectResourcesAndUpgradeWall = false
+			    	Exit Function
+			    End If
+			End If
+		End If
     End If
-	Dim resources = RecognizeOwnAmount()
-	ReportInfo resources(0), resources(1), resources(2), resources(3)
+    CollectResourcesAndUpgradeWall = true
 End Function
 
 Function NeedReinforcement()
@@ -3042,8 +3052,6 @@ Function WaitAndShowJoke(seconds)
 	Delay seconds
 End Function
 
-Dim g_upgraded_walls(15)
-FillArray g_upgraded_walls, 15, 0
 Dim kUpgradeButtonPixels = "124|550|71E8D0-101010,56|735|10B063-101010,63|547|10AC60-101010,134|744|81ECD8-101010"
 Dim kWallInfos = {_
     {"level":6, "cost":200000, "colors": "9530B8-101010|D034EA-101010|7E2080-101010|70259B-101010|612970-101010|D80CCB-101010|610B67-101010|B82ACD-101010|6A1D77-101010", _
@@ -3055,146 +3063,229 @@ Dim kWallInfos = {_
     {"level":8, "cost":1000000, "colors": "A1AEC2-101010|212420-101010|585E68-101010|6B717A-101010|3E3636-101010", _
      "pixels":{"A0A6B7-404040","0|1|A2B0C4-303030,0|2|8999B1-303030,-5|1|2D2B2F-202020,-6|1|242322-101010,-7|1|1F201C-101010,-8|1|23201F-101010"}, _
      "verification":"511|357|181510-101010,466|359|383028-101010,521|367|706968-101010,498|397|484848-101010,284|299|D0E4E0-101010,563|256|D4E5E2-101010,332|477|D0E4E0-101010,550|494|D0E4E0-101010,576|571|5F51DD-101010,570|583|604CDC-101010"}, _
-    {"level":9, "cost":3000000, "colors": "606064-0A0A0A|4F4038-0A0A0A|48484A-0A0A0A|605D60-0A0A0A|40362E-0A0A0A", _
-     "pixels":{"171712-202020","-1|1|17170F-202020,-2|3|181817-202020,-1|5|181C1B-202020,0|6|1E2020-202020,2|2|6D6864-202020,1|3|787370-202020,2|5|686160-202020,5|3|777471-202020", _
-               "191623-202020","2|0|14182A-202020,-1|2|171927-202020,-1|3|141624-202020,-2|5|171C2D-202020,0|6|141C34-202020,1|7|141C30-202020,3|4|D0D7F9-202020,2|4|6B6C81-202020,7|2|B1C0E9-202020"}, _
-     "verification":"511|357|181510-101010,466|359|383028-101010,521|367|706968-101010,498|397|484848-101010,284|299|D0E4E0-101010,563|256|D4E5E2-101010,332|477|D0E4E0-101010,550|494|D0E4E0-101010,576|571|5F51DD-101010,570|583|604CDC-101010"} _
+    {"level":9, "cost":3000000, "colors": "626678-0A0A0A|443830-0A0A0A|484448-0A0A0A|48484A-0A0A0A|605D60-0A0A0A|3A312B-0A0A0A", _
+     "pixels":{"252322-202020","1|-2|171410-202020,2|-4|181818-202020,0|1|1F1F20-202020,2|3|202020-202020,2|0|6A6A6D-282828,3|0|726D6B-202020,6|0|706C6A-202020", _
+               "10121D-202020","3|-3|14162C-202020,2|-2|161525-202020,2|2|141A30-202020,4|5|161F37-202020,3|1|646A7F-303030,4|1|7D7E92-303030,6|1|B8BEE4-303030"}, _
+     "verification":"529|367|62737C-101010,476|370|202828-101010,509|388|405358-101010,507|355|383B38-101010,469|335|5F6164-101010,483|390|989DA0-101010,575|571|5B4EDB-101010,578|595|6E65DC-101010"}, _
+     {"level":10, "cost":4000000, "colors": "47E9FD-202020|5C6875-202020|2358AF-101010|21CAFC-202020", _
+      "pixels":{"44E6FF-202020","-1|1|4DF5FF-202020,-2|2|57F6FF-202020", _
+                "45D8FD-202020","0|1|49E7FF-202020,1|2|48FBFF-202020"}, _
+      "verification":"530|366|6C7685-101010,509|350|494850-101010,513|380|505461-101010,482|350|1078FF-101010,494|390|1886FF-101010,460|364|12B0FF-101010,472|383|18B5FF-101010,502|369|485060-101010,575|572|6051DF-101010,575|593|685DDE-101010"} _
 }
 Dim kWallInfoCount = Len(kWallInfos)
-Dim kmap(46, 46)
-Fill2DArray kmap, 46, 46, "_"
+Dim g_upgraded_walls(15)
+FillArray g_upgraded_walls, 15, 0
+//Dim g_uw_map(46, 46)
+//Fill2DArray g_uw_map, 46, 46, "_"
+Dim g_able_to_update(15)
+FillArray g_able_to_update, 15, true
+
+Dim g_uw_wall_info_index = 0
+Dim g_uw_up_bottom_index = 0
+Dim g_uw_x = 0
+Dim g_uw_y = 0
 
 Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_threshold, min_wall_level, max_wall_level)
-	ShowMsg 1, "刷墙检测"
+	LogAndShow 1, "刷墙检测"
 	Dim kYMargin = 150
-	Dim kXMargin = 80
+	Dim kUpMargin = 80
 	Dim kXStep = 8
 	Dim kYStep = 8
 	Dim kMinmalPixel = 25
 	Dim minmal_remaining_resource = 300000
-	For wall_info_index = 2 To 2 //kWallInfoCount - 1
-		Dim wall_info = kWallInfos(wall_info_index)
-		Dim pixels = wall_info["pixels"]
-		Dim pixel_count = GetLength(pixels)
-		TracePrint "Test level", wall_info["level"]
-		If wall_info["level"] > max_wall_level Then 
-			Exit For
-		End If	
-		Dim able_to_upgrade = true
-		KeepCapture
-		While able_to_upgrade
-			If wall_info["level"] < min_wall_level Then 
-				Exit While
+	Dim action = 0
+	Dim turn_over = false
+	Dim last_up_bottom_index = -1
+	Dim check_in_clan = 0
+	//Dim minimal_elixir_required = 1000000 + minmal_remaining_resource
+	While true
+		If g_uw_wall_info_index >= GetLength(kWallInfos) Then 
+			If turn_over Then 
+				LogAndShow 1, "无墙可刷"
+				UpgradeWall = 1
+				Exit Function
+			End If
+			g_uw_wall_info_index = 0
+			turn_over = true
+		End If
+		Dim wall_info = kWallInfos(g_uw_wall_info_index)
+				
+		If wall_info["level"] > max_wall_level or wall_info["level"] < min_wall_level or not g_able_to_update(wall_info["level"]) or _
+		   ((gold_threshold = null or current_gold < gold_threshold or current_gold < wall_info["cost"] + minmal_remaining_resource) and _
+				(elixir_threshold = null or wall_info["level"] < 8 or current_elixir < elixir_threshold or current_elixir < wall_info["cost"] + minmal_remaining_resource)) Then 
+			g_uw_wall_info_index = g_uw_wall_info_index + 1
+			g_uw_up_bottom_index = 0
+			g_uw_x = 0
+			g_uw_y = 0
+			If not g_able_to_update(wall_info["level"]) Then 
+				g_uw_wall_info_index = GetLength(kWallInfos)
+			End If
+		Else
+			Dim pixels = wall_info["pixels"]
+			Dim pixel_count = GetLength(pixels)
+			TracePrint "Test level", wall_info["level"]
+			
+//			If (gold_threshold = null or current_gold < gold_threshold or current_gold < wall_info["cost"] + minmal_remaining_resource) and _
+//				(elixir_threshold = null or wall_info["level"] < 8 or current_elixir < elixir_threshold or current_elixir < wall_info["cost"] + minmal_remaining_resource) Then 
+//				//LogAndShow 1, "资源不够"
+//				//UpgradeWall = 0
+//				//Exit Function
+//				  // not enough resources for walls
+//			End If
+			
+			If last_up_bottom_index <> g_uw_up_bottom_index Then 
+				If g_uw_up_bottom_index = 0 Then 
+					MoveToMapTop()
+				Else 
+					MoveToMapBottom()
+				End If
+				last_up_bottom_index = g_uw_up_bottom_index
+			End If
+						
+			KeepCapture 
+			Dim need_release = true
+			If g_uw_y < kYMargin Then 
+				g_uw_y = kYMargin
 			End If
 			Dim kLastN = 5
 			Dim last_i = 0
 			Dim last_points(5)
-			For x = kXMargin To kScreenWidth - kXMargin Step kXStep/2
-				For y = kYMargin To kScreenHeight - kYMargin Step kXStep/2
-//					If (gold_threshold = null or current_gold < gold_threshold or current_gold < wall_info["cost"] + minmal_remaining_resource) and _
-//				 		(elixir_threshold = null or current_elixir < elixir_threshold or current_elixir < wall_info["cost"] + minmal_remaining_resource) Then 
-//						Exit While  // not enough resources for walls
-//					End If
-					If GetColorNum(x, y, x + kXStep-1, y + kYStep-1, wall_info["colors"], 1) >= kMinmalPixel Then 
-						Dim wall_x = x, wall_y = y
-						For i=0 to pixel_count-1 step 2
-							FindMultiColor x, y, x + kXStep - 1, y + kYStep - 1, pixels(i), pixels(i + 1), 0, 1, wall_x, wall_y
-							If wall_x > 0 and wall_y > 0 Then 
+			While true
+				Dim x=g_uw_x
+				Dim y=g_uw_y
+				If GetColorNum(x, y, x + kXStep-1, y + kYStep-1, wall_info["colors"], 1) >= kMinmalPixel Then 
+					Dim wall_x = -1, wall_y = -1
+					For i=0 to pixel_count-1 step 2
+						FindMultiColor x, y, x + kXStep - 1, y + kYStep - 1, pixels(i), pixels(i + 1), 0, 1, wall_x, wall_y
+						If wall_x > 0 and wall_y > 0 Then 
+							Exit For
+						End If
+					Next
+					If wall_x > 0 and wall_y > 0 Then 
+						// check it's not a dup
+						Dim dup = false
+						For i = 0 To kLastN - 1
+							Dim last = last_points(i)
+							If last <> null and Abs(last(0) - wall_x) <= kXStep * 0.7 and Abs(last(1) - wall_y) <= kYStep * 0.7 Then 
+								dup = True
 								Exit For
 							End If
 						Next
-						If wall_x > 0 and wall_y > 0 Then 
-							Dim dup = false
-							For i = 0 To kLastN - 1
-								Dim last = last_points(i)
-								If last <> null and Abs(last(0) - wall_x) <= kXStep * 0.7 and Abs(last(1) - wall_y) <= kYStep * 0.7 Then 
-									dup = True
-									Exit For
-								End If
-							Next
-							If not dup Then 
-								last_points(last_i) = {wall_x, wall_y}
-								last_i = last_i + 1
-								If last_i >= kLastN Then 
-									last_i = 0
-								End If
-								Dim p = GetGridPosition(wall_x, wall_y)
-								If p(0) > 0 and p(0) < 45 and p(1) > 0 and p(1) < 45 Then 
-									kmap(p(0), p(1)) = CStr(wall_info_index)
-								End If
-								TracePrint wall_x, wall_y
-								Tap wall_x, wall_y
-								Delay 2000
-								Tap 700, 350
-								Delay 1000
+						If not dup Then 
+							last_points(last_i) = {wall_x, wall_y}
+							last_i = last_i + 1
+							If last_i >= kLastN Then 
+								last_i = 0
 							End If
+							
+							// Mark in the map
+//							Dim p = GetGridPosition(wall_x, wall_y)
+//							If p(0) > 0 and p(0) < 45 and p(1) > 0 and p(1) < 45 Then 
+//								g_uw_map(p(0), p(1)) = CStr(g_uw_wall_info_index)
+//							End If
+							
+							Tap wall_x, wall_y
+							Delay 1500
+							action = action + 1
+
+							Dim upgrade_button_x, upgrade_button_y
+							Dim use_gold = true
+							
+							ReleaseCapture 
+							need_release = false
+
+							If gold_threshold <> null and current_gold >= gold_threshold and current_gold >= wall_info["cost"] + minmal_remaining_resource Then 
+								FindMultiColor 14, 358, 163, 934, "D8D8E8-202020", "8|9|C8CBD8-202020,-16|2|949EA8-202020,7|-11|243A75-202020,8|-9|162E63-202020,-11|14|426CD3-202020,-18|25|5078E0-202020,-27|40|3F77DF-202020,37|60|53E8F0-202020,34|63|38CAEC-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
+							ElseIf elixir_threshold <> null and current_elixir >= elixir_threshold and current_elixir >= wall_info["cost"] + minmal_remaining_resource Then
+								use_gold = false
+								FindMultiColor 14, 358, 163, 934, "C8C8D0-202020","3|-6|1A326B-202020,7|9|C0C2D0-202020,-16|21|4876E3-202020,-25|34|507BE0-202020,-28|39|5D79DB-202020,-30|45|4077E0-202020,34|67|FF34FF-202020,28|67|F064FF-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
+							End If
+							If upgrade_button_x > 0 and upgrade_button_y > 0 Then 
+								Tap upgrade_button_x, upgrade_button_y
+								Delay 1000
+								If CmpColorEx(wall_info["verification"], 0.95) = 1 Then 
+									TracePrint "wall at ", wall_x, wall_y
+									If CmpColorEx(kUpgradeButtonPixels, 0.95) = 0 Then 
+										TracePrint "not able to upgrade"
+										g_able_to_update(wall_info["level"]) = false
+										KeyPress "Back"
+										Delay 1000
+										Tap 5, 5
+										Delay 1000
+										Exit While
+									End If
+									
+									TapItem "Upgrade", 2000								
+									If use_gold Then 
+										current_gold = current_gold - wall_info["cost"]
+										TracePrint "god", current_gold
+									Else 
+										current_elixir = current_elixir - wall_info["cost"]
+										TracePrint "elixir", current_elixir
+									End If
+									g_upgraded_walls(wall_info["level"]) = g_upgraded_walls(wall_info["level"]) + 1
+									
+//									If (gold_threshold = null or current_gold < gold_threshold or current_gold < wall_info["cost"] + minmal_remaining_resource) and _
+//										(elixir_threshold = null or wall_info["level"] < 8 or current_elixir < elixir_threshold or current_elixir < wall_info["cost"] + minmal_remaining_resource) Then 
+//										UpgradeWall = 0
+//										Exit Function
+//									End If
+									If not InClan Then 
+										UpgradeWall = -1
+										Exit Function
+									End If
+									TracePrint "upgraded successfully"
+									Tap 5, 5
+									Delay 1000
+									Exit While
+								Else 
+									TracePrint "not a wall at ", wall_x, wall_y
+									KeyPress "Back"
+									Delay 1000
+									Tap 5, 5
+									Delay 1000
+								End If
+							End If
+							
+							KeepCapture 
+							need_release = true
 						End If
 					End If
-					
-				Next	
-			Next
-			
-			
-//			Dim wall_x = 0, wall_y = 0
-//				Tap wall_x, wall_y
-//				Delay 500
-//				Tap 700, 350
-//				Delay 1500
-				
-//				Dim upgrade_button_x, upgrade_button_y
-//				Dim use_gold = true
-//				If gold_threshold <> null and current_gold >= gold_threshold and current_gold >= wall_info["cost"] + minmal_remaining_resource Then 
-//					FindMultiColor 14, 358, 163, 934, "D8D8E8-202020", "8|9|C8CBD8-202020,-16|2|949EA8-202020,7|-11|243A75-202020,8|-9|162E63-202020,-11|14|426CD3-202020,-18|25|5078E0-202020,-27|40|3F77DF-202020,37|60|53E8F0-202020,34|63|38CAEC-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
-//				ElseIf elixir_threshold <> null and current_elixir >= elixir_threshold and current_elixir >= wall_info["cost"] + minmal_remaining_resource Then
-//					use_gold = false
-//					FindMultiColor 14, 358, 163, 934, "D8D8E8-202020", "8|9|C8CBD8-202020,-16|2|949EA8-202020,7|-11|243A75-202020,8|-9|162E63-202020,-11|14|426CD3-202020,-18|25|5078E0-202020,-27|40|3F77DF-202020,37|60|EA60F5-202020,34|63|E023FF-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
-//				End If
-//				If upgrade_button_x > 0 and upgrade_button_y > 0 Then 
-//					Tap upgrade_button_x, upgrade_button_y
-//					Delay 1000
-//					If CmpColorEx(wall_info["verification"], 0.95) = 1 Then 
-//						TracePrint "wall at ", wall_x, wall_y
-//						If CmpColorEx(kUpgradeButtonPixels, 0.95) = 0 Then 
-//							TracePrint "not able to upgrade"
-//							able_to_upgrade = false
-//							Exit While
-//						End If
-//						
-//						//TapItem "Upgrade", 1000
-//						KeyPress "Back"
-//
-//						If use_gold Then 
-//							current_gold = current_gold - wall_info["cost"]
-//							TracePrint current_gold
-//						Else 
-//							current_elixir = current_elixir - wall_info["cost"]
-//						End If
-//						//upgrade_success = true
-//						g_upgraded_walls[wall_info["level"]] = g_upgraded_walls[wall_info["level"]] + 1
-//					Else 
-//						TracePrint "not a wall at ", wall_x, wall_y
-//						KeyPress "Back"
-//					End If
-//					Delay 1000
-//				End If
-//				If upgrade_success Then 
-//					Exit While
-//				Else 
-//					wall_x = wall_x + 8
-//					FindMultiColor wall_x, wall_y - 1, kScreenWidth - kXMargin, wall_y + 1, pixels(0), pixels(1), 0, 1, wall_x, wall_y
-//					wall_x = Round(wall_x)
-//					wall_y = Round(wall_y)
-//				End If
-//			Wend
-//			If not upgrade_success Then 
-//				scaned_y = scaned_y + 8
-//			End If
-			Exit While
-		Wend
-		ReleaseCapture
-	Next
+				End If
+				g_uw_y = g_uw_y + kYStep / 2
+				If g_uw_y >= kScreenHeight - kYMargin Then 
+					g_uw_y = kYMargin
+					g_uw_x = g_uw_x + kXStep / 2
+					If g_uw_x >= kScreenWidth - kUpMargin Then 
+						g_uw_x = 0
+						g_uw_up_bottom_index = g_uw_up_bottom_index + 1
+						If g_uw_up_bottom_index >= 2 Then 
+							g_uw_up_bottom_index = 0
+							g_uw_wall_info_index = g_uw_wall_info_index + 1
+						End If
+						Exit While
+					End If
+				End If
+				If action >= 20 Then 
+					UpgradeWall = 0
+					Exit Function
+				End If
+				If check_in_clan = 0 Then 
+					If not InClan Then 
+						UpgradeWall = -1
+						Exit Function
+					End If
+					check_in_clan = 100
+				End If
+				check_in_clan = check_in_clan - 1
+			Wend
+			If need_release Then 
+				ReleaseCapture	
+			End If
+		End If
+	Wend
 	Dim t={null}
-	PrintMap(kmap, t)
+//	PrintMap(g_uw_map, t)
 End Function
 
 
@@ -3232,7 +3323,10 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 		End If
 		ZoomOutToMax() 
 		Delay 300
-		CollectResourcesAndReport()
+		If not CollectResourcesAndUpgradeWall() Then 
+			Report "Failed to CollectResourcesAndUpgradeWall"
+			Exit Function
+		End If
 		
 		Delay 300
 		Dim trained_troops_info
@@ -3342,8 +3436,14 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 				Delay 5000
 				WaitAndShowJoke(10000)
 				Dim span_minite = Int((Time() - g_bot_start_time) / 60)
+				Dim upgraded_wall_msg = ""
+				For wall_level = 0 To 11
+					If g_upgraded_walls(wall_level) > 0 Then 
+						upgraded_wall_msg = upgraded_wall_msg&",升级"&CStr(wall_level)&"级墙"&CStr(g_upgraded_walls(wall_level))&"块"
+					End If
+				Next
 				ShowMsg(1, "运行时间"&CStr(Int(span_minite / 60))&"小时"&(span_minite Mod 60)&"分,进攻次数"&CStr(g_total_attack_count)&_
-						",共获得金"&CStr(g_total_robbed_gold)&"水"&CStr(g_total_robbed_elixir)&"黑"&CStr(g_total_robbed_dark_elixir))
+						",共获得金"&CStr(g_total_robbed_gold)&"水"&CStr(g_total_robbed_elixir)&"黑"&CStr(g_total_robbed_dark_elixir)&upgraded_wall_msg)
 				Delay 5000
 			Next
 			
@@ -3352,7 +3452,10 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 			End If
 
 			ZoomOutToMax()
-			CollectResourcesAndReport()
+			If not CollectResourcesAndUpgradeWall() Then 
+				Report "Failed to CollectResourcesAndUpgradeWall"
+				Exit Function
+			End If
 			Delay 1000
 		Wend
 
@@ -3665,7 +3768,10 @@ Dim g_spell_lightning_at_dark_elixir_drill_if_dark_elixir = 0
 Dim g_wait_for_another_device = 60
 Dim g_deploy_king = false
 Dim g_deploy_queen = false
-
+Dim g_minimal_upgraded_wall_level
+Dim g_maximum_upgraded_wall_level
+Dim g_upgrade_wall_gold_threshold
+Dim g_upgrade_wall_elixir_threshold
 //Function GetTextEditValueInt(name)
 //	Dim data = UI.GetValue(name)
 //	GetTextEditValueInt = Int(data[name])
@@ -3782,6 +3888,23 @@ Function LoadSettingFromDefaultConfigPage()
 	g_deploy_queen = ReadUIConfig("deploy_queen", false)
 	log_str = log_str & "_NL_deploy-king: "&CStr(g_deploy_king) & "_NL_deploy-queen: "&CStr(g_deploy_queen)
 	
+	g_minimal_upgraded_wall_level = ReadUIConfig("minimal_wall_level", 0) + 6
+	g_maximum_upgraded_wall_level = ReadUIConfig("maximum_wall_level", 0) + 6 - 1
+	If g_maximum_upgraded_wall_level < g_minimal_upgraded_wall_level Then 
+		g_maximum_upgraded_wall_level = g_minimal_upgraded_wall_level
+	End If
+	If ReadUIConfig("use_gold_to_upgrade_wall", false) Then 
+		g_upgrade_wall_gold_threshold = Int(ReadUIConfig("upgrade_wall_if_gold", 0)) * 10000
+	Else 
+		g_upgrade_wall_gold_threshold = null
+	End If
+	If ReadUIConfig("use_elixir_to_upgrade_wall", false) Then 
+		g_upgrade_wall_elixir_threshold = Int(ReadUIConfig("upgrade_wall_if_elixir", 0)) * 10000
+	Else 
+		g_upgrade_wall_elixir_threshold = null
+	End If
+	log_str = log_str & "_NL_upgrade_wall: from "&CStr(g_minimal_upgraded_wall_level) & " to "&CStr(g_maximum_upgraded_wall_level)& _
+		", gold "&CStr(g_upgrade_wall_gold_threshold)&", elixir "&CStr(g_upgrade_wall_elixir_threshold)
 		
 	//Dim kAttackConfig = {"弓蛮打鱼（造兵便宜）", "弓蛮巨打鱼（金水黑均衡）", "全力抢黑（打黑快）", "自定义"}
 	Dim overall_config = Int(ReadUIConfig("overall_config", 1))
@@ -4144,8 +4267,12 @@ Function DragonChallenge()
 	Next
 End Function
 //DragonChallenge 
-Delay 4000
-UpgradeWall(2000000000, 10, 10, null, 6, 11)
+//Delay 4000
+//For 40
+//	UpgradeWall(2350000, 2000000000, 2000000, 10, 7, 11)	
+//Next
+//UpgradeWall(2500000, 2000000000, 10, null, 8, 11)
+//UpgradeWall(2500000, 2000000000, 10, null, 8, 11)
 //TracePrint AnotherDeviceIsLoggingIn()
 //TracePrint HasNextOpponentButton()
 //While true
@@ -4164,7 +4291,7 @@ UpgradeWall(2000000000, 10, 10, null, 6, 11)
 //KeyPress "Back"
 //TracePrint NeedReinforcement()
 //TracePrint NeedGemsToRequestReinforcement()
-//Run() 
+Run() 
 
 //Dim results = RecognizeRobableAmount()
 //TracePrint(results(0), results(1), results(2))
