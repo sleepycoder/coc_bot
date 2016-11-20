@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.0.8.0"
+Dim g_version = "1.0.8.1"
 Dim log_level = 3
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
@@ -1084,7 +1084,7 @@ End Function
 //Dim g_last_update_barrack_availability = 0
 Dim g_last_train_troop_time = 0
 Dim g_max_population = 0
-
+Dim g_current_population = 0
 Function TrainTroops(counts, cancel_training, force)
 	If not InTroopConfigurationPage() and not InTroopTrainingPage() Then 
 		TrainTroops = False
@@ -2998,11 +2998,11 @@ Function GoToWar(overall_criteria, strategy, trained_troop_infos)
 End Function
 
 Dim g_last_collect_resource_time = 0
-Function CollectResourcesAndUpgradeWall()
+Function CollectResourcesAndUpgradeWall(force)
     Dim current_time = Time()
     Dim resources = RecognizeOwnAmount()
 	ReportInfo resources(0), resources(1), resources(2), resources(3)
-    If current_time - g_last_collect_resource_time >= 30 * 60 Then 
+    If (force and current_time - g_last_collect_resource_time >= 5 * 60) or current_time - g_last_collect_resource_time >= 30 * 60 Then 
         g_last_collect_resource_time = current_time
     	Report "collecting resources"
 		CollectResources 
@@ -3323,7 +3323,7 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 		End If
 		ZoomOutToMax() 
 		Delay 300
-		If not CollectResourcesAndUpgradeWall() Then 
+		If not CollectResourcesAndUpgradeWall(false) Then 
 			Report "Failed to CollectResourcesAndUpgradeWall"
 			Exit Function
 		End If
@@ -3353,6 +3353,7 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 				Dim total_count = DetectTotalTroopCount()
 				Dim force_to_train = false
 				g_max_population = total_count(1)
+				g_current_population = total_count(0) 
 				If total_count(0) >= total_count(1) * strategy["troop_trained_percentage"] or (total_count(1) - total_count(0) < 30 and Time() - g_last_train_troop_time < 120 and not IsTrainingTroop()) Then
 					Report "Troops are ready! " & CStr(total_count(0)) & "/" & CStr(total_count(1))
 					trained_troops_info = GetTrainedTroops()
@@ -3442,9 +3443,12 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 						upgraded_wall_msg = upgraded_wall_msg&",升级"&CStr(wall_level)&"级墙"&CStr(g_upgraded_walls(wall_level))&"块"
 					End If
 				Next
-				ShowMsg(1, "运行时间"&CStr(Int(span_minite / 60))&"小时"&(span_minite Mod 60)&"分,进攻次数"&CStr(g_total_attack_count)&_
-						",共获得金"&CStr(g_total_robbed_gold)&"水"&CStr(g_total_robbed_elixir)&"黑"&CStr(g_total_robbed_dark_elixir)&upgraded_wall_msg)
-				Delay 5000
+				Dim stat_msg = "运行时间"&CStr(Int(span_minite / 60))&"小时"&(span_minite Mod 60)&"分,进攻次数"&CStr(g_total_attack_count)&_
+						",共获得金"&CStr(g_total_robbed_gold)&"水"&CStr(g_total_robbed_elixir)&"黑"&CStr(g_total_robbed_dark_elixir)&upgraded_wall_msg
+				ShowMsg(1, stat_msg)
+				Delay 2000
+				ShowMsg 1, stat_msg
+				Delay 3000
 			Next
 			
 			If ready_to_fight Then 
@@ -3452,7 +3456,11 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 			End If
 
 			ZoomOutToMax()
-			If not CollectResourcesAndUpgradeWall() Then 
+			Dim force_collect = false
+			If g_current_population + 60 < g_max_population Then 
+				force_collect = true
+			End If
+			If not CollectResourcesAndUpgradeWall(force_collect) Then 
 				Report "Failed to CollectResourcesAndUpgradeWall"
 				Exit Function
 			End If
