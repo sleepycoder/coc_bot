@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.0.8.1"
+Dim g_version = "1.0.8.2"
 Dim log_level = 1
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
@@ -393,7 +393,9 @@ Dim kTroopInfos = { _
 	{"Witch", 12, 180, 1, {275, 1194}, {"603838-101010","7|18|78484E-101010,-31|2|706C71-101010,-25|20|E8D8F0-101010,-44|37|4CF8FF-101010,-16|-5|AE47F8-101010"}}, _
 	{"LavaHound", 30, 300, 1, {145, 1194}, {"505E67-101010","22|-14|10B7F5-101010,-3|20|485758-101010,10|41|202827-101010,-6|45|0077FF-101010,-22|18|203424-101010"}}, _
 	{"Bowler", 6, 60, 1, {275, -1150}, {"E16871-101010","-6|-27|EA6F70-101010,-41|17|C88C58-101010,-33|-31|E86060-101010,-60|1|BD4445-101010,-69|-34|98A0B0-101010"}}, _
-	{"LightningSpell", 2, 360, 2, {279, 131}, {"", ""}, {"E85210-202020","19|-28|F3E066-202020,36|1|A7C6FF-202020,55|27|C34960-202020,6|20|F9FCE8-202020,-26|-3|EE2402-202020,-24|19|F8E840-202020,0|-11|E22008-202020,12|-5|F0A428-202020"}} _
+	{"LightningSpell", 2, 360, 2, {279, 131}, {"", ""}, {"E85210-202020","19|-28|F3E066-202020,36|1|A7C6FF-202020,55|27|C34960-202020,6|20|F9FCE8-202020,-26|-3|EE2402-202020,-24|19|F8E840-202020,0|-11|E22008-202020,12|-5|F0A428-202020"}}, _
+	{"RageSpell", 2, 360, 2, {279, 263}, {"", ""}, {"6E1F40-202020","34|-3|8BB2F8-202020,14|14|B870A0-202020,34|-4|8FB7FE-202020,59|-29|D05068-202020,-11|16|E53898-202020,-24|34|F8AAF0-202020,11|-9|AC7D7A-202020"}}, _
+	{"EarthquakeSpell", 2, 180, 1, {142, 539}, {"", ""}, {"588ABC-202020","-14|9|081870-202020,11|-3|718CA8-202020,43|3|AFC8EF-202020,-15|26|144084-202020,12|30|243038-202020,48|30|C96368-202020,49|-25|C86068-202020"}} _
 }
 
 
@@ -1906,6 +1908,18 @@ Function FindTroopCardsStart()
 	End If
 End Function
 
+Function FindSpellCard(spell_name)
+	Dim x = -1, y = -1
+	Dim troop_type = GetTroopType(spell_name)
+	FindSpellCard = null
+	If troop_type <> null Then
+		FindMultiColor 0, 0, 130, 1280, GetTroopColorInWar(troop_type, 0), GetTroopColorInWar(troop_type, 1), 0, 0.98, x, y
+		If y > 0 Then 
+			FindSpellCard = {x, y}
+		End If 
+	End If
+End Function
+
 Function FindLightningSpellCard()
 	Dim x = -1, y = -1
 	Dim troop_type = GetTroopType("LightningSpell")
@@ -2080,13 +2094,13 @@ End Function
 Function GetClosestVacantGrids(map, top_left_row, top_left_column, side, max_grid_count, max_distance)
 	Dim di={0, 1, 0, -1}
 	Dim dj={1, 0, -1, 0}
-	Dim grids(101)
+	Dim grids(251)
 	Dim direction = 0
 	Dim step_in_direction = 0
 	Dim grid_count = 0
 	Dim distance = 1
-	If max_grid_count > 100 Then 
-		max_grid_count = 100
+	If max_grid_count > 250 Then 
+		max_grid_count = 250
 	End If
 	Dim row_index = top_left_row - 1
 	Dim column_index = top_left_column - 1
@@ -2121,7 +2135,7 @@ Function GetClosestVacantGrids(map, top_left_row, top_left_column, side, max_gri
 			step_in_direction = 0
 		End If
 	Wend
-	Dim results(101)
+	Dim results(251)
 	Dim result_count = 0
 	For r = 1 To max_r
 		For i = 0 To grid_count - 1
@@ -4191,7 +4205,33 @@ Function Challenge()
 	End If	
 End Function
 
+Function Spell(spell_name, x, y, currently_at_top, count)
+	Dim spell_card = FindSpellCard(spell_name)
+	If spell_card <> null Then 
+		TracePrint spell_name, "..."
+		If (GetRealScreenX(x, true) > 170 and GetRealScreenY(y, true) < 1000) or GetRealScreenX(x, true) > 280 Then 
+			If not currently_at_top Then 
+				MoveToMapTop()
+				currently_at_top = true
+			End If
+		Else 
+			If currently_at_top Then 
+				MoveToMapBottom()
+				currently_at_top = false
+			End If
+		End If
+		Tap spell_card(0), spell_card(1)
+		Delay 500
+		For count
+			TapOnRealScreen(x - 15, y, currently_at_top)
+			Delay Int(3000 + Rnd() * 1000)
+		Next
+	End If
+	Spell = currently_at_top
+End Function
+
 Function DragonChallenge()
+	ZoomOutToMax()
 	TracePrint DetectZoomRatio()
 	Dim interesting_building_types = {0, 4}
 	Dim building_infos = FindBuildings(interesting_building_types)
@@ -4203,50 +4243,114 @@ Function DragonChallenge()
 	Dim map = DetectVacantGrids(true)
 	MarkAndUpdateBuildings map, building_infos
 	PrintMap(map, building_infos)
-	Dim grids = GetClosestVacantGrids(map, townhall["row"], townhall["column"], 4, 200, 24)
-	Dim start_grid = grids(0)
+	Dim grids = GetClosestVacantGrids(map, townhall["row"], townhall["column"], 4, 100, 60)
+	Dim start_grid = {grids(0, 0), grids(0, 1)}
+	grids = GetClosestVacantGrids(map, start_grid(0), start_grid(1), 1, 250, 30)
 	Dim grid_count = GetLength(grids)
+	TracePrint grid_count
+	
+	Dim nearest_distance = -1
+	Dim nearest_air_defense = null
+	For i = 0 To GetLength(building_infos) - 1
+		Dim build_info = building_infos(i)
+		Dim position = {build_info["row"], build_info["column"]}
+		Dim distance = MDistance(start_grid, position)
+		If build_info["type"] = 4 and (nearest_distance = -1 or distance > nearest_distance) Then 
+			nearest_distance = distance
+			nearest_air_defense = build_info
+		End If
+	Next
+	Dim at_top = false
+	If nearest_air_defense <> null Then 
+		TracePrint "selected air defense:", nearest_air_defense["x"], nearest_air_defense["y"]
+		Dim x = nearest_air_defense["x"]
+		Dim y = nearest_air_defense["y"]
+		at_top = Spell("EarthquakeSpell", x, y, false, 1)
+		at_top = Spell("LightningSpell", x, y, false, 2) 
+	End If
+			
 	Dim selected_grids(20)
 	selected_grids(0) = start_grid
+	Dim trained_troop_infos = {{dragon_type, 10, 0}}
+	Dim dragon_count = 10
+	
+	Dim start_grid_at_top = (start_grid(1) >= start_grid(0) + 5)
+	
 	Dim selected_grid_count = 1
-	For i = 1 To grid_count - 1
-		Dim grid = grids(i)
-		Dim distance_to_start = MDistance(grid, start_grid)
-		If distance_to_start >= 4 and distance_to_start <= 30 Then 
-			Dim passed = true
-			For j = 1 To selected_grid_count - 1
-				Dim previous_grid = selected_grids(j)
-				If MDistance(grid, previous_grid) < 4 Then 
-					passed = false
-					Exit For
-				End If
-			Next
-			If passed Then 
-				selected_grids(selected_grid_count) = grid
-				selected_grid_count = selected_grid_count + 1
-				If selected_grid_count > 12 Then 
-					Exit For
+	Dim distance_to_each_other = 4
+	Dim center = {townhall["row"] * 0.6 + start_grid(0) * 0.4, _
+	             townhall["column"] * 0.6 + start_grid(1) * 0.4}
+	For dragon_count - 1
+		Dim min_distance_to_center = -1
+		Dim seletected_grid_index = -1
+		For i = 0 To grid_count - 1
+			Dim grid = grids(i)
+			If (start_grid_at_top and grid(1) >= grid(0) + 5) or (not start_grid_at_top and grid(1) < grid(0) + 5) Then 
+				Dim distance_to_center = MDistance(grid, center)
+				If min_distance_to_center = -1 or distance_to_center < min_distance_to_center
+					Dim passed = true
+					For j = 0 To selected_grid_count - 1
+						Dim previous_grid = selected_grids(j)
+						If MDistance(grid, previous_grid) < distance_to_each_other Then 
+							passed = false
+							Exit For
+						End If
+					Next
+					If passed Then
+						min_distance_to_center = distance_to_center
+						seletected_grid_index = i
+					End If
 				End If
 			End If
+		Next
+		If seletected_grid_index <> -1 Then 
+			grid = grids(seletected_grid_index)
+			selected_grids(selected_grid_count) = grid
+			selected_grid_count = selected_grid_count + 1
+			distance_to_each_other = distance_to_each_other + 0.4
+		Else 
+			For i = dragon_count - 1 to dragon_count - selected_grid_count step -1
+				selected_grids(i) = selected_grids(i-(dragon_count - selected_grid_count))
+			Next
+			For i = 0 to dragon_count - selected_grid_count - 1
+				selected_grids(i) = start_grid
+			Next
+			selected_grid_count = dragon_count
+			Exit For
 		End If
 	Next
 	
+	Dim dragon_center = {0, 0}
+	Dim center_dragon_count = Int(dragon_count * 0.5)
+	For i = 0 To center_dragon_count - 1
+		grid = selected_grids(i)
+		dragon_center(0) = dragon_center(0) + grid(0)
+		dragon_center(1) = dragon_center(1) + grid(1)
+	Next
+	dragon_center(0) = dragon_center(0) / center_dragon_count
+	dragon_center(1) = dragon_center(1) / center_dragon_count
+	
 	Dim dragon_type = GetTroopType("Dragon")
-	Dim trained_troop_infos = {{dragon_type, 10, 0}}
 	Dim troop_cards_start = FindTroopCardsStart()
 	SelectTroop(troop_cards_start, 0)
-	Dim deployment_interval = 300
+	Dim deployment_interval = 4000
 	
 	Dim deployed_points = 0
-	Dim at_top = true
+	Dim first_dragon = true
 	For k = 0 To 1
 		If k = 0 Then 
-			MoveToMapTop
+			If not at_top
+				MoveToMapTop()
+				Delay 500
+				at_top = true
+			End If
 		Else 
-		 	MoveToMapBottom
-		End if
-		For i = 0 To selected_grid_count - 1
-			Dim position = selected_grids(i)
+		 	MoveToMapBottom 
+		 	Delay 500
+		 	at_top = false
+		End If
+		For i = selected_grid_count - 1 to 0 step -1
+			position = selected_grids(i)
 			Dim row_index = position(0)
 			Dim column_index = position(1)
 			If (k = 0 and column_index >= row_index + 5) or (k = 1 and column_index < row_index + 5) Then 
@@ -4265,16 +4369,48 @@ Function DragonChallenge()
 				Dim coordinate = GetGridCenterCoordinate(row_index, column_index)
 				TapOnRealScreen(Int(coordinate(0) + (Rnd() - 0.5) * kHalfGridWidth), Int(coordinate(1) + (Rnd() - 0.5) * kHalfGridHeight), at_top)
 				deployed_points = deployed_points + 1
-				Delay Int(deployment_interval / 2 + Rnd() * deployment_interval)
+				If first_dragon Then 
+					Delay 210
+					first_dragon = false
+				Else 
+					Delay Int(deployment_interval / 2 + Rnd() * deployment_interval)
+					deployment_interval = deployment_interval * 0.75
+				End If
 			End If
 		Next
 		If deployed_points >= selected_grid_count Then 
 			Exit For
 		End If
-		at_top = false
 	Next
+	
+	Delay 5000
+	Dim direction = {townhall["row"] - dragon_center(0), townhall["column"] - dragon_center(1)}
+	Dim l = Sqr(direction(0) * direction(0) + direction(1) * direction(1))
+	Dim rage_coordinate = GetGridCenterCoordinate(Round(dragon_center(0) + direction(0) / l * 6), _
+	                                              Round(dragon_center(1) + direction(1) / l * 6))
+	Spell "RageSpell", rage_coordinate(0), rage_coordinate(1), at_top, 1
+	
+	Delay 15000
+	Dim start_grid_coordinate = GetGridCenterCoordinate(start_grid(0), start_grid(1))
+	If g_deploy_king and g_king_card_coordinate <> null Then 
+		Tap g_king_card_coordinate(0), g_king_card_coordinate(1)
+		Delay 500
+		TapOnRealScreen start_grid_coordinate(0), start_grid_coordinate(1), at_top
+		Delay 1000
+	End If
+	If g_deploy_queen and g_queen_card_coordinate <> null Then 
+		Tap g_queen_card_coordinate(0), g_queen_card_coordinate(1)
+		Delay 500
+		TapOnRealScreen start_grid_coordinate(0), start_grid_coordinate(1), at_top
+		Delay 1000
+	End If
 End Function
-//DragonChallenge 
+
+//g_deploy_king = true
+//g_king_card_coordinate = FindKingCard()
+//DragonChallenge()
+//WaitAndBurstHeros(180)
+
 //Delay 4000
 //For 40
 //	UpgradeWall(2350000, 2000000000, 2000000, 10, 7, 11)	
