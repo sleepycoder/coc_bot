@@ -5,7 +5,7 @@ Import "file.lua"
 Import "shanhai.lua"
 
 Dim g_version = "1.0.8.1"
-Dim log_level = 3
+Dim log_level = 1
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
 
@@ -3101,7 +3101,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 	While true
 		If g_uw_wall_info_index >= GetLength(kWallInfos) Then 
 			If turn_over Then 
-				LogAndShow 1, "无墙可刷"
+				//LogAndShow 1, "无墙可刷"
 				UpgradeWall = 1
 				Exit Function
 			End If
@@ -3123,7 +3123,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 		Else
 			Dim pixels = wall_info["pixels"]
 			Dim pixel_count = GetLength(pixels)
-			TracePrint "Test level", wall_info["level"]
+			//TracePrint "Test level", wall_info["level"]
 			
 //			If (gold_threshold = null or current_gold < gold_threshold or current_gold < wall_info["cost"] + minmal_remaining_resource) and _
 //				(elixir_threshold = null or wall_info["level"] < 8 or current_elixir < elixir_threshold or current_elixir < wall_info["cost"] + minmal_remaining_resource) Then 
@@ -3204,9 +3204,9 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 								Tap upgrade_button_x, upgrade_button_y
 								Delay 1000
 								If CmpColorEx(wall_info["verification"], 0.95) = 1 Then 
-									TracePrint "wall at ", wall_x, wall_y
+									//TracePrint "wall at ", wall_x, wall_y
 									If CmpColorEx(kUpgradeButtonPixels, 0.95) = 0 Then 
-										TracePrint "not able to upgrade"
+										//TracePrint "not able to upgrade"
 										g_able_to_update(wall_info["level"]) = false
 										KeyPress "Back"
 										Delay 1000
@@ -3218,10 +3218,10 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 									TapItem "Upgrade", 2000								
 									If use_gold Then 
 										current_gold = current_gold - wall_info["cost"]
-										TracePrint "god", current_gold
+										//TracePrint "god", current_gold
 									Else 
 										current_elixir = current_elixir - wall_info["cost"]
-										TracePrint "elixir", current_elixir
+										//TracePrint "elixir", current_elixir
 									End If
 									g_upgraded_walls(wall_info["level"]) = g_upgraded_walls(wall_info["level"]) + 1
 									
@@ -3234,12 +3234,12 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 										UpgradeWall = -1
 										Exit Function
 									End If
-									TracePrint "upgraded successfully"
+									//TracePrint "upgraded successfully"
 									Tap 5, 5
 									Delay 1000
 									Exit While
 								Else 
-									TracePrint "not a wall at ", wall_x, wall_y
+									//TracePrint "not a wall at ", wall_x, wall_y
 									KeyPress "Back"
 									Delay 1000
 									Tap 5, 5
