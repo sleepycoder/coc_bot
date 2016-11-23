@@ -4,8 +4,8 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.0.8.2"
-Dim log_level = 1
+Dim g_version = "1.1.0.0"
+Dim log_level = 3
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
 
@@ -213,11 +213,13 @@ Dim kTotalTroopCountDigitIndex = 2
 Dim kTroopCountDigitIndex = 3
 Dim kTrainingTroopDigitIndex = 4
 Dim kWarResultDigitIndex = 5
+Dim kWarTrophyDigitIndex = 6
 SetDictEx kResourceDigitIndex, "Attachment:digits.txt"
 SetDictEx kTotalTroopCountDigitIndex, "Attachment:total_troop_count_digits.txt"
 SetDictEx kTroopCountDigitIndex, "Attachment:troop_count_digits.txt"
 SetDictEx kTrainingTroopDigitIndex, "Attachment:training_troop_count_digits.txt"
 SetDictEx kWarResultDigitIndex, "Attachment:war_result_digits.txt"
+SetDictEx kWarTrophyDigitIndex, "Attachment:war_trophy_digits.txt"
 
 Function LogInfo(level, log_message)
 	If log_level >= level Then 
@@ -630,11 +632,16 @@ End Function
 Function RecognizeRobableAmount()
     //LogInfo 3, "recognize robable resource amount"
     KeepCapture
-    Dim results = { _
-		SmartDigitOCR(kResourceDigitIndex, 605, 62, 630, 200,"CCFBFF-202020", 0.9, True), _
-		SmartDigitOCR(kResourceDigitIndex, 567, 60, 592, 200,"FDE8FF-202020", 0.9, True), _
-		SmartDigitOCR(kResourceDigitIndex, 530, 60, 555, 200,"F3F3F3-202020", 0.9, True) _
-	}
+    Dim results(4)
+	results(0) = SmartDigitOCR(kResourceDigitIndex, 605, 62, 630, 200,"CCFBFF-202020", 0.9, True)
+	results(1) = SmartDigitOCR(kResourceDigitIndex, 567, 60, 592, 200, "FDE8FF-202020", 0.9, True)
+	If CmpColorEx("533|44|503447-202020,532|51|583C4D-202020,549|53|391E30-202020",0.98) = 1 Then
+		results(2) = SmartDigitOCR(kResourceDigitIndex, 530, 60, 555, 200, "F3F3F3-202020", 0.9, True)
+		results(3) = SmartDigitOCR(kWarTrophyDigitIndex, 465, 62, 500, 105, "FFFFFF-202020", 0.9, True)
+	Else
+		results(2) = 0
+		results(3) = SmartDigitOCR(kWarTrophyDigitIndex, 512, 62, 537, 105, "FFFFFF-202020", 0.9, True)
+	End If
 	//LogInfo(3, "gold " & CStr(results(0)))
 	//LogInfo(3, "elixir " & CStr(results(1)))
 	//LogInfo 3, "drak elixir " & CStr(results(2))
@@ -1076,7 +1083,7 @@ Function BrewSpell(spell, count)
 		Dim coordinate = GetTroopTrainingCoordinate(GetTroopType(spell))
 		For count
 			Tap coordinate(0), coordinate(1)
-			Delay 100
+			Delay 300
 		Next
 		Delay 500
 	End If
@@ -1598,7 +1605,8 @@ Function CheckOpponentResourceCriteria(criterias, resources, estimated)
 		If (estimated and criteria["estimated"]) or not estimated Then 
 			checked_rules = checked_rules + 1
 			If resources(0) >= criteria["gold"] and resources(1) >= criteria["elixir"] and _ 
-				resources(2) >= criteria["dark_elixir"] and resources(0) + resources(1) >= criteria["gold_and_elixir"] Then
+				resources(2) >= criteria["dark_elixir"] and resources(0) + resources(1) >= criteria["gold_and_elixir"] and _
+				(criteria["trophy"] = null or resources(3) >= criteria["trophy"]) Then
 				CheckOpponentResourceCriteria = True
 				Exit Function
 			End If
@@ -1774,10 +1782,10 @@ Function SearchOpponent(overall_criteria, own_resources, stretagy)
 		//Report "a village: gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir"&CStr(opponent_resources(2))
 		Dim passed = True
 		
-		LogAndShow 3, "Village: Gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir "&CStr(opponent_resources(2))
+		LogAndShow 3, "Village: Gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir "&CStr(opponent_resources(2))&", Trophy "&CStr(opponent_resources(3))
 		If not CheckOpponentResourceCriteria(overall_criteria, opponent_resources, false) Then 
 			passed = False
-			LogAndShow 3, "Maximum possible resources are not enough.. Gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir "&CStr(opponent_resources(2))
+			LogAndShow 3, "Maximum possible resources are not enough.. Gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir "&CStr(opponent_resources(2))&", Trophy "&CStr(opponent_resources(3))
 		End If
 		
 		Dim pass_dead_fish_check = (not g_only_attack_dead_fish)
@@ -1835,11 +1843,39 @@ Function SearchOpponent(overall_criteria, own_resources, stretagy)
 					LogAndShow 3, "Attackable buildings don't have enought resources.. Gold "&CStr(selected_building_resources(0)) & ", Elixir " & CStr(selected_building_resources(1)) & ", DarkElixir " & CStr(selected_building_resources(2))
 				End If
 			End If
+			If passed and stretagy["type"] = 2 Then 
+				Dim townhall = FindTownhall(building_infos)
+				if townhall = null Then
+					If FindTownHallAtBottomLeft(building_infos) Then 
+						townhall = FindTownhall(building_infos)
+					End If
+				End If
+				If townhall = null Then 
+					LogAndShow 3, "townhall not found"
+					passed = false
+				End If
+				If passed and townhall["level"] > 8 Then 
+					LogAndShow 3, "townhall level is higher than 8(it's "&CStr(townhall["level"])&")"
+					passed = false
+				End If
+				If passed and GetLength(building_infos) <= 1 Then 
+					LogAndShow 3, "didn't find air defense..."
+					passed = false
+				End If
+				If passed Then 
+					map = DetectVacantGrids(true)
+					MarkAndUpdateBuildings(map, building_infos)
+					If log_level >= 3 Then 
+						PrintMap(map, building_infos)	
+					End If
+				End If
+				
+			End If
 		End If
 		
 		If passed Then 
 			Report("Find a opponent after seeing " & CStr(g_search_opponent) &" villages using " & CStr(Time() - g_search_start_time) & " seconds, total gold: " & _
-			       CStr(opponent_resources(0)) & " elixir: " & CStr(opponent_resources(1)) & " dark elixir: " & CStr(opponent_resources(2)) & ", estimated gold: " & _
+			       CStr(opponent_resources(0)) & " elixir: " & CStr(opponent_resources(1)) & " dark elixir: " & CStr(opponent_resources(2)) & ", trophy: " & CStr(opponent_resources(3)) & ", estimated gold: " & _
 			       CStr(estimated_resources(0)) & " elixir: " & CStr(estimated_resources(1)) & " dark elixir: " & CStr(estimated_resources(2)))
 			TracePrint "Estimated reources in townhall: ", (opponent_resources(0) - estimated_resources(0)) / 5, _
 					(opponent_resources(1) - estimated_resources(1)) / 5, (opponent_resources(2) - estimated_resources(2)) / 5
@@ -2909,6 +2945,8 @@ Function GoToWar(overall_criteria, strategy, trained_troop_infos)
 		ElseIf strategy["type"] = 1 Then	
 			strategy_result_code = TargetBuildingStrategy(map, building_infos, own_resources_before_war, total_resources, estimated_resources, _
 													  		strategy["target_building"], trained_troop_infos, strategy["deployment_interval"])
+		ElseIf strategy["type"] = 2 Then
+			strategy_result_code = DragonAttack(map, building_infos)
 		End If
 	
 		g_search_opponent = 0
@@ -3425,6 +3463,10 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 							If g_spell_lightning_at_dark_elixir_drill Then 
 								BrewSpell("LightningSpell", 5)
 							End If
+							If strategy["type"] = 2 Then 
+								BrewDragonAttackSpells()
+								BrewDragonAttackSpells()
+							End If
 						End If
 						
 						LeftTroopConfigurationPage()
@@ -3436,6 +3478,10 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 						End If
 						If g_spell_lightning_at_dark_elixir_drill Then 
 							BrewSpell("LightningSpell", 5)
+						End If
+						If strategy["type"] = 2 Then 
+							BrewDragonAttackSpells()
+							BrewDragonAttackSpells()
 						End If
 						LeftTroopConfigurationPage()
 					End If
@@ -3657,6 +3703,18 @@ Function LoadDefaultStrategy(strategy_index)
 		g_troop_plan(2) = 2
 		g_only_attack_dead_fish = true
 		g_overall_criteria(0) = {"gold":0, "elixir":0, "dark_elixir":500, "gold_and_elixir":0, "estimated":true}
+	ElseIf strategy_index = 3 Then // 龙流冲杯
+		strategy = {_
+			"type": 2, _
+			"troop_trained_percentage": 0.95 _
+		}
+		g_troop_plan(GetTroopType("Dragon")) = 1
+		g_only_attack_dead_fish = false
+		g_overall_criteria(0) = {"gold":0, "elixir":400000, "dark_elixir":0, "gold_and_elixir":0, "trophy":10, "estimated":false}
+		g_overall_criteria(1) = {"gold":0, "elixir":300000, "dark_elixir":0, "gold_and_elixir":0, "trophy":20, "estimated":false}
+		g_overall_criteria(2) = {"gold":0, "elixir":200000, "dark_elixir":0, "gold_and_elixir":0, "trophy":30, "estimated":false}
+		
+		g_spell_lightning_at_dark_elixir_drill = false  // don't spelllightning on dark elixir drills
 	End If
 	LoadDefaultStrategy = strategy
 End Function
@@ -3930,7 +3988,7 @@ Function LoadSettingFromDefaultConfigPage()
 		
 	//Dim kAttackConfig = {"弓蛮打鱼（造兵便宜）", "弓蛮巨打鱼（金水黑均衡）", "全力抢黑（打黑快）", "自定义"}
 	Dim overall_config = Int(ReadUIConfig("overall_config", 1))
-	If overall_config <> 3 Then 
+	If overall_config <> 4 Then 
 		g_strategy = LoadDefaultStrategy(overall_config)
 	End If
 	
@@ -3945,7 +4003,7 @@ Function LoadSettingFromDefaultConfigPage()
 		Next
 	End If
 	
-	If overall_config = 3 Then 
+	If overall_config = 4 Then 
 		g_only_attack_dead_fish = ReadUIConfig("only_attack_dead_fish", true)
 		Dim criteria_count = 0
 		For i = 0 To 3
@@ -4073,7 +4131,7 @@ Function LoadSettingFromDefaultConfigPage()
 	log_str = log_str & "_NL_only-attack-dead-fish:" & CStr(g_only_attack_dead_fish)
 	For i = 0 To GetLength(g_overall_criteria) - 1
 		criteria = g_overall_criteria(i)
-		log_str = log_str & "_NL_criteria: gold "&CStr(criteria["gold"])&",elixir "&CStr(criteria["elixir"])&",dark_elixir "&CStr(criteria["dark_elixir"])&",gold_and_elixir "&CStr(criteria["gold_and_elixir"])&",estimated "&CStr(criteria["estimated"])
+		log_str = log_str & "_NL_criteria: gold "&CStr(criteria["gold"])&",elixir "&CStr(criteria["elixir"])&",dark_elixir "&CStr(criteria["dark_elixir"])&",gold_and_elixir "&CStr(criteria["gold_and_elixir"])&",trophy "&CStr(criteria["trophy"])&",estimated "&CStr(criteria["estimated"])
 	Next
 
 	Report log_str
@@ -4082,6 +4140,8 @@ Function LoadSettingFromDefaultConfigPage()
 		g_interesting_building_types = FindInterestingBuildingTypes(null, g_overall_criteria)
 	ElseIf g_strategy["type"] = 1 Then 
 		g_interesting_building_types = FindInterestingBuildingTypes(g_strategy["target_building"], g_overall_criteria)
+	ElseIf g_strategy["type"] = 2 Then 
+		g_interesting_building_types = {0, 4}
 	End If
 	Dim interesting_building_type_str = ""
 	For i = 0 To GetLength(g_interesting_building_types) - 1
@@ -4205,6 +4265,12 @@ Function Challenge()
 	End If	
 End Function
 
+Function BrewDragonAttackSpells()
+	BrewSpell("LightningSpell", 2)
+	BrewSpell("RageSpell", 1)
+	BrewSpell("EarthquakeSpell", 2)
+End Function
+
 Function Spell(spell_name, x, y, currently_at_top, count)
 	Dim spell_card = FindSpellCard(spell_name)
 	If spell_card <> null Then 
@@ -4235,38 +4301,46 @@ Function DragonChallenge()
 	TracePrint DetectZoomRatio()
 	Dim interesting_building_types = {0, 4}
 	Dim building_infos = FindBuildings(interesting_building_types)
+	Dim map = DetectVacantGrids(true)
 	Dim townhall = FindTownhall(building_infos)
 	If townhall = null Then 
 		FindTownHallAtBottomLeft (building_infos)
 		townhall = FindTownhall(building_infos)
 	End If
-	Dim map = DetectVacantGrids(true)
-	MarkAndUpdateBuildings map, building_infos
-	PrintMap(map, building_infos)
+	DragonAttack(map, building_infos)
+End Function
+
+Function DragonAttack(map, building_infos)    
+	Dim townhall = FindTownhall(building_infos)
+	If townhall = null Then 
+		DragonAttack = -1
+		Exit Function
+	End If
 	Dim grids = GetClosestVacantGrids(map, townhall["row"], townhall["column"], 4, 100, 60)
 	Dim start_grid = {grids(0, 0), grids(0, 1)}
 	grids = GetClosestVacantGrids(map, start_grid(0), start_grid(1), 1, 250, 30)
 	Dim grid_count = GetLength(grids)
 	TracePrint grid_count
 	
-	Dim nearest_distance = -1
+	Dim best_distance = -1
 	Dim nearest_air_defense = null
 	For i = 0 To GetLength(building_infos) - 1
 		Dim build_info = building_infos(i)
 		Dim position = {build_info["row"], build_info["column"]}
 		Dim distance = MDistance(start_grid, position)
-		If build_info["type"] = 4 and (nearest_distance = -1 or distance > nearest_distance) Then 
-			nearest_distance = distance
+		If build_info["type"] = 4 and (best_distance = -1 or distance > best_distance) Then 
+			best_distance = distance
 			nearest_air_defense = build_info
 		End If
 	Next
-	Dim at_top = false
+	MoveToMapTop()
+	Dim at_top = true
 	If nearest_air_defense <> null Then 
 		TracePrint "selected air defense:", nearest_air_defense["x"], nearest_air_defense["y"]
 		Dim x = nearest_air_defense["x"]
 		Dim y = nearest_air_defense["y"]
-		at_top = Spell("EarthquakeSpell", x, y, false, 1)
-		at_top = Spell("LightningSpell", x, y, false, 2) 
+		at_top = Spell("EarthquakeSpell", x, y, at_top, 1)
+		at_top = Spell("LightningSpell", x, y, at_top, 2) 
 	End If
 			
 	Dim selected_grids(20)
@@ -4307,7 +4381,7 @@ Function DragonChallenge()
 			grid = grids(seletected_grid_index)
 			selected_grids(selected_grid_count) = grid
 			selected_grid_count = selected_grid_count + 1
-			distance_to_each_other = distance_to_each_other + 0.4
+			distance_to_each_other = distance_to_each_other + 0.35
 		Else 
 			For i = dragon_count - 1 to dragon_count - selected_grid_count step -1
 				selected_grids(i) = selected_grids(i-(dragon_count - selected_grid_count))
@@ -4321,7 +4395,7 @@ Function DragonChallenge()
 	Next
 	
 	Dim dragon_center = {0, 0}
-	Dim center_dragon_count = Int(dragon_count * 0.5)
+	Dim center_dragon_count = Int(dragon_count * 0.6)
 	For i = 0 To center_dragon_count - 1
 		grid = selected_grids(i)
 		dragon_center(0) = dragon_center(0) + grid(0)
@@ -4333,7 +4407,7 @@ Function DragonChallenge()
 	Dim dragon_type = GetTroopType("Dragon")
 	Dim troop_cards_start = FindTroopCardsStart()
 	SelectTroop(troop_cards_start, 0)
-	Dim deployment_interval = 4000
+	Dim deployment_interval = 3000
 	
 	Dim deployed_points = 0
 	Dim first_dragon = true
@@ -4345,7 +4419,7 @@ Function DragonChallenge()
 				at_top = true
 			End If
 		Else 
-		 	MoveToMapBottom 
+		 	MoveToMapBottom()
 		 	Delay 500
 		 	at_top = false
 		End If
@@ -4374,7 +4448,7 @@ Function DragonChallenge()
 					first_dragon = false
 				Else 
 					Delay Int(deployment_interval / 2 + Rnd() * deployment_interval)
-					deployment_interval = deployment_interval * 0.75
+					deployment_interval = deployment_interval * 0.7
 				End If
 			End If
 		Next
@@ -4383,14 +4457,14 @@ Function DragonChallenge()
 		End If
 	Next
 	
-	Delay 5000
+	Delay 4000
 	Dim direction = {townhall["row"] - dragon_center(0), townhall["column"] - dragon_center(1)}
 	Dim l = Sqr(direction(0) * direction(0) + direction(1) * direction(1))
 	Dim rage_coordinate = GetGridCenterCoordinate(Round(dragon_center(0) + direction(0) / l * 6), _
 	                                              Round(dragon_center(1) + direction(1) / l * 6))
 	Spell "RageSpell", rage_coordinate(0), rage_coordinate(1), at_top, 1
 	
-	Delay 15000
+	Delay 14000
 	Dim start_grid_coordinate = GetGridCenterCoordinate(start_grid(0), start_grid(1))
 	If g_deploy_king and g_king_card_coordinate <> null Then 
 		Tap g_king_card_coordinate(0), g_king_card_coordinate(1)
@@ -4404,8 +4478,11 @@ Function DragonChallenge()
 		TapOnRealScreen start_grid_coordinate(0), start_grid_coordinate(1), at_top
 		Delay 1000
 	End If
+	WaitAndBurstHeros(135)
+	DragonAttack = 0
 End Function
 
+//BrewDragonChallengeSpells()
 //g_deploy_king = true
 //g_king_card_coordinate = FindKingCard()
 //DragonChallenge()
@@ -4438,7 +4515,7 @@ End Function
 Run() 
 
 //Dim results = RecognizeRobableAmount()
-//TracePrint(results(0), results(1), results(2))
+//TracePrint(results(0), results(1), results(2), results(3))
 
 //Dim total = DetectTotalTroopCount()
 //TracePrint total(0), total(1)
