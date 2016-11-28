@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.1.0.0"
+Dim g_version = "1.1.0.5"
 Dim log_level = 3
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
@@ -288,8 +288,6 @@ Function Report(log_message)
 //	End If
 	
 End Function
-
-LogAndShow(1, "¸¨Öú°æ±¾:"&CStr(g_version))
 
 //{"ElixirCollector12", {"65D0FC-202020","0|11|78F8FF-202020,-8|1|285970-202020,-9|11|256493-202020,15|4|9E8E94-202020,17|1|B6B2B8-202020,14|8|999198-202020,23|8|50BDF8-202020,11|7|59C8F8-202020"}}, _
 //{"ElixirCollector11", {"70E0FF-202020","0|9|78F6FF-202020,-6|-1|285C70-202020,-5|9|276795-202020,14|1|8C7E7E-202020,13|5|8B7E80-202020,7|2|275470-202020,22|7|54C4F8-202020"}}, _
@@ -1597,16 +1595,27 @@ Function HasNextOpponentButton()
 	HasNextOpponentButton = (CmpColorEx("176|1082|0044D8-202020,225|1074|28ACEF-202020,183|1243|38C6E8-202020,237|1254|28B0F0-202020", 0.9) = 1)
 End Function
 
-Function CheckOpponentResourceCriteria(criterias, resources, estimated)
+Function FindOrDefault(dict, key, default)
+	If dict[key] = null Then 
+		FindOrDefault = default
+	Else 
+		FindOrDefault = dict[key]
+	End If
+End Function
+
+Function CheckOpponentResourceCriteria(criterias, resources, criteria_scales, own_resources, estimated)
 	Dim i = 0
 	Dim checked_rules = 0
 	While criterias(i) <> null
 		Dim criteria = criterias(i)
 		If (estimated and criteria["estimated"]) or not estimated Then 
 			checked_rules = checked_rules + 1
-			If resources(0) >= criteria["gold"] and resources(1) >= criteria["elixir"] and _ 
-				resources(2) >= criteria["dark_elixir"] and resources(0) + resources(1) >= criteria["gold_and_elixir"] and _
-				(criteria["trophy"] = null or resources(3) >= criteria["trophy"]) Then
+			If resources(0) >= criteria["gold"] * FindOrDefault(criteria_scales, "gold", 1) and _
+			   resources(1) >= criteria["elixir"] * FindOrDefault(criteria_scales, "elixir", 1) and _ 
+			   resources(2) >= criteria["dark_elixir"] *  FindOrDefault(criteria_scales, "dark_elixir", 1) and _ 
+			   resources(0) + resources(1) >= criteria["gold_and_elixir"] * FindOrDefault(criteria_scales, "gold_and_elixir", 1) and _
+			   (criteria["trophy"] = null or resources(3) >= criteria["trophy"] * FindOrDefault(criteria_scales, "trophy", 1)) and _
+			   (criteria["own_trophy"] = null or own_resources(3) >= criteria["own_trophy"]) Then
 				CheckOpponentResourceCriteria = True
 				Exit Function
 			End If
@@ -1706,12 +1715,39 @@ Function DetectZoomRatio()
 	ReleaseCapture
 End Function
 
+Function InitializeCriteriaScales(stretagt_type, criteria_scales)
+	If stretagt_type = 2 Then 
+		If criteria_scales["trophy"] = null Then 
+			criteria_scales["trophy"] = 1
+		Else
+			criteria_scales["trophy"] = criteria_scales["trophy"] + 0.3
+			If criteria_scales["trophy"] > 1 Then 
+				criteria_scales["trophy"] = 1
+			End If
+		End If
+	End If
+End Function
+
+Function UpdateCriteriaScales(stretagt_type, searched_opponent_count, criteria_scales)
+	If stretagt_type = 2 Then 
+		If searched_opponent_count >= 60 Then 
+			criteria_scales["trophy"] = criteria_scales["trophy"] - 1 / 400
+			If criteria_scales["trophy"] < 0.4 Then 
+				criteria_scales["trophy"] = 0.4
+			End If
+		End If
+		ShowMsg 3, "searched opponent: "&CStr(searched_opponent_count)&",Trophy criteria scale: "&CStr(criteria_scales["trophy"])
+	End If
+End Function
+
 Dim g_search_opponent = 0
 Dim g_search_start_time = 0
+Dim g_criteria_scales = {"placehold": 1}
 // criteria=(gold, elixir, dark_elixir, gold + elixir, use_estimated)+
 Function SearchOpponent(overall_criteria, own_resources, stretagy)
     If g_search_opponent = 0 Then 
     	g_search_start_time = Time()
+    	InitializeCriteriaScales(stretagy["type"], g_criteria_scales)
     End If
     Dim lightning_spell_card_coordinate = null
     Dim seeked_lightning_spell_card = false
@@ -1721,6 +1757,8 @@ Function SearchOpponent(overall_criteria, own_resources, stretagy)
 	Do
 		Delay 500
 		g_search_opponent = g_search_opponent + 1
+		UpdateCriteriaScales(stretagy["type"], g_search_opponent, g_criteria_scales)
+		
 		Dim current = Time()
 		If current - last_update > 60 Then 
 			last_update = current
@@ -1783,7 +1821,7 @@ Function SearchOpponent(overall_criteria, own_resources, stretagy)
 		Dim passed = True
 		
 		LogAndShow 3, "Village: Gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir "&CStr(opponent_resources(2))&", Trophy "&CStr(opponent_resources(3))
-		If not CheckOpponentResourceCriteria(overall_criteria, opponent_resources, false) Then 
+		If not CheckOpponentResourceCriteria(overall_criteria, opponent_resources, g_criteria_scales, own_resources, false) Then 
 			passed = False
 			LogAndShow 3, "Maximum possible resources are not enough.. Gold "&CStr(opponent_resources(0))&", Elixir "&CStr(opponent_resources(1))&", Black Elixir "&CStr(opponent_resources(2))&", Trophy "&CStr(opponent_resources(3))
 		End If
@@ -1818,7 +1856,7 @@ Function SearchOpponent(overall_criteria, own_resources, stretagy)
 				Next
 				LogAndShow 3, "Estimated Gold " & CStr(estimated_resources(0)) & ", Elixir " & CStr(estimated_resources(1)) & ", DarkElixir " & CStr(estimated_resources(2))
 	
-				If not CheckOpponentResourceCriteria(overall_criteria, estimated_resources, true) Then 
+				If not CheckOpponentResourceCriteria(overall_criteria, estimated_resources, g_criteria_scales, own_resources, true) Then 
 					passed = False
 					LogAndShow 3, "Estimated resources are not enough.. Gold " & CStr(estimated_resources(0)) & ", Elixir " & CStr(estimated_resources(1)) & ", DarkElixir " & CStr(estimated_resources(2))
 				End If
@@ -1838,7 +1876,7 @@ Function SearchOpponent(overall_criteria, own_resources, stretagy)
 				Dim selected_building_resources = SumRobableResourcesFromSelectedBuildings(building_infos, opponent_resources, estimated_resources)
 				TracePrint "selected building:", selected_building_resources(0), selected_building_resources(1), selected_building_resources(2)
 				
-				If not CheckOpponentResourceCriteria(overall_criteria, selected_building_resources, true) Then 
+				If not CheckOpponentResourceCriteria(overall_criteria, selected_building_resources, g_criteria_scales, own_resources, true) Then 
 					passed = False
 					LogAndShow 3, "Attackable buildings don't have enought resources.. Gold "&CStr(selected_building_resources(0)) & ", Elixir " & CStr(selected_building_resources(1)) & ", DarkElixir " & CStr(selected_building_resources(2))
 				End If
@@ -3196,6 +3234,10 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 						
 			KeepCapture 
 			Dim need_release = true
+			If not InClan Then 
+				UpgradeWall = -1
+				Exit Function
+			End If
 			If g_uw_y < kYMargin Then 
 				g_uw_y = kYMargin
 			End If
@@ -3235,6 +3277,13 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 //							If p(0) > 0 and p(0) < 45 and p(1) > 0 and p(1) < 45 Then 
 //								g_uw_map(p(0), p(1)) = CStr(g_uw_wall_info_index)
 //							End If
+							ReleaseCapture 
+							need_release = false
+							
+							If not InClan Then 
+								UpgradeWall = -2
+								Exit Function
+							End If
 							
 							Tap wall_x, wall_y
 							Delay 1500
@@ -3243,9 +3292,6 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 							Dim upgrade_button_x, upgrade_button_y
 							Dim use_gold = true
 							
-							ReleaseCapture 
-							need_release = false
-
 							If gold_threshold <> null and current_gold >= gold_threshold and current_gold >= wall_info["cost"] + minmal_remaining_resource Then 
 								FindMultiColor 14, 358, 163, 934, "D8D8E8-202020", "8|9|C8CBD8-202020,-16|2|949EA8-202020,7|-11|243A75-202020,8|-9|162E63-202020,-11|14|426CD3-202020,-18|25|5078E0-202020,-27|40|3F77DF-202020,37|60|53E8F0-202020,34|63|38CAEC-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
 							ElseIf elixir_threshold <> null and current_elixir >= elixir_threshold and current_elixir >= wall_info["cost"] + minmal_remaining_resource Then
@@ -3267,7 +3313,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 										Exit While
 									End If
 									
-									TapItem "Upgrade", 2000								
+									TapItem "Upgrade", 2000
 									If use_gold Then 
 										current_gold = current_gold - wall_info["cost"]
 										//TracePrint "god", current_gold
@@ -3301,6 +3347,10 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 							
 							KeepCapture 
 							need_release = true
+							If not InClan Then 
+								UpgradeWall = -1
+								Exit Function
+							End If
 						End If
 					End If
 				End If
@@ -3332,7 +3382,8 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 				check_in_clan = check_in_clan - 1
 			Wend
 			If need_release Then 
-				ReleaseCapture	
+				ReleaseCapture 
+				need_release = false
 			End If
 		End If
 	Wend
@@ -3710,10 +3761,10 @@ Function LoadDefaultStrategy(strategy_index)
 		}
 		g_troop_plan(GetTroopType("Dragon")) = 1
 		g_only_attack_dead_fish = false
-		g_overall_criteria(0) = {"gold":0, "elixir":400000, "dark_elixir":0, "gold_and_elixir":0, "trophy":10, "estimated":false}
-		g_overall_criteria(1) = {"gold":0, "elixir":300000, "dark_elixir":0, "gold_and_elixir":0, "trophy":20, "estimated":false}
-		g_overall_criteria(2) = {"gold":0, "elixir":200000, "dark_elixir":0, "gold_and_elixir":0, "trophy":30, "estimated":false}
-		
+		g_overall_criteria(0) = {"gold":0, "elixir":500000, "dark_elixir":0, "gold_and_elixir":0, "trophy":5, "estimated":false}
+		g_overall_criteria(1) = {"gold":0, "elixir":400000, "dark_elixir":0, "gold_and_elixir":0, "trophy":15, "estimated":false}
+		g_overall_criteria(2) = {"gold":0, "elixir":300000, "dark_elixir":0, "gold_and_elixir":0, "trophy":25, "estimated":false}
+		g_overall_criteria(3) = {"gold":0, "elixir":200000, "dark_elixir":0, "gold_and_elixir":0, "trophy":30, "estimated":false, "own_trophy": 2600}
 		g_spell_lightning_at_dark_elixir_drill = false  // don't spelllightning on dark elixir drills
 	End If
 	LoadDefaultStrategy = strategy
@@ -3807,6 +3858,7 @@ Function Run()
 	End If
 	
 	Log.Open 
+	LogAndShow(1, "¸¨Öú°æ±¾:"&CStr(g_version))
 	Report "Write log to " & GetTempDir()
 	If not StartApp() Then 
 		Exit Function
@@ -4268,7 +4320,7 @@ End Function
 Function BrewDragonAttackSpells()
 	BrewSpell("LightningSpell", 2)
 	BrewSpell("RageSpell", 1)
-	BrewSpell("EarthquakeSpell", 2)
+	BrewSpell("EarthquakeSpell", 1)
 End Function
 
 Function Spell(spell_name, x, y, currently_at_top, count)
@@ -4316,9 +4368,10 @@ Function DragonAttack(map, building_infos)
 		DragonAttack = -1
 		Exit Function
 	End If
-	Dim grids = GetClosestVacantGrids(map, townhall["row"], townhall["column"], 4, 100, 60)
+	Dim non_deployment_margin = 5
+	Dim grids = GetClosestVacantGrids(map, townhall["row"] - non_deployment_margin, townhall["column"] - non_deployment_margin, 4 + non_deployment_margin * 2, 100, 70)
 	Dim start_grid = {grids(0, 0), grids(0, 1)}
-	grids = GetClosestVacantGrids(map, start_grid(0), start_grid(1), 1, 250, 30)
+	grids = GetClosestVacantGrids(map, start_grid(0), start_grid(1), 1, 250, 35)
 	Dim grid_count = GetLength(grids)
 	TracePrint grid_count
 	
@@ -4328,7 +4381,7 @@ Function DragonAttack(map, building_infos)
 		Dim build_info = building_infos(i)
 		Dim position = {build_info["row"], build_info["column"]}
 		Dim distance = MDistance(start_grid, position)
-		If build_info["type"] = 4 and (best_distance = -1 or distance > best_distance) Then 
+		If build_info["type"] = 4 and (best_distance = -1 or distance < best_distance) Then 
 			best_distance = distance
 			nearest_air_defense = build_info
 		End If
@@ -4352,8 +4405,8 @@ Function DragonAttack(map, building_infos)
 	
 	Dim selected_grid_count = 1
 	Dim distance_to_each_other = 4
-	Dim center = {townhall["row"] * 0.6 + start_grid(0) * 0.4, _
-	             townhall["column"] * 0.6 + start_grid(1) * 0.4}
+	Dim center = {townhall["row"] * 0.5 + start_grid(0) * 0.5, _
+	             townhall["column"] * 0.5 + start_grid(1) * 0.5}
 	For dragon_count - 1
 		Dim min_distance_to_center = -1
 		Dim seletected_grid_index = -1
@@ -4444,11 +4497,14 @@ Function DragonAttack(map, building_infos)
 				TapOnRealScreen(Int(coordinate(0) + (Rnd() - 0.5) * kHalfGridWidth), Int(coordinate(1) + (Rnd() - 0.5) * kHalfGridHeight), at_top)
 				deployed_points = deployed_points + 1
 				If first_dragon Then 
-					Delay 210
+					Delay 310
 					first_dragon = false
 				Else 
 					Delay Int(deployment_interval / 2 + Rnd() * deployment_interval)
-					deployment_interval = deployment_interval * 0.7
+					deployment_interval = deployment_interval * 0.72
+					If deployment_interval < 300 Then 
+						deployment_interval = 300
+					End If
 				End If
 			End If
 		Next
@@ -4512,7 +4568,7 @@ End Function
 //KeyPress "Back"
 //TracePrint NeedReinforcement()
 //TracePrint NeedGemsToRequestReinforcement()
-Run() 
+Run()
 
 //Dim results = RecognizeRobableAmount()
 //TracePrint(results(0), results(1), results(2), results(3))
