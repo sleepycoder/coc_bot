@@ -4,8 +4,8 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.1.0.5"
-Dim log_level = 3
+Dim g_version = "1.1.1.0"
+Dim log_level = 1
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
 
@@ -454,6 +454,7 @@ End Function
 
 Dim kScreenCoordinates = { _
 	{"OpenTroopConfigurationPage", {196, 54}}, _
+	{"Army", {678, 186}}, _
 	{"Barrack", {676, 465}}, _
 	{"SpellFactory", {677, 740}}, _
 	{"CancelTraining", {586, 1200}}, _
@@ -897,6 +898,23 @@ Function DetectTotalTroopCount()
 	End If
 End Function
 
+Function DetectTotalSpellCount()
+	Dim intX,intY
+	FindMultiColor 402, 100, 404, 300, "E0E8E8-080808","6|0|DFE7E7-080808,11|0|E0E8E8-080808,16|1|E0E8E8-080808,23|1|E0E8E8-080808,0|4|E0E8E8-080808,6|4|E0E8E8-080808,11|4|E0E8E8-080808,16|4|E0E8E8-080808,23|4|E0E8E8-080808", 0, 1, intX, intY
+	If intX < 0 or intY < 0 Then
+		DetectTotalSpellCount = {-1, -1}
+		Exit Function
+	End If
+	Dim result = SmartDigitOCR(kTotalTroopCountDigitIndex, 402,intY,432,intY+150, "FFFFFF-101010", 0.9, False)
+	//TracePrint intY, result
+	Dim slash_position = InStr(1, result, "/")
+	If slash_position = null Then 
+		DetectTotalSpellCount = {-1, -1}
+	Else 
+		DetectTotalSpellCount = {Int(Mid(result, 1, slash_position - 1)), Int(Mid(result, slash_position + 1, Len(result) - slash_position))}
+	End If
+End Function
+
 Function CheckTrainedTroop(trained_troops_infos)
 	Dim l = GetLength(trained_troops_infos)
 	Dim str = ""
@@ -1114,7 +1132,11 @@ Function TrainTroops(counts, cancel_training, force)
 End Function
 
 Function IsTrainingTroop()
-	IsTrainingTroop = (CmpColorEx("672|576|20B36C-303030,677|578|77D0A0-303030",0.9) = 1)
+	IsTrainingTroop = (CmpColorEx("672|576|20B36C-303030,677|578|77D0A0-303030", 1) = 1)
+End Function
+
+Function ArmyCampsAreFull()
+	ArmyCampsAreFull = (CmpColorEx("604|1191|A9AFD7-101010,506|1194|A9AFD7-101010", 1) = 1)
 End Function
 
 Function LeftTroopConfigurationPage()
@@ -1921,7 +1943,7 @@ Function SearchOpponent(overall_criteria, own_resources, stretagy)
 			Exit Function
 		End If
 		
-		If g_spell_lightning_at_dark_elixir_drill and not g_spell_lightning_at_dark_elixir_drill_only_when_attack and pass_dead_fish_check Then 
+		If g_spell_lightning_at_dark_elixir_drill and not g_spell_lightning_at_dark_elixir_drill_only_when_attack and pass_dead_fish_check and stretagy["type"] <> 2 Then 
 			//Report "estimated dark elixir by lightning is " & CStr(opponent_resources(2) * 0.3)
 			//TracePrint g_spell_lightning_at_dark_elixir_drill_if_dark_elixir
 			If lightning_spell_card_coordinate <> null and opponent_resources(2) * 0.4 > g_spell_lightning_at_dark_elixir_drill_if_dark_elixir Then 
@@ -3175,6 +3197,15 @@ Dim g_uw_up_bottom_index = 0
 Dim g_uw_x = 0
 Dim g_uw_y = 0
 
+Function CheckUpgradeWallResourceEnough()
+	Dim x, y
+	CheckUpgradeWallResourceEnough = false
+	FindColor 68, 543, 129, 696, "120AE7-202020", 0, 0.9, x, y
+	If x < 0 and y < 0 and CmpColorEx(kUpgradeButtonPixels, 0.95) = 1 Then 
+		CheckUpgradeWallResourceEnough = True	
+	End If
+End Function
+
 Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_threshold, min_wall_level, max_wall_level)
 	LogAndShow 1, "Ë¢Ç½¼ì²â"
 	Dim kYMargin = 150
@@ -3301,9 +3332,9 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 							If upgrade_button_x > 0 and upgrade_button_y > 0 Then 
 								Tap upgrade_button_x, upgrade_button_y
 								Delay 1000
-								If CmpColorEx(wall_info["verification"], 0.95) = 1 Then 
+								If  CmpColorEx(wall_info["verification"], 0.95) = 1 Then 
 									//TracePrint "wall at ", wall_x, wall_y
-									If CmpColorEx(kUpgradeButtonPixels, 0.95) = 0 Then 
+									If not CheckUpgradeWallResourceEnough() Then 
 										//TracePrint "not able to upgrade"
 										g_able_to_update(wall_info["level"]) = false
 										KeyPress "Back"
@@ -3456,16 +3487,45 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 				Dim total_count = DetectTotalTroopCount()
 				Dim force_to_train = false
 				g_max_population = total_count(1)
-				g_current_population = total_count(0) 
-				If total_count(0) >= total_count(1) * strategy["troop_trained_percentage"] or (total_count(1) - total_count(0) < 30 and Time() - g_last_train_troop_time < 120 and not IsTrainingTroop()) Then
-					Report "Troops are ready! " & CStr(total_count(0)) & "/" & CStr(total_count(1))
-					trained_troops_info = GetTrainedTroops()
-					If trained_troops_info = null Then 
-						Report "Failed to get trained troops"
-						Exit Function
+				g_current_population = total_count(0)
+				
+				Dim troops_are_ready = false
+				If total_count(0) >= total_count(1) * strategy["troop_trained_percentage"] Then
+					troops_are_ready = true
+				ElseIf total_count(1) - total_count(0) < 30 Then
+					TapItem("Barrack", 1000)
+					If ArmyCampsAreFull() Then 
+						troops_are_ready = true
 					End If
- 					CheckTrainedTroop(trained_troops_info)
-					ready_to_fight = True
+					TapItem("Army", 500)
+				End If
+				
+				If troops_are_ready Then 
+					ready_to_fight = true
+					If strategy["type"] = 2 Then  // Dragon attack needs spell ready as well.
+						Dim total_spell = DetectTotalSpellCount()
+						If total_spell(0) = total_spell(1) and total_spell(1) > 0 Then 
+							Report "Spells are ready! " & CStr(total_spell(0)) & "/" & CStr(total_spell(1))
+						Else 
+							ready_to_fight = false
+							If total_spell(0) = total_spell(1) - 1 Then 
+								TapItem("SpellFactory", 1000)
+								If ArmyCampsAreFull() Then 
+									ready_to_fight = true
+								End If
+								TapItem("Army", 500)
+							End If
+						End If
+					End If
+					If ready_to_fight Then 
+						Report "Troops are ready! " & CStr(total_count(0)) & "/" & CStr(total_count(1))
+						trained_troops_info = GetTrainedTroops()
+						If trained_troops_info = null Then 
+							Report "Failed to get trained troops"
+							Exit Function
+						End If
+ 						CheckTrainedTroop(trained_troops_info)
+					End If
 				Else 
 					//Report "Troops not ready, " & CStr(total_count(0)) & "/" & CStr(total_count(1))
 					If not IsTrainingTroop() Then 
@@ -4373,7 +4433,6 @@ Function DragonAttack(map, building_infos)
 	Dim start_grid = {grids(0, 0), grids(0, 1)}
 	grids = GetClosestVacantGrids(map, start_grid(0), start_grid(1), 1, 250, 35)
 	Dim grid_count = GetLength(grids)
-	TracePrint grid_count
 	
 	Dim best_distance = -1
 	Dim nearest_air_defense = null
@@ -4569,7 +4628,7 @@ End Function
 //TracePrint NeedReinforcement()
 //TracePrint NeedGemsToRequestReinforcement()
 Run()
-
+//Traceprint CheckUpgradeWallResourceEnough()
 //Dim results = RecognizeRobableAmount()
 //TracePrint(results(0), results(1), results(2), results(3))
 
