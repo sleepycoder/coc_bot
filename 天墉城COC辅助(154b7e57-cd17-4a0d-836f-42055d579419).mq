@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.1.1.0"
+Dim g_version = "1.2.1.8"
 Dim log_level = 1
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
@@ -313,16 +313,16 @@ Dim kObjectPixels = { _
     {"ElixirLevel2", {"FF82EE-020202","-2|1|FF7EF0-020202,-4|0|FC89EA-020202,-5|1|D949C6-020202,-6|0|BB55A5-020202"}}, _
     {"ElixirLevel1", {"FF80F0-020202","-2|1|FF78E9-020202,-4|0|FF7BED-020202,-5|1|FF77E8-020202,-6|0|FF93EF-020202"}}, _
     {"ElixirLevel0", {"FF87F0-101010","-3|1|5F799A-101010,-4|1|596C8A-101010,-6|-1|FF7CE8-101010,-6|2|FF70E8-101010,0|2|FF7FEF-101010"}}, _
-    {"ElixirCollector12", {"59C8F8-202020","4|-3|9E8E94-202020,-11|-7|65D0FC-202020,-11|4|78F8FF-202020,-19|-6|285970-202020,-20|4|256493-202020,6|-6|B6B2B8-202020,3|1|999198-202020,12|1|50BDF8-202020"}}, _
+    {"ElixirCollector12", {"50B8EB-202020","-11|4|76F0FF-202020,-12|-5|61CFF9-202020,4|-15|9F8B88-202020,15|5|C8CFE4-202020,-2|11|E0EFFF-202020,-2|-16|5C4D48-202020,-21|6|206090-202020,-20|-6|285C70-202020,-5|4|206190-202020"/*"59C8F8-202020","4|-3|9E8E94-202020,-11|-7|65D0FC-202020,-11|4|78F8FF-202020,-19|-6|285970-202020,-20|4|256493-202020,6|-6|B6B2B8-202020,3|1|999198-202020,12|1|50BDF8-202020"*/}}, _
    	{"ElixirCollector11", {"8B7E80-202020","-13|-5|70E0FF-202020,-13|4|78F6FF-202020,-19|-6|285C70-202020,-18|4|276795-202020,1|-4|8C7E7E-202020,-6|-3|275470-202020,9|2|54C4F8-202020"}}, _
-   	{"ElixirCollector10", {"205D88-303030","7|3|5BC7F5-202020,10|-2|00F0FB-202020,-24|-8|595E60-202020,-24|4|5A7080-202020,-24|-2|58BDEF-202020,0|-16|544A45-202020,-8|11|5F5050-202020,16|2|ADA8B6-202020"}}, _
-   	{"ElixirCollector9", {"58585B-202020","-2|-6|5C5754-202020,8|-6|B2ACB1-202020,3|7|636168-202020,-12|14|625E60-202020,-9|-6|58C4F0-202020,-9|6|52B6E2-202020"}}, _
+   	{"ElixirCollector10", {"55BDF0-202020","1|1|58C4F1-202020,3|-15|C8C3CF-202020,-4|6|D6DFED-202020,3|8|DAEEFF-202020,4|-4|00EBFF-202020,7|3|414049-202020,2|2|60D0FB-202020,-4|-18|584C48-202020,-30|2|5D7184-202020"/*"205D88-303030","7|3|5BC7F5-202020,10|-2|00F0FB-202020,-24|-8|595E60-202020,-24|4|5A7080-202020,-24|-2|58BDEF-202020,0|-16|544A45-202020,-8|11|5F5050-202020,16|2|ADA8B6-202020"*/}}, _
+   	{"ElixirCollector9", {"585151-202020","14|-6|C5CAD9-202020,2|-10|BCBDC5-202020,5|7|605C5D-202020,-9|15|646264-202020,6|7|605F5E-202020,-28|5|586E80-202020,-4|4|273D5B-202020,-19|12|184450-202020"/*"58585B-202020","-2|-6|5C5754-202020,8|-6|B2ACB1-202020,3|7|636168-202020,-12|14|625E60-202020,-9|-6|58C4F0-202020,-9|6|52B6E2-202020"*/}}, _
    	{"ElixirCollector8", {"565350-202020","-1|-6|5A5550-202020,3|-5|B0A7A9-202020,2|7|60595B-202020,-13|14|706468-202020,-30|-5|96A7B8-202020,-12|1|284668-202020,-6|-2|5BC1F0-202020,-30|0|58C4F5-202020"}}, _
-   	{"GoldMine11", {"aeb0bc-454139","-6|-6|54412c-1a140c,-6|0|2c221f-1d1513,-9|-7|1d2832-15181e,3|-4|2f221f-201918,-5|-7|58402e-231a11,-7|-6|4f3e34-26151d,-5|5|7e726c-27231a,-8|-8|14212b-1b1f2b,-5|0|2f241f-2e251e,-9|-8|1f1b22-321d1c,-3|-6|7e6150-332624,4|-4|40312b-332927,-3|4|887975-342923,-4|-7|604a36-352b28,-4|5|817470-362722,-2|5|8f7f7d-362e26,-7|0|2e2724-39342d,4|-5|392b29-3c2a2b,4|5|b6b9c1-3c3a35,-7|-8|18252c-23333d,-6|-5|645145-36343d,3|4|9fa4ac-3e3a39,-8|-7|34303a-401a1e,-7|-7|3d363b-401f39,-6|-7|433d3d-401330,-2|-3|38333a-3f2e40,-5|-1|1f1715-40302d,-6|5|72645e-433f3a,3|3|9a9ba2-3c3d45"}}, _
-	{"GoldMine12", {"4e5861-272f39","-3|-7|252121-181010,-8|-4|06171c-0f131c,-8|-7|523e2b-221a0e,-4|4|1d1c1b-25262a,-5|-7|745845-2d1f19,-5|-4|2a3b49-1b242f,-4|-4|2a2e35-23232f,-7|-4|091e29-122330,-4|0|37404a-262831,-6|-7|715643-33281d,-7|-7|604735-342318,-1|-1|505960-232934,-6|-4|111e28-273035,-9|-3|18151a-352d38,-8|-6|604f40-343039,-5|-3|2d323c-23273e,-6|-2|212b33-3f292b,1|2|545c67-24353f,-3|-4|41474e-293641"}}, _
-	{"GoldMine9", {"ab8f85-403e3c","-7|4|0f1314-050909,-7|3|111112-12110f,-2|1|9a8980-1f1912,-3|-5|17202a-1c2528,-6|-1|456891-141e28,-3|2|6e655d-282218,-1|2|9b867c-1d1c28,0|-1|b5998d-2a1c18,-1|0|9b7a67-2a281d,-7|-1|4a75ab-1f262d,-1|-5|73584d-312326,-4|-3|8c6a50-312f23,-3|4|4e7db2-222831,-7|-2|49719f-192332,1|-1|aa876f-1e2632,-5|-5|406c9c-121e33,-2|-4|382e30-351c1e,-1|1|a08881-352722,-7|-3|3d5c7b-182639,-5|1|517eb1-1b2b39,-4|-2|8a6658-32343b,-3|-1|5e412f-3b271e,-5|0|3f5c7f-192f3c,-6|4|242426-3c3335,-6|1|4470a1-1a2d40,-2|2|8a7c74-413535,2|-5|302c29-46312f,-5|4|584e53-46393b,1|4|3b3332-464040"}}, _
-	{"GoldMine10", {"a78a82-38291f","-8|-8|273544-151213,-8|0|271f1a-18140e,-7|-6|55422f-191411,-8|-6|564131-1a1414,-6|-1|322521-1d1712,-7|-7|524034-1e111b,-3|-7|826754-1f1b1b,-9|-8|1e2b37-141a23,-6|-6|67503e-241b1f,-5|-3|100e0e-241717,-6|-8|4f3b30-262212,-4|-7|7a5d4d-261e1d,-7|-1|261c18-261c15,-6|-7|5c4532-2a231c,-5|-2|291e1e-2a1f1f,-10|-7|292f39-2d1913,-3|-6|856856-2d252a,1|-5|9b775b-2f1d1a,-10|-8|17232e-1d2831,-2|-1|9b8777-2d1d31,0|-7|99775e-322515,0|-5|99755c-322018,-7|0|3d2e28-332723,1|-6|97755c-34201b,0|-6|98755a-352a1e,-3|3|93827d-352f2a,-1|-1|a68d80-3a2a30,-1|0|907a72-3a2a28,-2|-2|ab8b7c-3c343c"}}, _
-	{"GoldMine8", {"332a23-2b1e1e","-6|6|0d161d-0e1922,1|1|453325-23130e,-1|-1|1c252d-0f1b28,-4|-2|97755e-292015,0|1|3a281e-2a1c14,-3|0|96745e-2b2014,-5|-3|937157-2e2223,-4|-1|93735b-2e221c,-6|2|4975a7-1d252e,-2|1|9a785e-302317,-3|-3|334e70-1d2933,1|5|51392b-331f1b,-5|-2|97735b-34261c,-3|-1|987561-34231c,-2|2|98775c-35271e,-1|0|232e3b-172536,-3|1|957561-362a24,-5|4|4573a3-152636,-2|-2|2a3c56-1d2a38,-5|2|426894-1c2938,-4|5|4572a2-19283a,-1|3|95745b-3b2b1d,-5|3|4972a2-1e2d3d,1|2|3b2a1c-3e2b1e,-6|3|41678e-18243e,-1|2|937157-3f3326,-5|6|5a4e53-3f3a3a,1|-2|987459-402e1f,2|-1|926e53-41362e"}}, _
+   	{"GoldMine11", {"BCBCC4-202020","-3|-6|886756-202020,-5|5|8A7D75-202020,-21|-2|9D9CA0-202020,-24|0|B0B0B8-202020,-9|17|A7A8B0-202020,-7|-13|60442F-202020,-5|4|8B7C73-202020,1|0|AFAEB3-202020,-16|-11|584C40-202020"/*"aeb0bc-454139","-6|-6|54412c-1a140c,-6|0|2c221f-1d1513,-9|-7|1d2832-15181e,3|-4|2f221f-201918,-5|-7|58402e-231a11,-7|-6|4f3e34-26151d,-5|5|7e726c-27231a,-8|-8|14212b-1b1f2b,-5|0|2f241f-2e251e,-9|-8|1f1b22-321d1c,-3|-6|7e6150-332624,4|-4|40312b-332927,-3|4|887975-342923,-4|-7|604a36-352b28,-4|5|817470-362722,-2|5|8f7f7d-362e26,-7|0|2e2724-39342d,4|-5|392b29-3c2a2b,4|5|b6b9c1-3c3a35,-7|-8|18252c-23333d,-6|-5|645145-36343d,3|4|9fa4ac-3e3a39,-8|-7|34303a-401a1e,-7|-7|3d363b-401f39,-6|-7|433d3d-401330,-2|-3|38333a-3f2e40,-5|-1|1f1715-40302d,-6|5|72645e-433f3a,3|3|9a9ba2-3c3d45"*/}}, _
+	{"GoldMine12", {"50565D-303030","-4|-13|785540-202020,-25|-2|454548-202020,-12|-9|302C28-202020,-14|18|474856-202020,-5|-8|7C5945-202020,-13|-8|322C28-202020,-24|0|505460-202020,-10|6|8F7C75-202020"/*"4e5861-272f39","-3|-7|252121-181010,-8|-4|06171c-0f131c,-8|-7|523e2b-221a0e,-4|4|1d1c1b-25262a,-5|-7|745845-2d1f19,-5|-4|2a3b49-1b242f,-4|-4|2a2e35-23232f,-7|-4|091e29-122330,-4|0|37404a-262831,-6|-7|715643-33281d,-7|-7|604735-342318,-1|-1|505960-232934,-6|-4|111e28-273035,-9|-3|18151a-352d38,-8|-6|604f40-343039,-5|-3|2d323c-23273e,-6|-2|212b33-3f292b,1|2|545c67-24353f,-3|-4|41474e-293641"*/}}, _
+	{"GoldMine9", {"473332-202020","-14|-9|745440-202020,-23|-12|605A58-202020,-12|-2|4976AB-202020,-11|-1|456E9A-202020,-14|-9|745440-202020,-25|-10|534E50-202020,-12|-3|4F739E-202020,-22|-12|676263-202020,-11|-11|5C422D-202020"/*"ab8f85-403e3c","-7|4|0f1314-050909,-7|3|111112-12110f,-2|1|9a8980-1f1912,-3|-5|17202a-1c2528,-6|-1|456891-141e28,-3|2|6e655d-282218,-1|2|9b867c-1d1c28,0|-1|b5998d-2a1c18,-1|0|9b7a67-2a281d,-7|-1|4a75ab-1f262d,-1|-5|73584d-312326,-4|-3|8c6a50-312f23,-3|4|4e7db2-222831,-7|-2|49719f-192332,1|-1|aa876f-1e2632,-5|-5|406c9c-121e33,-2|-4|382e30-351c1e,-1|1|a08881-352722,-7|-3|3d5c7b-182639,-5|1|517eb1-1b2b39,-4|-2|8a6658-32343b,-3|-1|5e412f-3b271e,-5|0|3f5c7f-192f3c,-6|4|242426-3c3335,-6|1|4470a1-1a2d40,-2|2|8a7c74-413535,2|-5|302c29-46312f,-5|4|584e53-46393b,1|4|3b3332-464040"*/}}, _
+	{"GoldMine10", {"A09088-202020","2|-12|B38566-202020,-3|-13|B08468-202020,-9|-1|908078-202020,-24|-7|A09FA7-202020,-3|-12|A88360-202020,-11|-13|5C4630-202020,-12|11|A0A4B0-202020,-10|-19|5E4430-202020,3|-5|B18868-202020"/*"a78a82-38291f","-8|-8|273544-151213,-8|0|271f1a-18140e,-7|-6|55422f-191411,-8|-6|564131-1a1414,-6|-1|322521-1d1712,-7|-7|524034-1e111b,-3|-7|826754-1f1b1b,-9|-8|1e2b37-141a23,-6|-6|67503e-241b1f,-5|-3|100e0e-241717,-6|-8|4f3b30-262212,-4|-7|7a5d4d-261e1d,-7|-1|261c18-261c15,-6|-7|5c4532-2a231c,-5|-2|291e1e-2a1f1f,-10|-7|292f39-2d1913,-3|-6|856856-2d252a,1|-5|9b775b-2f1d1a,-10|-8|17232e-1d2831,-2|-1|9b8777-2d1d31,0|-7|99775e-322515,0|-5|99755c-322018,-7|0|3d2e28-332723,1|-6|97755c-34201b,0|-6|98755a-352a1e,-3|3|93827d-352f2a,-1|-1|a68d80-3a2a30,-1|0|907a72-3a2a28,-2|-2|ab8b7c-3c343c"*/}}, _
+	{"GoldMine8", {"583C28-202020","-6|-6|AB8465-202020,-3|-11|AB8467-202020,-2|-10|A98468-202020,-4|-5|AC8568-202020"/*"332a23-2b1e1e","-6|6|0d161d-0e1922,1|1|453325-23130e,-1|-1|1c252d-0f1b28,-4|-2|97755e-292015,0|1|3a281e-2a1c14,-3|0|96745e-2b2014,-5|-3|937157-2e2223,-4|-1|93735b-2e221c,-6|2|4975a7-1d252e,-2|1|9a785e-302317,-3|-3|334e70-1d2933,1|5|51392b-331f1b,-5|-2|97735b-34261c,-3|-1|987561-34231c,-2|2|98775c-35271e,-1|0|232e3b-172536,-3|1|957561-362a24,-5|4|4573a3-152636,-2|-2|2a3c56-1d2a38,-5|2|426894-1c2938,-4|5|4572a2-19283a,-1|3|95745b-3b2b1d,-5|3|4972a2-1e2d3d,1|2|3b2a1c-3e2b1e,-6|3|41678e-18243e,-1|2|937157-3f3326,-5|6|5a4e53-3f3a3a,1|-2|987459-402e1f,2|-1|926e53-41362e"*/}}, _
 	{"DarkElixirDrill1", {"8E90A6-202020","-6|-6|6094D0-202020,10|0|878A9E-202020,3|4|858290-202020,7|11|6093D0-202020,-22|-7|B6BDC7-202020,-7|15|C8D7E6-202020"}}, _
 	{"DarkElixirDrill2", {"868696-202020","-6|-9|888698-202020,9|-3|8C8E9F-202020,6|8|888CA0-202020,-15|-7|305078-202020,-1|10|305078-202020,-23|-5|708498-202020,-11|12|77889F-202020"}}, _
 	{"DarkElixirDrill3", {"60C0F8-303030","-7|-8|5DC8FF-202020,-14|-9|304D62-202020,7|8|60C1F8-202020,-25|-5|5B5C68-202020,-11|13|605E68-202020,10|-9|868899-202020,-27|9|5D8AC0-202020", _
@@ -336,10 +336,10 @@ Dim kObjectPixels = { _
 	                      "1E131B-101010","1|0|200E1C-101010,2|0|281522-101010,3|0|50344C-101010,4|0|351F2D-101010,4|-2|402333-101010,5|-3|563346-101010,3|1|7D5D7D-101010,5|-1|797C8D-101010,4|-4|543542-101010"}}, _
 	{"DarkElixirLevel1", {"5B3650-202020","1|0|422434-202020,2|0|3C2230-202020,1|-1|4C2C3C-202020,2|-1|482438-202020,3|0|402332-202020,4|1|8890A0-202020,9|1|9297AC-202020,1|3|685064-202020"}}, _
 	{"DarkElixirLevel0", {"64646B-202020","0|1|92909A-202020,1|2|92969D-202020,2|3|A2A0AD-202020,3|3|999DA5-202020,5|-1|898EA1-202020,9|1|9095A3-202020"}}, _
-	{"Townhall11", {"3680FF-202020","-6|-23|0748C8-202020,-17|-2|0030CE-202020,1|22|0032D3-202020,-6|-2|3399FF-202020,-23|3|909DA7-202020,-5|28|939FA8-202020,-41|0|00005B-202020"}}, _
-	{"Townhall10", {"2176FF-202020","18|0|787070-202020,-3|-29|2B2C7A-202020,2|22|7E7070-202020,-16|-8|38409B-202020,-21|16|46AEEE-202020,-35|1|333688-202020,-14|29|3838B0-202020"}}, _
-	{"Townhall9", {"4B433E-202020","14|-8|8EA6BE-202020,1|-33|3E322C-202020,1|15|B0C4DC-202020,-13|-10|95A8BF-202020,-35|-5|4B403D-202020,-17|20|4C4246-202020,-23|15|C8DDEF-202020"}}, _
-	{"Townhall8", {"4778AB-202020","8|-9|C1D0EC-202020,17|-1|B0BEE0-202020,-18|-2|B8C7E8-202020,-19|28|40A8FF-202020,-38|-1|3C9DEF-202020,-34|15|B4B4C8-202020,-18|-30|2767A2-202020"}}, _
+	{"Townhall11", {"3A8CF6-303030","-2|-35|001D6C-303030,2|-31|3B8CBF-303030,-3|-26|0040BB-303030,4|22|002CA1-303030,4|15|002DA2-303030,-15|-6|002ECF-303030,-18|-15|7B705E-303030,-3|22|8E98A2-303030"/*"3680FF-202020","-6|-23|0748C8-202020,-17|-2|0030CE-202020,1|22|0032D3-202020,-6|-2|3399FF-202020,-23|3|909DA7-202020,-5|28|939FA8-202020,-41|0|00005B-202020"*/}}, _
+	{"Townhall10", {"60E7FF-202020","2|-35|302E7E-202020,-9|-12|383D99-202020,-11|-18|302D7E-202020,-6|-3|5A5C67-202020,-13|18|3338AA-202020,-26|1|383890-202020,14|4|697387-202020,-18|-11|334050-202020"/*"2176FF-202020","18|0|787070-202020,-3|-29|2B2C7A-202020,2|22|7E7070-202020,-16|-8|38409B-202020,-21|16|46AEEE-202020,-35|1|333688-202020,-14|29|3838B0-202020"*/}}, _
+	{"Townhall9", {"5D4E4B-303030","2|-17|504644-303030,2|-33|403430-303030,4|19|B8C6E0-303030,17|-6|A0B3C8-303030,-8|-2|504445-303030,-19|11|544A48-303030,-11|-8|A0B2C8-303030,-15|-15|686668-303030"/*"4B433E-202020","14|-8|8EA6BE-202020,1|-33|3E322C-202020,1|15|B0C4DC-202020,-13|-10|95A8BF-202020,-35|-5|4B403D-202020,-17|20|4C4246-202020,-23|15|C8DDEF-202020"*/}}, _
+	{"Townhall8", {"4C83BC-202020","9|-12|A4B7D9-202020,9|-1|9299B3-202020,-16|23|3EA5FB-202020,-17|-37|2C74AF-202020,9|-14|ABBDE0-202020,-3|16|51657E-202020,-19|13|3FA5FC-202020,-5|-27|4D5154-202020,-13|-9|4271A8-202020"/*"4778AB-202020","8|-9|C1D0EC-202020,17|-1|B0BEE0-202020,-18|-2|B8C7E8-202020,-19|28|40A8FF-202020,-38|-1|3C9DEF-202020,-34|15|B4B4C8-202020,-18|-30|2767A2-202020"*/}}, _
 	{"Townhall7", {"A8B4D8-202020","-3|-12|4879AF-202020,9|-5|40B0FF-202020,-8|18|40AFFF-202020,-19|4|40B0FF-202020,-18|-23|58544B-202020,-2|8|575D72-202020,-35|16|B2B0C2-202020"}}, _
 	{"Townhall6", {"46B4FF-202020","-5|-17|41ADFF-202020,-22|6|40ACFF-202020,-12|20|42B1FF-202020,-2|13|6D6F6B-202020,-23|-19|685850-202020,-33|-15|235C95-202020,-39|18|B4B2C4-202020"}}, _
 	{"AirDefense2", {"30B698-303030","2|11|4E57D5-303030,1|-7|5064DD-303030,-10|-5|53463B-303030,-10|6|5B4A3C-303030,-4|1|35BB97-303030,-12|11|31C8A1-303030,-12|-2|204061-303030,-5|-11|37B090-303030,-19|-2|0F372C-303030"}}, _
@@ -374,28 +374,28 @@ Function GetPixels(object_name)
 End Function
 
 Dim kTroopInfos = { _
-	{"Barbarian", 1, 5, 0, {275, 130},  {"42E6FF-101010","-2|-25|D8A970-101010,-13|36|D8A068-101010,-29|2|C0CAFF-101010,-57|7|C0C8FF-101010,-36|10|36F9FF-101010"}}, _
-	{"Archer", 1, 6, 0, {145, 130}, {"D05AFC-101010","-19|10|7340EE-101010,-47|6|A0B7FB-101010,-78|13|10DEF6-101010,-10|40|D19C60-101010"}}, _
-	{"Giant", 5, 30, 0, {275, 262}, {"98CCFF-101010","-10|27|087CF8-101010,-11|-7|0877EF-101010,-29|14|98D8FF-101010,-57|21|7FC5F9-101010,-61|49|6069A0-101010"}}, _
-	{"Goblin", 1, 7, 0, {145, 262}, {"6CF4B8-101010","-25|-48|184C9B-101010,-20|-37|D8AC78-101010,-12|23|66F0AB-101010,-65|20|7DEAAD-101010"}}, _
-	{"WallBreaker", 2, 15, 0, {275, 394}, {"E8C089-101010","-18|-23|705F6E-101010,-9|17|4883DF-101010,-36|14|CFE4FE-101010,-54|25|CC9460-101010"}}, _
-	{"Balloon", 5, 30, 0, {145, 394}, {"121F88-101010","-11|-13|E4BB88-101010,-29|23|43424B-101010,-12|35|D8AC78-101010,-65|24|8AA8D2-101010,-25|-6|104199-101010"}}, _
-	{"Wizard", 4, 30, 0, {275, 526}, {"DAAE76-101010","-8|20|D0F0FF-101010,-31|37|88A4F8-101010,-45|43|2E3347-101010,-55|19|282C30-101010,-14|51|E1ECDF-101010"}}, _
-	{"Healer", 14, 120, 0, {145, 526}, {"E2F8FD-101010","-2|-19|D8A468-101010,2|27|ECFCFC-101010,-33|16|B8D5FB-101010,-67|20|B8DAFB-101010,-28|45|D8F7FA-101010"}}, _
-	{"Dragon", 20, 180, 0, {275, 658}, {"502D38-101010","30|19|F0F8F8-101010,23|-20|D8AB70-101010,-16|5|3855FA-101010,2|38|5F3040-101010,-21|38|CEDBEC-101010"}}, _
-	{"PEKKA", 25, 180, 0, {145, 658}, {"A08968-101010","13|-2|E0BA87-101010,22|-15|F8F8F8-101010,14|40|D5A268-101010,3|49|B728A4-101010,-49|32|98805E-101010"}}, _
-	{"BayDragon", 10, 90, 0, {275, 790}, {"39A179-101010","11|-13|D9AC78-101010,21|2|7065E8-101010,-9|42|49C489-101010,-39|46|215F38-101010"}}, _
-	{"Miner", 5, 120, 0, {145, 790}, {"809CDA-101010","45|-10|52524F-101010,41|-37|D7A065-101010,-20|4|E89868-101010,-9|22|304460-101010"}}, _
-	{"Minion", 2, 18, 1, {275, 930}, {"E8D475-101010","-10|16|E8E4A0-101010,16|27|402518-101010,21|-4|382010-101010,-43|19|987C50-101010,1|-26|854E23-101010"}}, _
-	{"HogRider", 5, 45, 1, {145, 930}, {"27304A-101010","7|-11|D8AC70-101010,15|28|303840-101010,-6|31|5D84D1-101010,-39|50|587BD0-101010,-61|33|101B20-101010"}}, _
-	{"Valkyrie", 8, 90, 1, {275, 1062}, {"1365FF-101010","-14|20|B0C9FB-101010,-13|44|0036A6-101010,-39|12|B5CBF8-101010,-39|36|A8BBF7-101010,-72|23|B0BBF8-101010"}}, _
-	{"Golem", 30, 300, 1, {145, 1062}, {"9BB9D8-101010","9|-37|90A8B8-101010,-22|-15|C880F0-101010,-15|17|526572-101010,-51|16|687F98-101010,-17|34|A0C1E0-101010"}}, _
-	{"Witch", 12, 180, 1, {275, 1194}, {"603838-101010","7|18|78484E-101010,-31|2|706C71-101010,-25|20|E8D8F0-101010,-44|37|4CF8FF-101010,-16|-5|AE47F8-101010"}}, _
-	{"LavaHound", 30, 300, 1, {145, 1194}, {"505E67-101010","22|-14|10B7F5-101010,-3|20|485758-101010,10|41|202827-101010,-6|45|0077FF-101010,-22|18|203424-101010"}}, _
+	{"Barbarian", 1, 5, 0, {275, 130},  {"30B0EF-101010","-28|25|74B8F8-101010,2|-32|D0A060-101010,3|24|33C4F8-101010,-60|38|7EB3F8-101010,-27|6|609CF8-101010,-69|10|6E96E5-101010,-4|40|D09960-101010,-22|19|BDE0F0-101010"}}, _
+	{"Archer", 1, 6, 0, {145, 130}, {"6429B8-101010","-4|17|682CC8-101010,-61|9|18A085-101010,-33|-9|687CC8-101010,-51|26|C88C58-101010,-48|10|30BEA6-101010"}}, _
+	{"Giant", 5, 30, 0, {275, 262}, {"70A8F0-101010","37|-47|79A6E8-101010,38|-19|98D0FB-101010,5|-19|88B4F8-101010,-22|16|1F7BF7-101010,29|16|3894F9-101010"}}, _
+	{"Goblin", 1, 7, 0, {145, 262}, {"5EDFB0-101010","10|-26|8DF0B0-101010,-3|-61|466386-202020,11|-8|60ECB8-101010,-57|-18|5ED8A8-101010,10|-54|3C95CD-101010"}}, _
+	{"WallBreaker", 2, 15, 0, {275, 394}, {"CC9860-101010","44|7|B8D4E0-101010,73|-52|668FBA-101010,-5|-1|C99059-101010,60|3|325A95-101010,14|3|A2BFCA-101010,63|-36|413C31-101010"}}, _
+	{"Balloon", 5, 30, 0, {145, 394}, {"1920AC-101010","-8|-57|292571-101010,1|-41|201C6D-101010,-79|-4|5073AA-101010,-22|-30|3279F8-101010"}}, _
+	{"Wizard", 4, 30, 0, {275, 526}, {"B0C8F8-101010","-34|-1|203058-101010,-4|14|A67030-101010,30|-27|F6ECD8-101010,36|-32|DAAC72-101010,-25|-11|243448-101010,-41|19|90642F-101010"}}, _
+	{"Healer", 14, 120, 0, {145, 526}, {"E5EAF7-101010","-39|3|88A4EC-101010,5|-23|E7E7EE-101010,-69|7|6A88CC-101010,-29|-11|B3D7F8-101010,6|-33|D8AC70-101010,-55|7|E7E8F5-101010"}}, _
+	{"Dragon", 20, 180, 0, {275, 658}, {"D8A869-101010","-25|-22|E05E70-101010,6|-61|F8FCFF-101010,-43|-23|6036E7-101010,-52|-1|D09C68-101010,-69|-16|6D2C40-101010,-2|-44|F07080-101010"}}, _
+	{"PEKKA", 25, 180, 0, {145, 658}, {"DBD8D8-101010","-13|42|F5E0B9-101010,-19|24|7E4C40-101010,-28|42|F0CDF5-101010,-11|71|E850C8-101010,-69|60|5B3A28-101010,-66|35|381A0A-101010"}}, _
+	{"BayDragon", 10, 90, 0, {275, 790}, {"60D880-101010","-33|51|52D488-101010,11|-6|1F5C89-101010,-34|16|4654B5-101010,-53|9|287335-101010,-58|29|285CA0-101010"}}, _
+	{"Miner", 5, 120, 0, {145, 790}, {"AEB3AE-101010","-43|2|A0CCFF-101010,-73|-3|E49665-101010,9|-12|E0FCFE-101010,-52|14|304467-101010,-49|-5|718DC9-101010,-9|0|686560-101010,-64|30|98BDFF-101010"}}, _
+	{"Minion", 2, 18, 1, {275, 930}, {"F8E4A8-101010","20|-24|885010-101010,19|-57|A06400-101010,-57|21|987498-101010,-33|-14|A8884E-101010,-21|16|C78F3E-101010,-15|6|F0F8F8-101010"}}, _
+	{"HogRider", 5, 45, 1, {145, 930}, {"697EB8-101010","-2|-15|304071-101010,-65|12|6070A0-101010,-44|15|D09868-101010,-18|-22|304068-101010,11|-2|182028-101010"}}, _
+	{"Valkyrie", 8, 90, 1, {275, 1062}, {"7090E0-101010","14|-12|588CF8-101010,9|-36|71A8FA-101010,-26|13|78A0F6-101010,-58|6|88A8F1-101010,15|34|D09C5A-101010,-3|36|0844E3-101010,-27|29|003CCA-101010"}}, _
+	{"Golem", 30, 300, 1, {145, 1062}, {"A0B4C8-101010","-28|1|88A3B8-101010,-48|20|7088A0-101010,-8|-45|485050-101010,-21|20|FBDEFC-101010,0|26|485050-101010,8|-23|A1A3A0-101010"}}, _
+	{"Witch", 12, 180, 1, {275, 1194}, {"893931-101010","-7|30|C65F60-101010,-29|2|E04CF8-101010,-31|32|CF41F0-101010,-21|48|D8A470-101010,-45|28|C8B4E0-101010,-76|31|BB8D80-101010"}}, _
+	{"LavaHound", 30, 300, 1, {145, 1194}, {"121520-101010","31|12|F0F8FC-101010,27|-18|F0F7F8-101010,44|-13|A6968E-101010,39|26|061025-101010,-21|13|08205F-101010,29|28|1DD6FF-101010,-1|-2|101720-101010"}}, _
 	{"Bowler", 6, 60, 1, {275, -1150}, {"E16871-101010","-6|-27|EA6F70-101010,-41|17|C88C58-101010,-33|-31|E86060-101010,-60|1|BD4445-101010,-69|-34|98A0B0-101010"}}, _
-	{"LightningSpell", 2, 360, 2, {279, 131}, {"", ""}, {"E85210-202020","19|-28|F3E066-202020,36|1|A7C6FF-202020,55|27|C34960-202020,6|20|F9FCE8-202020,-26|-3|EE2402-202020,-24|19|F8E840-202020,0|-11|E22008-202020,12|-5|F0A428-202020"}}, _
-	{"RageSpell", 2, 360, 2, {279, 263}, {"", ""}, {"6E1F40-202020","34|-3|8BB2F8-202020,14|14|B870A0-202020,34|-4|8FB7FE-202020,59|-29|D05068-202020,-11|16|E53898-202020,-24|34|F8AAF0-202020,11|-9|AC7D7A-202020"}}, _
-	{"EarthquakeSpell", 2, 180, 1, {142, 539}, {"", ""}, {"588ABC-202020","-14|9|081870-202020,11|-3|718CA8-202020,43|3|AFC8EF-202020,-15|26|144084-202020,12|30|243038-202020,48|30|C96368-202020,49|-25|C86068-202020"}} _
+	{"LightningSpell", 2, 360, 2, {279, 131}, {"F6B838-202020","-14|-3|E7400D-202020,-16|16|F1C410-202020,-39|-5|E83B08-202020,35|8|B0C9FF-202020,43|-35|BC6776-202020,5|19|F0D983-202020,-5|42|F6F0C0-202020"}, {"E85210-202020","19|-28|F3E066-202020,36|1|A7C6FF-202020,55|27|C34960-202020,6|20|F9FCE8-202020,-26|-3|EE2402-202020,-24|19|F8E840-202020,0|-11|E22008-202020,12|-5|F0A428-202020"}}, _
+	{"RageSpell", 2, 360, 2, {279, 263}, {"AA6E79-202020","-17|-3|682140-202020,-16|18|A31F68-202020,32|4|85ADF3-202020,34|-26|A65676-202020,-10|47|FBF3F9-202020,39|25|AD5A74-202020"}, {"6E1F40-202020","34|-3|8BB2F8-202020,14|14|B870A0-202020,34|-4|8FB7FE-202020,59|-29|D05068-202020,-11|16|E53898-202020,-24|34|F8AAF0-202020,11|-9|AC7D7A-202020"}}, _
+	{"EarthquakeSpell", 2, 180, 1, {142, 539}, {"5C7A98-202020","-14|5|466FA8-202020,-29|4|507FB0-202020,-34|16|152378-202020,39|9|ACC4F0-202020,44|-34|A65068-202020,47|26|B05870-202020,-6|47|283438"}, {"588ABC-202020","-14|9|081870-202020,11|-3|718CA8-202020,43|3|AFC8EF-202020,-15|26|144084-202020,12|30|243038-202020,48|30|C96368-202020,49|-25|C86068-202020"}} _
 }
 
 
@@ -618,12 +618,12 @@ Function RecognizeOwnAmount()
     	SmartDigitOCR(kResourceDigitIndex, 668, 1000, 695, 1210,"FFFFFF-202020", 0.9, True), _
     	SmartDigitOCR(kResourceDigitIndex, 598, 1000, 625, 1210,"FFFFFF-202020", 0.9, True), _
 		SmartDigitOCR(kResourceDigitIndex, 533, 1070, 560, 1210, "FFFFFF-202020", 0.9, True), _
-		SmartDigitOCR(kResourceDigitIndex, 598, 90, 623, 160,"FFFFFF-202020", 0.9, True) _
+		SmartDigitOCR(kResourceDigitIndex, 586,88,608,162,"FFFFFF-202020", 0.9, True) _
 	}
-	//LogInfo(3, "gold " & CStr(results(0)))
-	//LogInfo(3, "elixir " & CStr(results(1)))
-	//LogInfo(3, "drak elixir " & CStr(results(2)))
-	//LogInfo 3, "trophy " & CStr(results(3))
+//	LogInfo(3, "gold " & CStr(results(0)))
+//	LogInfo(3, "elixir " & CStr(results(1)))
+//	LogInfo(3, "drak elixir " & CStr(results(2)))
+//	LogInfo 3, "trophy " & CStr(results(3))
 	RecognizeOwnAmount = results
 	ReleaseCapture
 End Function
@@ -634,7 +634,7 @@ Function RecognizeRobableAmount()
     Dim results(4)
 	results(0) = SmartDigitOCR(kResourceDigitIndex, 605, 62, 630, 200,"CCFBFF-202020", 0.9, True)
 	results(1) = SmartDigitOCR(kResourceDigitIndex, 567, 60, 592, 200, "FDE8FF-202020", 0.9, True)
-	If CmpColorEx("533|44|503447-202020,532|51|583C4D-202020,549|53|391E30-202020",0.98) = 1 Then
+	If CmpColorEx("530|43|28232F-202020,531|52|2F2330-202020,542|39|483040-202020", 0.98) = 1 Then  // has dark elixir
 		results(2) = SmartDigitOCR(kResourceDigitIndex, 530, 60, 555, 200, "F3F3F3-202020", 0.9, True)
 		results(3) = SmartDigitOCR(kWarTrophyDigitIndex, 465, 62, 500, 105, "FFFFFF-202020", 0.9, True)
 	Else
@@ -1041,12 +1041,25 @@ Function GoToBarrackAndTrain(training_plan, cancel_training)
 				If cursor < sub_total_population Then 
 					Dim trained_population = 0
 					Dim coordinate = GetTroopTrainingCoordinate(troop_type)
-					While trained_population < 5
+					Dim troop_space = GetTroopSpace(troop_type)
+					If GetColorNum(coordinate(0) - 60, coordinate(1) - 60, coordinate(0) - 20, coordinate(1) + 60, "8181F3-101010", 1) > 20 Then 
+						Exit Function
+					End If
+					While trained_population = 0 or trained_population + GetTroopSpace(troop_type) <= 5
 						Tap coordinate(0), coordinate(1)
-						Delay 20
+						If troop_space > 2 Then 
+							Delay 300
+						Else 
+							Delay 20
+						End If
 						training_plan(troop_type) = training_plan(troop_type) - 1
-						trained_population = trained_population + GetTroopSpace(troop_type)
+						trained_population = trained_population + troop_space
 					Wend
+					Delay 100
+					If not InTroopTrainingPage() Then 
+						KeyPress "Back"
+						Exit Function
+					End If
 					total_population = total_population - trained_population	
 					Exit For
 				End If
@@ -1096,12 +1109,16 @@ Function BrewSpell(spell, count)
 	//TapItem("TroopStatus", 500)
 	TapItem("SpellFactory", 500)
 	If InSpellTrainingPage() Then 
-		Dim coordinate = GetTroopTrainingCoordinate(GetTroopType(spell))
-		For count
-			Tap coordinate(0), coordinate(1)
-			Delay 300
-		Next
-		Delay 500
+		Dim x = -1, y = -1
+		Dim type = GetTroopType(spell)
+		FindMultiColor 59,50,348,1204, GetTroopColor(type, 0), GetTroopColor(type, 1), 0, 0.98, x, y
+		If x >= 0
+			For count
+				Tap x, y
+				Delay 300
+			Next
+			Delay 500
+		End If
 	End If
 End Function
 
@@ -1216,10 +1233,10 @@ Function CountItemInRange(item_name, x0, y0, x1, y1)
 		End if
 	Loop
 	ReleaseCapture
-	CountItem = result
+	CountItemInRange = result
 End Function
 
-Function FindItemWithAttachment(item_name, delta_x0, delta_y0, delta_x1, delta_y1, attachment_name_prefix, attachment_type_count, direction)
+Function FindItemWithAttachment(item_name, delta_x0, delta_y0, delta_x1, delta_y1, attachment_name_prefix, attachment_type_count, direction, similarity)
 	Dim kStartY = 80
 	Dim x = 0, y = kStartY
 	Dim kStartX = 137
@@ -1230,7 +1247,7 @@ Function FindItemWithAttachment(item_name, delta_x0, delta_y0, delta_x1, delta_y
 	KeepCapture 
 	For pixel_index = 0 to pixel_length - 2 step 2
 	Do
-			FindMultiColor kStartX, y, kScreenWidth, kScreenHeight - kStartY, pixels(pixel_index), pixels(pixel_index + 1), 0, 0.98, x, y
+			FindMultiColor kStartX, y, kScreenWidth, kScreenHeight - kStartY, pixels(pixel_index), pixels(pixel_index + 1), 0, similarity/*0.98*/, x, y
 			If x >= 0 Then
 				Dim next_x = x, next_y = y
 				Do
@@ -1374,8 +1391,12 @@ Function FindBuildings(types)
 				level_step = -1
 			End If
 
-			For level = level_start To level_end step level_step
-    			Dim results = FindItemWithAttachment(resource_type&CStr(level), x0, y0, x1, y1, resource_level_type, resource_level_count, direction)
+			For level = level_start To level_end Step level_step
+				Dim similarity = 0.98
+				If type = 1 or type = 2 Then 
+					similarity = 0.98
+				End If
+    			Dim results = FindItemWithAttachment(resource_type&CStr(level), x0, y0, x1, y1, resource_level_type, resource_level_count, direction, similarity)
     			Delay 50
 				Dim j = 0
 				While results(j) <> null and building_info_count < 100
@@ -1454,7 +1475,7 @@ Function FindTownHallAtBottomLeft(building_infos)
 	End If
 	Dim building_info_count = GetLength(building_infos)
 	For level = 6 To 11
-    	Dim results = FindItemWithAttachment("Townhall"&CStr(level), 0, 0, 0, 0, "", 0, 1)
+    	Dim results = FindItemWithAttachment("Townhall"&CStr(level), 0, 0, 0, 0, "", 0, 1, 0.98)
 		Dim j = 0
 		While results(j) <> null and building_info_count < 100
 			Dim duplicated = False
@@ -1671,8 +1692,8 @@ Function DetectZoomRatio()
 	TouchMove kCenterX * 0.72, kCenterY * 0.72, 1, 100
 	TouchUp 1
 	Delay 1500
-	Dim offset = 17
-	Dim line_count = 23
+	Dim offset = 13//17
+	Dim line_count = Int(17*23/offset)//23
 	Dim base_str(23)
 	Dim others_str(23)
 	Dim results(23)
@@ -1806,7 +1827,7 @@ Function SearchOpponent(overall_criteria, own_resources, stretagy)
 		End If
 		last_stuck_in_cloud_time = Time() - current
 		For i = 0 To 10
-			If CmpColorEx("618|41|5BEAF0-101010,571|39|B840C0-101010", 0.9) = 1 Then 
+			If CmpColorEx("609|46|00B8F0-101010,619|43|48EFFF-101010", 0.9) = 1 Then // seen gold sign
 				Delay 300
 				Exit For
 			End If
@@ -2029,7 +2050,7 @@ End Function
 
 Function FindKingCard()
 	Dim x = -1, y = -1
-	FindMultiColor 0, 0, 130, 1280, "7EECFF-202020","-18|0|C0C8FF-202020,35|-1|DCEEFF-202020,23|-4|70E4F8-202020,22|7|61E3FB-202020,13|2|ABC6FF-202020,-43|29|403AA5-202020,27|36|CE2128-202020,29|-36|C81C28-202020",0,0.9,x,y
+	FindMultiColor 0, 0, 130, 1280, "6B94E9-202020","47|1|254463-202020,-35|11|709EF5-202020,-46|1|3037C0-202020,-38|29|404BD7-202020,-14|23|40A0E8-202020,30|-36|C91C25-202020,30|37|D2242B-202020,-35|13|6DA2F7-202020",0,0.9,x,y
 	If x > -1 And y > -1 Then
 		FindKingCard = {x, y}
 	Else 
@@ -2039,7 +2060,7 @@ End Function
 
 Function FindQueenCard()
 	Dim x = -1, y = -1
-	FindMultiColor 0, 0, 130, 1280, "B0C5FB-202020","22|-1|D02858-202020,35|-13|28B4F6-202020,-34|4|508880-202020,-2|-40|081CA8-202020,-1|22|602038-202020,11|6|F8F8F8-202020",0,0.9,x,y
+	FindMultiColor 0, 0, 130, 1280, "6892EC-202020","38|-9|355D77-202020,42|-30|3E5E74-202020,17|18|EC88AC-202020,-12|13|A73C60-202020,-39|4|903858-202020,-52|26|5876C5-202020,-55|-7|445135-202020,29|-42|D01C28-202020",0,0.9,x,y
 	If x > -1 And y > -1 Then
 		FindQueenCard = {x, y}
 	Else 
@@ -2898,7 +2919,7 @@ Function InWarPreparationPage()
 End Function
 
 Function InWarResultPage()
-	InWarResultPage = (CmpColorEx("93|566|68E6C8-202020,96|710|70E8C8-202020,101|638|76EBD0-202020,52|637|10AC5D-202020,534|374|90E6FF-202020,418|263|07100D-202020,422|311|0B1512-202020,160|1019|050B08", 0.96) = 1)
+	InWarResultPage = (CmpColorEx("544|378|98F0FF-101010,499|574|4096BC-101010,470|502|91F0FF-101010,470|403|032438-101010,519|578|88DCFF-101010,533|715|97EBFF-101010,481|703|186884-101010", 0.96) = 1)
 End Function
 
 Function KingIsHurt()
@@ -2907,7 +2928,7 @@ Function KingIsHurt()
 		Exit Function
 	End If
 	Dim x, y
-	FindMultiColor 0, 0, 140, 1280, "758389-202020", "4|1|616962-202020,3|10|B9364D-202020,1|15|959FA2-202020,3|28|50001F-202020,-14|-4|67E4FA-202020,-23|-9|B8CFFF-202020,-87|-22|A0FFFF-202020", 0, 0.9, x, y
+	FindMultiColor 0, 0, 140, 1280, "244D66-202020","-86|-10|3E84B0-202020,-21|2|50A8E8-202020,-101|6|52B0E2-202020,-11|8|568EC5-202020,-44|-10|6894EB-202020,9|-3|A11328-202020,-10|26|CA1B38-202020,-12|-38|E8264B-202020,0|8|3B6F93-202020", 0, 0.9, x, y
 	KingIsHurt = (x >= 0)
 End Function
 
@@ -2917,7 +2938,7 @@ Function QueenIsHurt()
 		Exit Function
 	End If
 	Dim x, y
-	FindMultiColor 0, 0, 140, 1280, "275D7C-202020","3|13|3279A6-202020,-22|-6|D8285F-202020,-18|14|4C1830-202020,-46|-43|081CA8-202020,-43|-2|BACAFC-202020,5|29|500020-202020,-34|2|F5F4F5-202020,13|9|3E0410,11|-10|CF1C38", 0, 0.9, x, y
+	FindMultiColor 0, 0, 140, 1280, "B8506E-202020","7|18|CB6489-202020,-16|10|819EF0-202020,-14|2|B2C2F6-202020,16|-25|A71030-202020,17|43|CE1A3A-202020,29|19|565760-202020,27|32|305362-202020,33|19|AE1428-202020,-9|11|A3BED8-202020", 0, 0.9, x, y
 	QueenIsHurt = (x >= 0)
 End Function
 
@@ -3121,7 +3142,7 @@ Function CollectResourcesAndUpgradeWall(force)
 		If g_upgrade_wall_gold_threshold <> null or g_upgrade_wall_elixir_threshold <> null Then 
 			If UpgradeWall(resources(0), resources(1), g_upgrade_wall_gold_threshold, g_upgrade_wall_elixir_threshold, _
 			               g_minimal_upgraded_wall_level, g_maximum_upgraded_wall_level) < 0 Then
-			    If not GoToClan Then 
+			    If not GoToClan() Then 
 			    	CollectResourcesAndUpgradeWall = false
 			    	Exit Function
 			    End If
@@ -3132,11 +3153,11 @@ Function CollectResourcesAndUpgradeWall(force)
 End Function
 
 Function NeedReinforcement()
-	NeedReinforcement = (CmpColorEx("99|1066|989592-101010,109|1017|68E0C0-101010,109|1130|68E0C0-101010",0.9) = 1)
+	NeedReinforcement = (CmpColorEx("92|1114|9D9A98-101010,107|1075|70E6C8-101010,98|1175|60E0B8-101010",0.9) = 1)
 End Function
 
 Function NeedGemsToRequestReinforcement()
-	NeedGemsToRequestReinforcement = (CmpColorEx("72|1120|005428-101010,80|1117|88F0D8-101010,93|1022|767572-101010", 0.98) = 1)
+	NeedGemsToRequestReinforcement = (CmpColorEx("94|1071|A8A5A3-101010,107|1053|70E4C8-101010,109|1190|78E8D0-101010,81|1071|605D5F-101010", 0.98) = 1)
 End Function
 
 //Function IsTraining()
@@ -3175,11 +3196,11 @@ Dim kWallInfos = {_
     {"level":8, "cost":1000000, "colors": "A1AEC2-101010|212420-101010|585E68-101010|6B717A-101010|3E3636-101010", _
      "pixels":{"A0A6B7-404040","0|1|A2B0C4-303030,0|2|8999B1-303030,-5|1|2D2B2F-202020,-6|1|242322-101010,-7|1|1F201C-101010,-8|1|23201F-101010"}, _
      "verification":"511|357|181510-101010,466|359|383028-101010,521|367|706968-101010,498|397|484848-101010,284|299|D0E4E0-101010,563|256|D4E5E2-101010,332|477|D0E4E0-101010,550|494|D0E4E0-101010,576|571|5F51DD-101010,570|583|604CDC-101010"}, _
-    {"level":9, "cost":3000000, "colors": "626678-0A0A0A|443830-0A0A0A|484448-0A0A0A|48484A-0A0A0A|605D60-0A0A0A|3A312B-0A0A0A", _
+    {"level":9, "cost":2000000, "colors": "626678-0A0A0A|443830-0A0A0A|484448-0A0A0A|48484A-0A0A0A|605D60-0A0A0A|3A312B-0A0A0A", _
      "pixels":{"252322-202020","1|-2|171410-202020,2|-4|181818-202020,0|1|1F1F20-202020,2|3|202020-202020,2|0|6A6A6D-282828,3|0|726D6B-202020,6|0|706C6A-202020", _
                "10121D-202020","3|-3|14162C-202020,2|-2|161525-202020,2|2|141A30-202020,4|5|161F37-202020,3|1|646A7F-303030,4|1|7D7E92-303030,6|1|B8BEE4-303030"}, _
      "verification":"529|367|62737C-101010,476|370|202828-101010,509|388|405358-101010,507|355|383B38-101010,469|335|5F6164-101010,483|390|989DA0-101010,575|571|5B4EDB-101010,578|595|6E65DC-101010"}, _
-     {"level":10, "cost":4000000, "colors": "47E9FD-202020|5C6875-202020|2358AF-101010|21CAFC-202020", _
+     {"level":10, "cost":3000000, "colors": "47E9FD-202020|5C6875-202020|2358AF-101010|21CAFC-202020", _
       "pixels":{"44E6FF-202020","-1|1|4DF5FF-202020,-2|2|57F6FF-202020", _
                 "45D8FD-202020","0|1|49E7FF-202020,1|2|48FBFF-202020"}, _
       "verification":"530|366|6C7685-101010,509|350|494850-101010,513|380|505461-101010,482|350|1078FF-101010,494|390|1886FF-101010,460|364|12B0FF-101010,472|383|18B5FF-101010,502|369|485060-101010,575|572|6051DF-101010,575|593|685DDE-101010"} _
@@ -3265,7 +3286,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 						
 			KeepCapture 
 			Dim need_release = true
-			If not InClan Then 
+			If not InClan() Then 
 				UpgradeWall = -1
 				Exit Function
 			End If
@@ -3311,7 +3332,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 							ReleaseCapture 
 							need_release = false
 							
-							If not InClan Then 
+							If not InClan() Then 
 								UpgradeWall = -2
 								Exit Function
 							End If
@@ -3359,7 +3380,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 //										UpgradeWall = 0
 //										Exit Function
 //									End If
-									If not InClan Then 
+									If not InClan() Then 
 										UpgradeWall = -1
 										Exit Function
 									End If
@@ -3378,7 +3399,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 							
 							KeepCapture 
 							need_release = true
-							If not InClan Then 
+							If not InClan() Then 
 								UpgradeWall = -1
 								Exit Function
 							End If
@@ -3404,7 +3425,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 					Exit Function
 				End If
 				If check_in_clan = 0 Then 
-					If not InClan Then 
+					If not InClan() Then 
 						UpgradeWall = -1
 						Exit Function
 					End If
@@ -3778,8 +3799,8 @@ Function LoadDefaultStrategy(strategy_index)
 		g_troop_plan(1) = 150
 		g_troop_plan(2) = 10
 		g_only_attack_dead_fish = true
-		g_overall_criteria(0) = {"gold":120000, "elixir":120000, "dark_elixir":0, "gold_and_elixir":0, "estimated":true}
-		g_overall_criteria(1) = {"gold":0, "elixir":0, "dark_elixir":1000, "gold_and_elixir":0, "estimated":true}
+		g_overall_criteria(0) = {"gold":130000, "elixir":130000, "dark_elixir":0, "gold_and_elixir":0, "estimated":true}
+		g_overall_criteria(1) = {"gold":0, "elixir":0, "dark_elixir":1500, "gold_and_elixir":0, "estimated":true}
 	ElseIf strategy_index = 2 Then // È«Á¦´òºÚ
 		strategy = {_
 			"type": 1, _
@@ -3792,7 +3813,7 @@ Function LoadDefaultStrategy(strategy_index)
 				"townhall_vacant_grids": 20, _
 				"townhall_resources": {20000,20000,200}, _
 				"townhall_attack_others": true, _
-				"elixir_collector": 25000, _
+				"elixir_collector": 30000, _
 				"elixir_collector_max_distance": 5, _
 				"elixir_collector_vacant_grids": 10, _
 				"dark_elixir_drill": 180, _
@@ -4627,7 +4648,22 @@ End Function
 //KeyPress "Back"
 //TracePrint NeedReinforcement()
 //TracePrint NeedGemsToRequestReinforcement()
+//TracePrint InWarResultPage()
 Run()
+
+//Dim building_types = {0,1,2,3,4}
+//MoveToMapTop()
+//TracePrint DetectZoomRatio()
+//Dim buildings = FindBuildings(building_types)
+//For i = 0 To GetLength(buildings) - 1
+//	Dim building = buildings(i)
+//	TracePrint building["type"], building["level"], building["fullness"], building["x"], building["y"]
+//Next
+//
+//Dim map = DetectVacantGrids(true)
+//MarkAndUpdateBuildings(map, buildings)
+//PrintMap(map, buildings)
+	
 //Traceprint CheckUpgradeWallResourceEnough()
 //Dim results = RecognizeRobableAmount()
 //TracePrint(results(0), results(1), results(2), results(3))
@@ -4640,6 +4676,17 @@ Run()
 //	Dim x = t(i)
 //	TracePrint kTroopChineseName(x(0)), x(1), x(2)
 //Next
+
+//Dim a = FindKingCard()
+//TracePrint a(0), a(1)
+//g_deploy_king = true
+//g_king_card_coordinate = FindKingCard()
+//TracePrint g_king_card_coordinate(0), g_king_card_coordinate(1)
+//g_deploy_queen = true
+//g_queen_card_coordinate = FindQueenCard()
+//TracePrint g_queen_card_coordinate(0), g_queen_card_coordinate(1)
+//WaitAndBurstHeros(300000)
+
 //While True
 //	Dim total = DetectTotalTroopCount()
 //	TracePrint total(0), total(1)
@@ -4653,7 +4700,8 @@ Run()
 //Wend
 
 //Dim counts(30)
-//FillArray(counts, 30, 0)
+//FillArray counts, 30, 0
+//counts(0) = 240
 //counts(0) = 19
 //counts(1) = 19
 //counts(2) = 10
@@ -4683,7 +4731,7 @@ Run()
 
 //Dim r = RecognizeWarResultAmount()
 //TracePrint r(0), r(1), r(2), r(3)
-
+//
 //Dim opponent_resources = RecognizeOwnAmount()
 //TracePrint opponent_resources(0), opponent_resources(1), opponent_resources(2)
 //GoToWar({{0, 0, 300, 0, false}}, {999999, 999999, 100}, "TargetBuilding", null, {{0, 50, 0}, {1, 150, 1}}, 200)
@@ -4693,7 +4741,7 @@ Run()
 //Dim resource_amount = EstimateRobableResourcesFromCollectors(collectors)
 //TracePrint resource_amount(0), resource_amount(1)
 //RecognizeRobableAmount()
-//RecognizeOwnAmount 
+//RecognizeOwnAmount()
 //For 1000
 //	ListAllTroops 
 //	Delay 3000
