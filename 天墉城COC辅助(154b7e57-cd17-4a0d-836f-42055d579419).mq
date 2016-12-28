@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.2.1.8"
+Dim g_version = "1.2.1.12"
 Dim log_level = 1
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
@@ -628,6 +628,16 @@ Function RecognizeOwnAmount()
 	ReleaseCapture
 End Function
 
+Function RecognizeOwnAmountInTraining()
+    KeepCapture
+    Dim results = { _
+    	"elixir" : SmartDigitOCR(kResourceDigitIndex, 32,376,53,508,"FFFFFF-202020", 0.9, True), _
+		"black_elixir":SmartDigitOCR(kResourceDigitIndex, 33,597,53,714, "FFFFFF-202020", 0.9, True) _
+	}
+	RecognizeOwnAmountInTraining = results
+	ReleaseCapture
+End Function
+
 Function RecognizeRobableAmount()
     //LogInfo 3, "recognize robable resource amount"
     KeepCapture
@@ -1111,13 +1121,19 @@ Function BrewSpell(spell, count)
 	If InSpellTrainingPage() Then 
 		Dim x = -1, y = -1
 		Dim type = GetTroopType(spell)
-		FindMultiColor 59,50,348,1204, GetTroopColor(type, 0), GetTroopColor(type, 1), 0, 0.98, x, y
+		FindMultiColor 59, 50, 348, 1204, GetTroopColor(type, 0), GetTroopColor(type, 1), 0, 0.98, x, y
 		If x >= 0
 			For count
+				If GetColorNum(x - 80, y - 60, x - 20, y + 60, "8181F3-101010", 1) > 20 Then 
+					Exit Function
+				End If
 				Tap x, y
-				Delay 300
+				Delay 500
+				If not InSpellTrainingPage() Then
+					KeyPress "Back"
+					Exit Function
+				End If
 			Next
-			Delay 500
 		End If
 	End If
 End Function
@@ -3185,6 +3201,10 @@ Function WaitAndShowJoke(seconds)
 	Delay seconds
 End Function
 
+/**********************************************************************************************************/
+/********************************************* upgradewall ************************************************/
+/**********************************************************************************************************/
+
 Dim kUpgradeButtonPixels = "124|550|71E8D0-101010,56|735|10B063-101010,63|547|10AC60-101010,134|744|81ECD8-101010"
 Dim kWallInfos = {_
     {"level":6, "cost":200000, "colors": "9530B8-101010|D034EA-101010|7E2080-101010|70259B-101010|612970-101010|D80CCB-101010|610B67-101010|B82ACD-101010|6A1D77-101010", _
@@ -3345,10 +3365,10 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 							Dim use_gold = true
 							
 							If gold_threshold <> null and current_gold >= gold_threshold and current_gold >= wall_info["cost"] + minmal_remaining_resource Then 
-								FindMultiColor 14, 358, 163, 934, "D8D8E8-202020", "8|9|C8CBD8-202020,-16|2|949EA8-202020,7|-11|243A75-202020,8|-9|162E63-202020,-11|14|426CD3-202020,-18|25|5078E0-202020,-27|40|3F77DF-202020,37|60|53E8F0-202020,34|63|38CAEC-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
+								FindMultiColor 14, 358, 163, 934, "D3D5E2-101010","11|5|C0C4D0-101010,-23|34|647DDD-101010,-13|16|4472DA-101010,-26|40|4078E0-101010,1|17|9098A0-101010,37|62|48F2FF-101010,33|64|08C4FF-101010", 0, 0.95, upgrade_button_x, upgrade_button_y
 							ElseIf elixir_threshold <> null and current_elixir >= elixir_threshold and current_elixir >= wall_info["cost"] + minmal_remaining_resource Then
 								use_gold = false
-								FindMultiColor 14, 358, 163, 934, "C8C8D0-202020","3|-6|1A326B-202020,7|9|C0C2D0-202020,-16|21|4876E3-202020,-25|34|507BE0-202020,-28|39|5D79DB-202020,-30|45|4077E0-202020,34|67|FF34FF-202020,28|67|F064FF-202020", 0, 0.95, upgrade_button_x, upgrade_button_y
+								FindMultiColor 14, 358, 163, 934, "C0C4D0-101010","-11|-4|D2D6E2-101010,-23|12|4874E0-101010,-36|35|4077E0-101010,-10|11|909AA4-101010,-3|6|C8C8D8-101010,27|56|FF54FF-101010,24|62|FF2AF7-101010", 0, 0.95, upgrade_button_x, upgrade_button_y
 							End If
 							If upgrade_button_x > 0 and upgrade_button_y > 0 Then 
 								Tap upgrade_button_x, upgrade_button_y
@@ -3395,11 +3415,20 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 									Tap 5, 5
 									Delay 1000
 								End If
+							Else 
+								If not InClan() Then 
+							 		KeyPress "Back"
+									Delay 1000
+								End If
+								Tap 5, 5
+								Delay 1000
 							End If
 							
 							KeepCapture 
 							need_release = true
 							If not InClan() Then 
+							 	ReleaseCapture 
+							 	need_release = false
 								UpgradeWall = -1
 								Exit Function
 							End If
@@ -3442,6 +3471,14 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 	Dim t={null}
 //	PrintMap(g_uw_map, t)
 End Function
+
+/**********************************************************************************************************/
+/************************************************ donate **************************************************/
+/**********************************************************************************************************/
+
+Dim kWordBoundaryMark = {"FEFEFE-101010","0|2|FFFFFF-101010,0|3|FFFFFF-101010,0|4|FFFFFF-101010,0|5|FFFFFF-101010,-22|0|FEFEFE-101010,-22|1|FFFFFF-101010,-22|2|FFFFFF-101010,-22|3|FFFFFF-101010,-22|5|FFFFFF-101010,-19|1|FFFFFF-101010,-17|3|FFFFFF-101010,-13|1|FFFFFF-101010,-13|3|FFFFFF-101010,-10|1|FFFFFF-101010,-7|3|FFFFFF-101010,-5|1|FFFFFF-101010,-5|4|FFFFFF-101010,-2|2|FFFFFF-101010"}
+
+
 
 
 Function CalculateProperTrainingTroopCounts(planed_troop_counts, total_population, counts)
@@ -3738,7 +3775,7 @@ Function LoadDefaultStrategy(strategy_index)
 				"townhall_trophy": 1200, _
 				"townhall_max_distance": 4, _
 				"townhall_vacant_grids": 20, _
-				"townhall_resources": {10000, 10000}, _
+				"townhall_resources": {10000, 10000, 200}, _
 				"townhall_attack_others": true, _
 				"gold_mine": 10000, _
 				"gold_mine_max_distance": 5, _
@@ -3808,13 +3845,13 @@ Function LoadDefaultStrategy(strategy_index)
 			"troop_trained_percentage": 0.7, _
 			"target_building" : {_
 				"townhall": true, _
-				"townhall_trophy": 1200, _
+				"townhall_trophy": 1400, _
 				"townhall_max_distance": /*4*/5, _
 				"townhall_vacant_grids": 20, _
 				"townhall_resources": {20000,20000,200}, _
 				"townhall_attack_others": true, _
-				"elixir_collector": 30000, _
-				"elixir_collector_max_distance": 5, _
+				"elixir_collector": 25000, _
+				"elixir_collector_max_distance": 6, _
 				"elixir_collector_vacant_grids": 10, _
 				"dark_elixir_drill": 180, _
 				"dark_elixir_drill_max_distance": 7, _
@@ -3844,8 +3881,8 @@ Function LoadDefaultStrategy(strategy_index)
 		g_only_attack_dead_fish = false
 		g_overall_criteria(0) = {"gold":0, "elixir":500000, "dark_elixir":0, "gold_and_elixir":0, "trophy":5, "estimated":false}
 		g_overall_criteria(1) = {"gold":0, "elixir":400000, "dark_elixir":0, "gold_and_elixir":0, "trophy":15, "estimated":false}
-		g_overall_criteria(2) = {"gold":0, "elixir":300000, "dark_elixir":0, "gold_and_elixir":0, "trophy":25, "estimated":false}
-		g_overall_criteria(3) = {"gold":0, "elixir":200000, "dark_elixir":0, "gold_and_elixir":0, "trophy":30, "estimated":false, "own_trophy": 2600}
+		g_overall_criteria(2) = {"gold":0, "elixir":350000, "dark_elixir":0, "gold_and_elixir":0, "trophy":25, "estimated":false}
+		g_overall_criteria(3) = {"gold":0, "elixir":250000, "dark_elixir":0, "gold_and_elixir":0, "trophy":30, "estimated":false, "own_trophy": 2600}
 		g_spell_lightning_at_dark_elixir_drill = false  // don't spelllightning on dark elixir drills
 	End If
 	LoadDefaultStrategy = strategy
@@ -4399,6 +4436,12 @@ Function Challenge()
 End Function
 
 Function BrewDragonAttackSpells()
+	TapItem("SpellFactory", 500)
+	Dim own_resources = RecognizeOwnAmountInTraining()
+	If own_resources["elixir"] < 90000 or own_resources["black_elixir"] < 300 Then 
+		LogAndShow 1, "×ÊÔ´²»¹»..."
+		Exit Function
+	End If
 	BrewSpell("LightningSpell", 2)
 	BrewSpell("RageSpell", 1)
 	BrewSpell("EarthquakeSpell", 1)
@@ -4651,6 +4694,8 @@ End Function
 //TracePrint InWarResultPage()
 Run()
 
+//Dim r = RecognizeOwnAmountInTraining()
+//TracePrint r["elixir"], r["black_elixir"]
 //Dim building_types = {0,1,2,3,4}
 //MoveToMapTop()
 //TracePrint DetectZoomRatio()
