@@ -4,8 +4,8 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.2.2.0"
-Dim log_level = 3
+Dim g_version = "1.2.2.7"
+Dim log_level = 1
 
 url.Get("http://c.statcounter.com/11143433/0/ee876ad7/0/", 2)
 
@@ -439,7 +439,7 @@ Dim kTroopInfos = { _
 		{"7D4E3E-101010","-41|9|402215-101010,3|37|D845B8-101010,0|16|F0D5AA-101010,-53|8|60493A-101010,-19|5|10080D-101010,-40|26|543020-101010"}, _
 		{"", ""} _
 	}, _
-	{"BayDragon", 10, 90, 0, _
+	{"BabyDragon", 10, 90, 0, _
 		{"7DE69D-101010","-31|17|4054B2-101010,20|-42|D0A878-101010,-7|7|7AE18A-101010,-7|46|2B9260-101010,-50|2|308439-101010,15|-19|D0A771-101010"}, _
 		{"60D880-101010","-33|51|52D488-101010,11|-6|1F5C89-101010,-34|16|4654B5-101010,-53|9|287335-101010,-58|29|285CA0-101010"}, _
 		{"7BE296-101010","-19|9|4053B8-101010,-38|20|285CA2-101010,-18|37|4EC786-101010,10|11|A8E8F8-101010,1|0|6FDD8D-101010,-10|22|40B458-101010"}, _
@@ -3765,41 +3765,81 @@ End Function
 
 //Dim ps = CreateWordPatterns()
 
-Function FindDonationRequest(start_x, pattern_dict, donatable_troop_types)
+Dim kRequestConflicts = { _
+	{GetTroopType("BabyDragon"), GetTroopType("Dragon")}, _
+	{GetTroopType("Bowler"), GetTroopType("Giant")} _
+}
+// -1：not found
+// 0：find a request accepting troops in need
+// 1：find a request accepting any and troops in need
+Function FindDonationRequest(start_x, pattern_list, is_troop_donatable)
 	Dim x, y
-	Dim pattern_count = GetLength(donatable_troop_types) + 2
+	Dim pattern_count = GetLength(pattern_list)
 	KeepCapture
 	While True
 		// Find the sword mark
 		FindMultiColor start_x, kChattingContentStartY, kChattingContentEndX, kChattingContentStartY + 60, _
 			"B08870-101010","-12|7|B08C71-101010,1|4|E0E0E8-101010,-6|7|EEEAEE-101010,-18|7|2E87B5-303030,5|306|70E8C8,-25|413|20A85F", 0, 0.98, x, y
 		If x > 0 Then 
-			Dim found_pattern = -3
+			Dim action = -1
+			Dim need(30)
+			FillArray(need, 30, false)
 			For i = 0 To pattern_count - 1
-				Dim pattern
-				If i = 0 Then // dont donate
-					pattern = pattern_dict[kDontAccept]
-					found_pattern = -1
-				Elseif i = pattern_count - 1  // donate any
-					pattern = pattern_dict[kAcceptAny]
-					found_pattern = -2
-				Else 
-					Dim troop_type = donatable_troop_types(i - 1)
-					pattern = pattern_dict[GetTroopName(troop_type)]
-					//TracePrint GetTroopName(troop_type)
-					found_pattern = troop_type
-				End If
+				Dim pattern = pattern_list(i)
+				Dim pattern_name = pattern["name"]
+				Dim troop_type = pattern["type"]
 				Dim text_x, text_y
 				FindMultiColor x + 10, kChattingContentStartY, x + 110, kChattingContentEndY, pattern["first"], pattern["others"], 0, 0.98, text_x, text_y
 				If text_x > 0 Then 
-					Exit For
+					If pattern_name = kDontAccept Then 
+						action = -1
+						Exit For  // don't do anything
+					ElseIf pattern_name = kAcceptAny Then
+					 	If action = -1 Then // only no specific troop type
+							action = 1
+						End If
+					Else 
+						action = 0
+						need(troop_type) = true
+					End If
 				End If
-				found_pattern = -3
 			Next
-			If found_pattern <> -3 Then 
-			 	ReleaseCapture
-				FindDonationRequest = {x, found_pattern}
-				Exit Function
+			If action <> -1 Then 
+				If action = 0 Then 
+					For Each conflict In kRequestConflicts
+						If need(conflict(0)) Then 
+							need(conflict(1)) = false
+						End If
+					Next
+					
+					Dim has_specific_troop = false
+					For i = 0 To kTroopTypeCount - 1
+						If not is_troop_donatable(i) Then 
+							need(i) = false
+						End If
+						If need(i) Then 
+							has_specific_troop = true
+						End If
+					Next
+					If not has_specific_troop Then 
+						action = -1
+					End If
+				End If
+				
+				
+//				For i = 0 To 18
+//					If need(i) Then 
+//						TracePrint "Request", kTroopChineseName(i)
+//					End If
+//				Next
+//				If action = 1 Then 
+//					TracePrint "Request any"
+//				End If
+				If action <> -1 Then 
+					ReleaseCapture
+					FindDonationRequest = {action, x, need}
+					Exit Function
+				End If
 			End If
 			start_x = x + 100
 		Else 
@@ -3807,7 +3847,7 @@ Function FindDonationRequest(start_x, pattern_dict, donatable_troop_types)
 		End If
 	Wend
 	ReleaseCapture
-	FindDonationRequest = {-1, -3}
+	FindDonationRequest = {-1, -1, null}
 End Function
 //Dim t = FindDonationRequest(kChattingContentStartX, ps)
 //TracePrint t(0), t(1)
@@ -3826,10 +3866,13 @@ Function DonationPanelOpened()
 	DonationPanelOpened = (x > 0)
 End Function
 
-Dim g_donation_pattern_dict
-Dim g_donation_troop_types(30)
-Dim g_default_donation_type
+Dim g_donation_patterns(30)
+Dim g_troops_are_donatable(30)
+FillArray(g_troops_are_donatable, 30, false)
+Dim g_default_donation_type_0 = -1
+Dim g_default_donation_type_1 = -1
 Dim g_max_donation_population = 99999
+Dim g_total_donation_population = 0
 
 Function TryToDonate()
 //	TapItem("Chat", 600)
@@ -3852,62 +3895,75 @@ Function TryToDonate()
 			from_buttom = false
 		End If
 		While donated_population < g_max_donation_population
-			Dim result = FindDonationRequest(start_x, g_donation_pattern_dict, g_donation_troop_types)
-			Dim request_x = result(0)
-			If request_x < 0 Then 
+			Dim result = FindDonationRequest(start_x, g_donation_patterns, g_troops_are_donatable)
+			Dim action = result(0)
+			If action = -1 Then 
 				Exit While
 			End If
-			Dim donation_troop_index = result(1)
+			Dim request_x = result(1)
+			Dim need = result(2)
 			
-			If donation_troop_index = -1
-				LogInfo 3, "不要捐兵"
-			ElseIf donation_troop_index = -2
-				LogInfo 3, "请求任意"
-			Else
-				LogInfo 3, "请求" & kTroopChineseName(donation_troop_index)
-			End If
-			
-			If donation_troop_index = -1 or (donation_troop_index = -2 and g_default_donation_type < 0) Then 
-				// Do nothing
-			Else
-				Dim troop_type = g_default_donation_type
-				If donation_troop_index >= 0
-					troop_type = donation_troop_index
+			Tap request_x, 400
+			Delay 500
+			Dim on_left = true
+			For troop_index = kTroopTypeCount - 1 To -2 Step -1
+				If donated_population >= g_max_donation_population Then 
+					Exit For
 				End If
-				Tap request_x, 400
-				Delay 500
-				If DonationPanelOpened() Then 
-					Dim troop_x = -1, troop_y = -1
-					FindMultiColor 337,508,683,1067, GetTroopColorInDonation(troop_type, 0), GetTroopColorInDonation(troop_type, 1), 0, 0.98, troop_x, troop_y
-					If troop_x < 0 Then 
-						Swipe 490, 860, 490, 610, 200
-						Delay 800
-						FindMultiColor 337,508,683,1067, GetTroopColorInDonation(troop_type, 0), GetTroopColorInDonation(troop_type, 1), 0, 0.98, troop_x, troop_y
-					End If
-					If troop_x >= 0 Then 
-						Dim donated_count = 0
-						While donated_count < 10
-							donated_troop_counts(troop_type) = donated_troop_counts(troop_type) + 1
-							Tap troop_x, troop_y
-							donated_population = donated_population + GetTroopSpace(troop_type)
-							TracePrint "donate", kTroopChineseName(troop_type)
-							donated_count = donated_count + 1
-							Delay 1000
-							If not DonationPanelOpened() or donated_population >= g_max_donation_population Then 
-								Exit While
-							End If
-							FindMultiColor 337,508,683,1067, GetTroopColorInDonation(troop_type, 0), GetTroopColorInDonation(troop_type, 1), 0, 0.98, troop_x, troop_y
-							If troop_x < 0 Then 
-								Exit While
-							End If
-						Wend
-					End If
+				Dim donating_type = -1
+				If troop_index <> -1 and need(troop_index) Then 
+					donating_type = troop_index
+				End If
+				If action = 1 and troop_index = -1 and g_default_donation_type_0 >= 0 and not need(g_default_donation_type_0) Then 
+					donating_type = g_default_donation_type_0
+				End If
+				If action = 1 and troop_index = -2 and g_default_donation_type_1 >= 0 and not need(g_default_donation_type_1) Then 
+					donating_type = g_default_donation_type_1
+				End If
+				If donating_type >= 0 Then 
 					If DonationPanelOpened() Then 
-						KeyPress "Back"
-						Delay 1000
+//						TracePrint "try to donate", kTroopChineseName(donating_type)
+						
+						Dim troop_x = -1, troop_y = -1
+						FindMultiColor 337,508,683,1067, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.98, troop_x, troop_y
+						If troop_x < 0 Then 
+							If on_left Then 
+								Swipe 490, 860, 490, 610, 200
+								on_left = false
+							Else 
+								Swipe 490, 610, 490, 860, 200 
+								on_left = true
+							End If
+							Delay 800
+							FindMultiColor 337,508,683,1067, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.98, troop_x, troop_y
+						End If
+						If troop_x >= 0 Then 
+							Dim donated_count = 0
+							While donated_count < 10
+								donated_troop_counts(donating_type) = donated_troop_counts(donating_type) + 1
+								Tap troop_x, troop_y
+								donated_population = donated_population + GetTroopSpace(donating_type)
+//								TracePrint "donate", kTroopChineseName(donating_type)
+								donated_count = donated_count + 1
+								Delay 1000
+								If not DonationPanelOpened() or donated_population >= g_max_donation_population Then 
+									Exit While
+								End If
+								FindMultiColor 337,508,683,1067, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.98, troop_x, troop_y
+								If troop_x < 0 Then 
+									Exit While
+								End If
+							Wend
+						End If
+					Else 
+						Exit For
 					End If
-				End If				
-			End If 
+				End If
+			Next
+			If DonationPanelOpened() Then 
+				KeyPress "Back"
+				Delay 1000
+			End If
 			start_x = request_x + 100
 		Wend
 		If HasPreviousDonation() Then 
@@ -3916,43 +3972,37 @@ Function TryToDonate()
 			Exit While
 		End If	
 	Wend
+	g_total_donation_population = g_total_donation_population + donated_population
 	TryToDonate = donated_troop_counts
 End Function
 
-Function ReadPatternsFromFile(pattern_dict)
+Function ReadPatternsFromFile(pattern_list)
 	Dim pattern_count = 0
 	Dim lines = File.ReadLines("/sdcard/tyc_coc/donation_request_patterns.txt")
-	For i = 0 To GetLength(lines) - 1 step 3
-		pattern_dict[lines(i)] = {"first":lines(i+1), "others":lines(i+2)}
+	Dim j=0
+	For i = 0 To GetLength(lines) - 1 Step 3
+		Dim type = -1
+		If lines(i) <> kDontAccept and lines(i) <> kAcceptAny Then 
+			type = GetTroopType(lines(i))
+		End If
+		pattern_list(j) = {"name":lines(i), "first":lines(i + 1), "others":lines(i + 2), "type":type}
+		j=j+1
 	Next
 End Function
 
-Function WritePatternsToFile(pattern_dict)
+Function WritePatternsToFile(pattern_list)
 	Dim content = ""
-	Dim pattern
-	If pattern_dict[kDontAccept] <> null Then 
-		pattern = pattern_dict[kDontAccept]
-		content = content & kDontAccept & "\n" & pattern["first"] & "\n" & pattern["others"] & "\n"
-	End If
-	
-	If pattern_dict[kAcceptAny] <> null Then 
-		pattern = pattern_dict[kAcceptAny]
-		content = content & kAcceptAny & "\n" & pattern["first"] & "\n" & pattern["others"] & "\n"
-	End If
-	
-	For i = 0 To kTroopTypeCount - 1
-		Dim troop_name = GetTroopName(i)
-		If pattern_dict[troop_name] <> null Then 
-			pattern = pattern_dict[troop_name]
-			content = content & troop_name & "\n" & pattern["first"] & "\n" & pattern["others"] & "\n"
-		End If
+	Dim pattern_count = GetLength(pattern_list)
+	For i = 0 To pattern_count - 1
+		Dim pattern = pattern_list(i)
+		content = content & pattern["name"] & "\n" & pattern["first"] & "\n" & pattern["others"] & "\n"
 	Next
-	
 	File.Write("/sdcard/tyc_coc/donation_request_patterns.txt", content)
 End Function
 
-Dim kDonationRequestWords = {"蛮", "弓", "巨", "哥布林", "炸弹", "球", "法", "天使", "龙", "皮卡", "龙宝宝", "矿工", _
-							 "亡灵", "猪", "武神", "石", "女巫", "狗", "蓝胖"}
+Dim kDonationRequestWords = {"蛮|黄毛", "弓", "巨|胖", "哥布林", "炸弹", "球", "法", "天使", "龙", "皮卡", "龙宝|小龙", "矿工", _
+							 "亡灵|苍蝇", "猪", "武神", "石", "女巫", "狗", "蓝胖|投手"}
+
 Function AnnounceAndUpdatePattern(patterns, troop_types, default_troop)
 	Dim troop_type_count = GetLength(troop_types)
 	If troop_type_count <= 0 Then 
@@ -3964,22 +4014,33 @@ Function AnnounceAndUpdatePattern(patterns, troop_types, default_troop)
 	Dim troop_count_in_the_line = 0
 	Dim line_count = 0
 	Dim current_line = ""
-
 	Dim max_troop_in_a_line = 6
-	While troop_type_count mod max_troop_in_a_line = 1
-		max_troop_in_a_line = max_troop_in_a_line - 1
-	Wend
-
+	
+	Dim word_to_troop_name(50)
+	Dim total_word_count = 0
 	For i = 0 To troop_type_count - 1
-		current_line = current_line & " " & kWordBoundary & kDonationRequestWords(troop_types(i))
-		troop_count_in_the_line = troop_count_in_the_line + 1
-		If troop_count_in_the_line >= max_troop_in_a_line or i = troop_type_count - 1 Then 
-			lines(line_count) = current_line & " " & kWordBoundary & "\n"
-			current_line = ""
-			troop_count_in_the_line = 0
-			line_count = line_count + 1
-		End If
+		Dim words = Split(kDonationRequestWords(troop_types(i)), "|")
+		Dim word_count = GetLength(words)
+		Dim troop_name = GetTroopName(troop_types(i))
+		For j=0 to word_count - 1
+			current_line = current_line & " " & kWordBoundary & words(j)
+			
+			word_to_troop_name(total_word_count) = troop_name
+			total_word_count = total_word_count + 1
+			
+			troop_count_in_the_line = troop_count_in_the_line + 1
+			If troop_count_in_the_line >= max_troop_in_a_line or (i = troop_type_count - 1 and j = word_count - 1) Then 
+				lines(line_count) = current_line & " " & kWordBoundary & "\n"
+				current_line = ""
+				troop_count_in_the_line = 0
+				line_count = line_count + 1
+			End If			
+		Next
 	Next
+	word_to_troop_name(total_word_count) = kDontAccept
+	word_to_troop_name(total_word_count + 1) = kAcceptAny
+	total_word_count = total_word_count + 2
+	
 	lines(line_count) = kWordBoundary & "不" & kWordBoundary & "要发其它的名字"
 	If default_troop >= 0 Then 
 		lines(line_count) = lines(line_count) & "," & kWordBoundary & "随" & kWordBoundary & "便默认发" & kTroopChineseName(default_troop)
@@ -3990,7 +4051,7 @@ Function AnnounceAndUpdatePattern(patterns, troop_types, default_troop)
 	For i = 0 to line_count - 1
 		content = content & lines(i)
 	Next
-	
+
 	If not Say(content) Then 
 		AnnounceAndUpdatePattern = -2
 		Exit Function
@@ -4000,39 +4061,31 @@ Function AnnounceAndUpdatePattern(patterns, troop_types, default_troop)
 	
 	Dim pattern_lists = CreateWordPatterns()
 	Dim pattern_count = GetLength(pattern_lists)
-	If pattern_count <> 2 + troop_type_count Then 
+	If pattern_count <> total_word_count Then 
 		AnnounceAndUpdatePattern = -3
 		Exit Function
 	End If
-	patterns[kDontAccept] = pattern_lists(pattern_count - 2)
-	patterns[kAcceptAny] = pattern_lists(pattern_count - 1)
-	For i = 0 To pattern_count - 2
-		patterns[GetTroopName(troop_types(i))] = pattern_lists(i)
+	
+	For i = 0 To total_word_count - 1
+		Dim pattern = pattern_lists(i)
+		pattern["name"] = word_to_troop_name(i)
+		patterns(i) = pattern
 	Next
 	
 	AnnounceAndUpdatePattern = 0
 End Function
-
-//For i = 0 To 18
-//	Dim x, y
-//	FindMultiColor 337, 508, 683, 1067, GetTroopColorInDonation(i, 0), GetTroopColorInDonation(i, 1), 0, 0.98, x, y
-//	TracePrint kTroopChineseName(i), x, y
-//Next
-
-//Dim patterns = {"place_hold":{"first":"", "others":""}}
-
-//AnnounceAndUpdatePattern(patterns, troop_types, 13)
-//WritePatternsToFile(patterns)
 
 Function CanOpenChat()
 	CanOpenChat = (CmpColorEx("364|14|0844B8-101010,428|14|2490E8-101010,410|24|FFFFFF-101010",0.98))
 End Function
 
 Dim g_last_donation_time = 0
-Dim g_donation_interval = -1
+Dim g_donation_interval = 999999
+Dim g_enable_donation = false
+Dim g_train_after_donation = false
 
 Function Donate()
-	If g_donation_interval = -1 Then 
+	If not g_enable_donation Then 
 		Donate = 1
 		Exit Function
 	End If
@@ -4044,7 +4097,7 @@ Function Donate()
 	End If
 	
 	g_last_donation_time = Time()	
-	LogAndShow 1, "开始捐兵.."
+	LogAndShow(1, "开始捐兵..")
 	
 	If not CanOpenChat() Then 
 		Donate = -1
@@ -4052,11 +4105,15 @@ Function Donate()
 	End If
 	TapItem("Chat", 1000)
 	Dim donated_troop_counts = TryToDonate()
-
+	If donated_troop_counts = null Then 
+		Donate = -2
+		Exit Function
+	End If
+	
 	KeyPress "Back"
 	Delay 1000
 	If not InClan() Then 
-		Donate = -2
+		Donate = -3
 		Exit Function
 	End If
 
@@ -4068,32 +4125,46 @@ Function Donate()
 		End If
 	Next
 	
-	If donated Then 
+	If donated and g_train_after_donation Then 
 		TapItem "OpenTroopConfigurationPage", 500
 		If not TrainTroops(donated_troop_counts, kDontCancelTraining, true, false) Then 
-			Donate = -3
+			Donate = -4
 			Exit Function
 		End If
 		
 		KeyPress "Back"
 		Delay 800
 		If not InClan() Then 
-			Donate = -4
+			Donate = -5
 			Exit Function
 		End If
 	End If
 	Donate = 0
 End Function
 
+//For i = 0 To 18
+//	Dim x, y
+//	FindMultiColor 337, 508, 683, 1067, GetTroopColorInDonation(i, 0), GetTroopColorInDonation(i, 1), 0, 0.98, x, y
+//	TracePrint kTroopChineseName(i), x, y
+//Next
 
-//g_donation_pattern_dict = {"place_hold":{"first":"", "others":""}}
+//Dim patterns(30)
+//
 //Dim troop_types(19)
 //For i = 0 To 18
 //	troop_types(i) = i
 //Next
-//g_donation_troop_types = troop_types
+//AnnounceAndUpdatePattern(patterns, troop_types, 13)
+//WritePatternsToFile(patterns)
+
+//For i = 0 To 18
+//	g_troops_are_donatable(i) = i
+//Next
 //g_default_donation_type = -1
-//ReadPatternsFromFile (g_donation_pattern_dict)
+//g_donation_interval = 1
+//g_default_donation_type_0 = 1
+//g_default_donation_type_1 = 0
+//ReadPatternsFromFile (g_donation_patterns)
 //TracePrint Donate()
 
 /****************************************************************************************************/
@@ -4298,8 +4369,12 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
 						upgraded_wall_msg = upgraded_wall_msg&",升级"&CStr(wall_level)&"级墙"&CStr(g_upgraded_walls(wall_level))&"块"
 					End If
 				Next
+				Dim donation_msg = ""
+				If g_total_donation_population > 0 Then 
+					donation_msg = ",捐兵"&CStr(g_total_donation_population)&"人口"
+				End If
 				Dim stat_msg = "运行时间"&CStr(Int(span_minite / 60))&"小时"&(span_minite Mod 60)&"分,进攻次数"&CStr(g_total_attack_count)&_
-						",共获得金"&CStr(g_total_robbed_gold)&"水"&CStr(g_total_robbed_elixir)&"黑"&CStr(g_total_robbed_dark_elixir)&upgraded_wall_msg
+						",共获得金"&CStr(g_total_robbed_gold)&"水"&CStr(g_total_robbed_elixir)&"黑"&CStr(g_total_robbed_dark_elixir)&upgraded_wall_msg&donation_msg
 				ShowMsg(1, stat_msg)
 				Delay 2000
 				ShowMsg 1, stat_msg
@@ -4791,32 +4866,39 @@ Function LoadSettingFromDefaultConfigPage()
 		
 		
 	// Donation config
-	// "不捐", "半分钟", "5分钟", "30分钟",
-	Dim kDonationIntervals = {-1, 20, 5 * 60, 30 * 60}
-	g_donation_interval = kDonationIntervals(Int(ReadUIConfig("donation_interval", 0)))
-	// "不限", "10", "20", "50",
-	Dim kDonationPopulations = {9999, 10, 20, 50}
-	g_max_donation_population = kDonationPopulations(Int(ReadUIConfig("donation_population", 0)))
-	Dim donation_log = "_NL_donation-interval_"&CStr(g_donation_interval)&"_population_"&CStr(g_max_donation_population)
-	
-	Dim donatable_troop_count = 0
-	For i = 0 To 18  // 19 types of troops
-		If ReadUIConfig("donate_" & CStr(i), false) Then 
-			g_donation_troop_types(donatable_troop_count) = i
-			donatable_troop_count = donatable_troop_count + 1
-			donation_log = donation_log & "_" & kTroopChineseName(i) 
+	g_enable_donation = ReadUIConfig("donate", false)
+	If g_enable_donation Then 
+		g_train_after_donation = ReadUIConfig("train_after_donation", false)
+		// "半分钟", "5分钟", "10分钟", "30分钟",
+		Dim kDonationIntervals = {10, 5 * 60, 10 * 60, 30 * 60}
+		g_donation_interval = kDonationIntervals(Int(ReadUIConfig("donation_interval", 0)))
+		// "不限", "10", "20", "50",
+		Dim kDonationPopulations = {9999, 10, 20, 50}
+		g_max_donation_population = kDonationPopulations(Int(ReadUIConfig("donation_population", 0)))
+		Dim donation_log = "_NL_donation-interval_"&CStr(g_donation_interval)&"_population_"&CStr(g_max_donation_population)&"_train_after_donation_"&CStr(g_train_after_donation)
+		
+		For i = 0 To 18  // 19 types of troops
+			g_troops_are_donatable(i) = ReadUIConfig("donate_" & CStr(i), false)
+			If g_troops_are_donatable(i) Then 
+				donation_log = donation_log & "_" & kTroopChineseName(i) 
+			End If
+		Next
+		
+		g_default_donation_type_0 = Int(ReadUIConfig("default_donate_0", 0)) - 1
+		g_default_donation_type_1 = Int(ReadUIConfig("default_donate_1", 0)) - 1
+		If g_default_donation_type_0 >= 0 Then 
+			donation_log = donation_log & "_default:" & kTroopChineseName(g_default_donation_type_0)
 		End If
-	Next
-	
-	g_default_donation_type = Int(ReadUIConfig("default_donate", 0)) - 1
-	If g_default_donation_type >= 0 Then 
-		donation_log = donation_log & "_default:" & kTroopChineseName(g_default_donation_type) 	
+		If g_default_donation_type_1 >= 0 Then 
+			donation_log = donation_log & "_default:" & kTroopChineseName(g_default_donation_type_1)
+		End If
+		
+			
+		FillArray(g_donation_patterns, 30, null)
+		ReadPatternsFromFile (g_donation_patterns)
+		TracePrint donation_log	
 	End If
-	
-	g_donation_pattern_dict = {"place_hold":{"first":"", "others":""}}
-	ReadPatternsFromFile (g_donation_pattern_dict)
-	TracePrint donation_log
-	
+
 	//Dim kAttackConfig = {"弓蛮打鱼（造兵便宜）", "弓蛮巨打鱼（金水黑均衡）", "全力抢黑（打黑快）", "龙流冲杯", "在线捐兵(不进攻)", "自定义"}
 	Dim kCustomMode = 5
 	Dim overall_config = Int(ReadUIConfig("overall_config", 1))
@@ -5020,7 +5102,7 @@ End Function
 
 //CancelAllTroopTrainingExceptFirst()
 
-Run()
+//Run()
 
 //g_deploy_queen = true
 //g_queen_card_coordinate = FindQueenCard()
@@ -5354,7 +5436,8 @@ End Function
 //TracePrint NeedReinforcement()
 //TracePrint NeedGemsToRequestReinforcement()
 //TracePrint InWarResultPage()
-//Run()
+Run()
+
 
 //Dim r = RecognizeOwnAmountInTraining()
 //TracePrint r["elixir"], r["dark_elixir"]
