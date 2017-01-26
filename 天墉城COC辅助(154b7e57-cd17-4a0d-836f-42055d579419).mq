@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.2.3.6"
+Dim g_version = "1.2.3.9"
 Dim log_level = 1
 
 Sub Ping
@@ -624,9 +624,10 @@ Dim kScreenCoordinates = { _
 	{"Upgrade", {99, 632}}, _
 	{"Say", {37, 435}}, _
 	{"SendWords", {10, 1224}}, _
-	{"Chat", {410, 22}}, _
+	{"Chat", {435, 34}}, _
 	{"NextDonation", {104, 468}}, _
 	{"PreviousDonation", {566, 468}}, _
+	{"CloseChat", {407, 505}}, _
 	{"None"} _
 }
 
@@ -1325,7 +1326,7 @@ Function BrewSpell(spell, count)
 				Exit Function
 			End If
 		Else 
-			If resources["dark_elixir"] <= 50000 Then 
+			If resources["elixir"] <= 50000 Then 
 				LogAndShow 1, "圣水所剩无几，停止造法术"
 				Exit Function
 			End If
@@ -1338,7 +1339,7 @@ Function BrewSpell(spell, count)
 					Exit Function
 				End If
 				Tap x, y
-				Delay 500
+				Delay 800
 				If not InSpellTrainingPage() Then
 					KeyPress "Back"
 					Exit Function
@@ -4004,7 +4005,7 @@ Function TryToDonate()
 				End If
 				If need(donating_type) Then
 					If DonationPanelOpened() Then 
-						TracePrint "try to donate", kTroopChineseName(donating_type)
+						//TracePrint "try to donate", kTroopChineseName(donating_type)
 						Dim troop_x = -1, troop_y = -1
 						If IsSpell(donating_type) Then 
 							FindMultiColor 215, 518, 400, 1073, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.98, troop_x, troop_y
@@ -4178,7 +4179,7 @@ Function AnnounceAndUpdatePattern(patterns, troop_types, default_troop)
 End Function
 
 Function CanOpenChat()
-	CanOpenChat = (CmpColorEx("364|14|0844B8-101010,428|14|2490E8-101010,410|24|FFFFFF-101010",0.98))
+	CanOpenChat = (CmpColorEx("371|29|0848B8-101010,424|31|288BE8-101010,410|23|FFFFFF-101010",0.98))
 End Function
 
 Dim g_last_donation_time = 0
@@ -4205,7 +4206,7 @@ Function Donate()
 		Donate = -1
 		Exit Function
 	End If
-	TapItem "Chat", 800
+	TapItem("Chat", 800)
 	If ChattingPageIsOpened() Then 
 		Tap 688, 323
 		Delay 500
