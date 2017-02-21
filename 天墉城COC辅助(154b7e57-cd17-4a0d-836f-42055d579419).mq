@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.2.3.9"
+Dim g_version = "1.2.4.0"
 Dim log_level = 1
 
 Sub Ping
@@ -3820,7 +3820,7 @@ Function FindDonationRequest(start_x, pattern_list, is_troop_donatable, default_
 	While True
 		// Find the sword mark
 		FindMultiColor start_x, kChattingContentStartY, kChattingContentEndX, kChattingContentStartY + 60, _
-			"B08870-101010","-12|7|B08C71-101010,1|4|E0E0E8-101010,-6|7|EEEAEE-101010,-18|7|2E87B5-303030,5|326|70E8C8,-25|393|20A85F", 0, 0.98, x, y
+			"B08870-101010","-12|7|B08C71-101010,1|4|E0E0E8-101010,-6|7|EEEAEE-101010,-18|7|2E87B5-303030,5|326|70E8C8,-25|393|20A85F", 5, 0.98, x, y
 		If x > 0 Then 
 			Dim pattern_matched(50)
 			FillArray(pattern_matched, 50, 0)
@@ -3912,7 +3912,7 @@ Function FindDonationRequest(start_x, pattern_list, is_troop_donatable, default_
 					need(i) = false
 				End If
 				If need(i) Then 
-					//TracePrint "need", kTroopChineseName(i)
+					LogInfo(3, "need "&kTroopChineseName(i))
 					has_specific_troop = true
 				End If
 			Next
@@ -4005,7 +4005,7 @@ Function TryToDonate()
 				End If
 				If need(donating_type) Then
 					If DonationPanelOpened() Then 
-						//TracePrint "try to donate", kTroopChineseName(donating_type)
+						LogInfo(3, "try to donate "&kTroopChineseName(donating_type))
 						Dim troop_x = -1, troop_y = -1
 						If IsSpell(donating_type) Then 
 							FindMultiColor 215, 518, 400, 1073, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.98, troop_x, troop_y
@@ -4041,7 +4041,7 @@ Function TryToDonate()
 								donated_troop_counts(donating_type) = donated_troop_counts(donating_type) + 1
 								Tap troop_x, troop_y
 								donated_population = donated_population + GetTroopSpace(donating_type)
-								//TracePrint "donate", kTroopChineseName(donating_type)
+								LogInfo(3, "donate " & kTroopChineseName(donating_type))
 								donated_count = donated_count + 1
 								Delay 1000
 								If not DonationPanelOpened() or donated_population >= g_max_donation_population Then 
