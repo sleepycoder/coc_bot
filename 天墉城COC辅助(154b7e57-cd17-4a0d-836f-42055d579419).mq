@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.2.5.1"
+Dim g_version = "1.3.0.0"
 Dim log_level = 1
 
 Sub Ping
@@ -628,6 +628,7 @@ Dim kScreenCoordinates = { _
 	{"NextDonation", {104, 468}}, _
 	{"PreviousDonation", {566, 468}}, _
 	{"CloseChat", {407, 505}}, _
+	{"ConfirmWinningStarBonus", {188, 640}}, _
 	{"None"} _
 }
 
@@ -716,9 +717,9 @@ Function CollectResources()
     MoveToMapTop()
 	
     Dim resources_data = { _
-		{"30B0D8","5|1|5CE9F0,2|5|40D2F2,5|4|68EFF8,3|4|38C5E8,10|-4|B7DBD7,9|11|B7DBD7,-5|10|7CBCB0,-5|-5|7FBCB0"}, _
-		{"D058E0","6|2|C928E1,-3|3|C03ED8,6|5|D01BE8,6|-6|B0D8D5,7|9|B8DCD7,-5|8|80BDB7,0|-7|98CCC5,-9|0|70B8B0"}, _
-		{"604458","-4|1|503346,4|1|301826,0|5|704E62,0|-4|2F1A25,1|-8|A8D4CC,8|-1|B8DCD8,-1|9|A0CEC8,-11|0|71B8B0"} _
+		{"48F0FF","5|-10|B7DCD7,6|13|B7DBD7,-7|2|00BCF2,-14|14|7CBCB0,-12|-11|86C0B8,-1|6|1FE8FF,-20|2|72B8B0"}, _
+		{"CC57DD","8|3|D231E8,12|-10|B2D5D0,-8|-12|79BAB0,11|13|B2D6D4,-6|12|81BDB7,-2|0|CC53D5,-14|1|70B6AF"}, _
+		{"573C4D","3|3|FBFAFD,3|-1|5F4358,-2|-8|000000,13|-11|B5D9D5,11|11|B5D8D5,-7|11|7EBBB0,-14|-1|71B7AF,2|-14|9DCBC7"} _
 	}
     Dim moved_to_bottom = False
     For 2
@@ -730,7 +731,7 @@ Function CollectResources()
                     Tap x, y
                     //TracePrint x
                     //TracePrint y
-                    Delay 500
+                    Delay 500 + Int(Rnd() * 500)
                 End If
             Loop While x >= 0 and y >= 0
         Next
@@ -3160,6 +3161,12 @@ Function WaitForLoading()
             Exit For 
         End If
 		
+		// Íã¶¹¼Ôsdk¸üÐÂ
+		If CmpColorEx("485|222|FFFFFF,167|211|FFFFFF,495|529|FFFFFF,302|525|FFFFFF,303|705|FFFFFF,490|742|FFFFFF,171|641|FFFFFF,247|947|FFFFFF", 1) = 1 Then
+			Tap 240, 500
+			Delay 2000
+		End If
+		
         If AnotherDeviceIsLoggingIn() Then 
             WaitForAnotherDevice() 
             Exit For
@@ -3170,11 +3177,15 @@ Function WaitForLoading()
 End Function
 
 Function InWarPreparationPage()
-    InWarPreparationPage = (CmpColorEx("217|399|28B0F0-101010,694|1233|8880F8-101010,682|1232|FFFFFF-101010,658|1233|160FC0-101010",0.9) = 1)
+    InWarPreparationPage = (CmpColorEx("257|172|45C7FF-101010,260|398|48C9FF-101010,170|402|0D51CE-101010,170|167|0D51D1-101010,705|166|78E4F8-101010,686|1216|8D85FE-101010",0.9) = 1)
 End Function
 
 Function InWarResultPage()
     InWarResultPage = (CmpColorEx("544|378|98F0FF-101010,499|574|4096BC-101010,470|502|91F0FF-101010,470|403|032438-101010,519|578|88DCFF-101010,533|715|97EBFF-101010,481|703|186884-101010", 0.96) = 1)
+End Function
+
+Function GotWinningStarBonus()
+	GotWinningStarBonus = (CmpColorEx("210|565|85F5DD-101010,212|712|85F9DD-101010,502|483|C8CDC9-101010,505|641|D0D6D0-101010,157|559|1DB96D-101010,268|472|B6139E-101010,312|434|38B8D8-101010", 0.96) = 1)
 End Function
 
 Function KingIsHurt()
@@ -3393,6 +3404,9 @@ Function GoToWar(overall_criteria, strategy, trained_troop_infos)
     For 20
         If InClan() Then 
             Exit For
+        End If
+        If GotWinningStarBonus() Then 
+        	TapItem "ConfirmWinningStarBonus", 500
         End If
         Delay 500
     Next
