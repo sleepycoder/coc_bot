@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.3.1.0"
+Dim g_version = "1.3.1.1"
 Dim log_level = 1
 
 Sub Ping
@@ -224,12 +224,14 @@ Dim kTroopCountDigitIndex = 3
 Dim kTrainingTroopDigitIndex = 4
 Dim kWarResultDigitIndex = 5
 Dim kWarTrophyDigitIndex = 6
+Dim kUpgradingBuildingDigitIndex = 7
 SetDictEx kResourceDigitIndex, "Attachment:digits.txt"
 SetDictEx kTotalTroopCountDigitIndex, "Attachment:total_troop_count_digits.txt"
 SetDictEx kTroopCountDigitIndex, "Attachment:troop_count_digits.txt"
 SetDictEx kTrainingTroopDigitIndex, "Attachment:training_troop_count_digits.txt"
 SetDictEx kWarResultDigitIndex, "Attachment:war_result_digits.txt"
 SetDictEx kWarTrophyDigitIndex, "Attachment:war_trophy_digits.txt"
+SetDictEx kUpgradingBuildingDigitIndex, "Attachment:upgrade_building_digits.txt"
 
 Function LogInfo(level, log_message)
     If log_level >= level Then 
@@ -3664,6 +3666,14 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
                                 use_gold = false
                                 FindMultiColor 14, 358, 163, 934, "C0C4D0-101010","-11|-4|D2D6E2-101010,-23|12|4874E0-101010,-36|35|4077E0-101010,-10|11|909AA4-101010,-3|6|C8C8D8-101010,27|56|FF54FF-101010,24|62|FF2AF7-101010", 0, 0.95, upgrade_button_x, upgrade_button_y
                             End If
+                            
+                            If upgrade_button_x > 0 Then 
+                            	Dim results = FindUpgradeButton(use_gold)
+                                If results(2) <> wall_info["cost"] Then 
+                                	upgrade_button_x = -1
+                                End If
+                            End If
+                                
                             If upgrade_button_x > 0 and upgrade_button_y > 0 Then 
                                 Tap upgrade_button_x, upgrade_button_y
                                 Delay 1000
@@ -3764,6 +3774,63 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
     Wend
     Dim t={null}
     //	PrintMap(g_uw_map, t)
+End Function
+
+/**********************************************************************************************************/
+/********************************************** auto upgrade **********************************************/
+/**********************************************************************************************************/
+
+
+Function FindUpgradeButton(use_gold)
+    Dim upgrade_button_x = -1, upgrade_button_y = -1
+    If use_gold Then 
+    	FindMultiColor 14, 358, 163, 934, "1AE2FF-101010","-31|-71|D5D5DD-101010,-29|-54|D5D8E5-101010,-45|-51|4B76DB-101010,-61|-24|4D85ED-101010,-51|-62|9EAAB6-101010,1|3|2CF6FF-101010,-1|6|34F5FF-101010", 0, 0.95, upgrade_button_x, upgrade_button_y
+    Else 
+        FindMultiColor 14, 358, 163, 934, "FF27E5-101010", "5|-3|FF5DFF-101010,-1|6|FF24E6-101010,-31|-65|DDD9E5-101010,-50|-62|A5B0BB-101010,-43|-52|486FD1-101010,-57|-31|6E88E7-101010,-60|-22|477CE7-101010,-46|-78|C5CDD8", 0, 0.95, upgrade_button_x, upgrade_button_y
+        If upgrade_button_x < 0 Then 
+        	FindMultiColor 14, 358, 163, 934, "FF33A8-101010","-53|-65|BCC5CB-101010,-19|-56|C5C2CC-101010,-42|-78|C3CDD5-101010,-43|-52|4569CA-101010,-58|-21|4A80EA-101010,-59|-28|6D87E5-101010,-6|0|EF3175-101010,6|6|FF53CD-101010", 0, 0.95, upgrade_button_x, upgrade_button_y
+        End If
+    End If
+    If upgrade_button_x < 0 Then 
+    	FindUpgradeButton = Array(-1, -1, -1)
+    	Exit Function
+    End If
+    // Traceprint Ocr(upgrade_button_x - 12, upgrade_button_y - 120, upgrade_button_x + 12, upgrade_button_y - 6, "FFFFFF", 0.9)
+    Dim resource =  SmartDigitOCR(kUpgradingBuildingDigitIndex, upgrade_button_x - 12, upgrade_button_y - 120, upgrade_button_x + 12, upgrade_button_y - 6, "FFFFFF", 0.9, true)
+	FindUpgradeButton = Array(upgrade_button_x,upgrade_button_y, resource)
+End Function
+
+Function InBuildingMasterBase()
+	InBuildingMasterBase = (CmpColorEx("703|585|B99167-101010,703|572|B08861-101010,653|583|3866C0-101010,655|572|3D68CD-101010,679|577|BCCAF9-101010,694|576|B0DCF8-101010,669|585|3F6BC8-101010",0.98) = 1)
+End Function
+
+Function GetWorkerInBuildingMasterBase()
+	GetWorkerInBuildingMasterBase = SmartDigitOCR(kTotalTroopCountDigitIndex, 667, 617, 692, 671, "FFFFFF-101010", 0.9, false)
+End Function
+
+Function GoBackHomeFromBuildingMasterBase()
+	ZoomOutToMax 
+	MoveToMapTop
+	Delay 1000
+	Dim x = -1, y = -1
+	FindMultiColor 667, 617, 692, 671, "919AA0-101010", "4|-5|30266C-101010,13|-17|302670-101010,21|-26|302672-101010,0|-13|757C8A-101010,21|-20|9AA0A0-101010,61|-13|492D06-101010,-8|55|493009-101010,-43|26|4E320A-101010", 0, 0.9, x, y
+	If x < 0 Then 
+		GoBackHomeFromBuildingMasterBase = false
+	End If
+	For 3
+		Tap x, y
+		Delay 3000
+		If InClan() Then 
+			GoBackHomeFromBuildingMasterBase = False
+			Exit Function
+		End If
+		If not InBuildingMasterBase() Then 
+			GoBackHomeFromBuildingMasterBase = False
+			Exit Function
+		End If
+		Delay 1000
+	Next
+	GoBackHomeFromBuildingMasterBase = False
 End Function
 
 /**********************************************************************************************************/
@@ -5597,6 +5664,7 @@ End Function
 //Wend
 // Challenge()
 //Delay 4000
+//GoBackHomeFromBuildingMasterBase
 //Challenge()
 //MoveToMapTop()
 //CancellAllTroopTraining()
@@ -5605,7 +5673,18 @@ End Function
 //TracePrint NeedGemsToRequestReinforcement()
 //TracePrint InWarResultPage()
 
+/*While true
+	Dim r = FindUpgradeButton(true)
+	TracePrint r(0), r(1), r(2)
+	r = FindUpgradeButton(false)
+	TracePrint r(0), r(1), r(2)
+	Delay 2000
+	TracePrint "..."
+Wend*/
+
+
 Run()
+
 //BrewSpell "PoisonSpell", 1
 //BrewSpell "EarthquakeSpell", 1
 //BrewSpell("HasteSpell", 1)
@@ -5660,7 +5739,7 @@ Run()
 //	Next
 //	Delay 2000
 //Wend
-
+//Delay 3000
 //Dim counts(30)
 //FillArray(counts, 30, 0)
 //FillArray(counts, 19, 1)
@@ -5670,7 +5749,7 @@ Run()
 //counts(15) = 1000
 //counts(11) = 1
 //CancellAllTroopTraining()
-//TrainTroops(counts, kDontCancelTraining, true)
+//TrainTroops(counts, kDontCancelTraining, true, false)
 //BrewSpell("LightningSpell", 5)
 //Test()
 
