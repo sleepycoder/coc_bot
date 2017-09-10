@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.3.1.3"
+Dim g_version = "1.3.1.4"
 Dim log_level = 1
 
 Sub Ping
@@ -155,7 +155,7 @@ Function TryToStartCOCApp()
     TryToStartCOCApp = False
 End Function
 
-Dim kApkVersions = {"自动检测", "九游", "昆仑", "小米", "腾讯", "360", "百度", "豌豆荚", "华为", "靠谱", "松果", "新浪", "国际版", "谷歌版", "原版",  "益玩海马", "益玩靠谱"}
+Dim kApkVersions = {"自动检测", "九游", "昆仑", "小米", "360", "百度", "豌豆荚", "华为", "靠谱", "松果", "新浪", "国际版", "谷歌版", "原版",  "益玩海马", "益玩靠谱", "腾讯"}
 Function StartApp(first_run)
     If first_run and InClan() Then 
         StartApp = True
@@ -484,7 +484,7 @@ Dim kTroopInfos = { _
 	{"Golem", 30, 300, 1, _
 		{"99B8CF-101010","19|-8|A2B5C3-101010,17|-43|9C8C70-101010,-8|-26|FFC1FE-101010,-10|22|FFDBFA-101010,-24|-4|768CA0-101010,-41|19|6D8699-101010"}, _
 		{"A0B4C8-101010","-28|1|88A3B8-101010,-48|20|7088A0-101010,-8|-45|485050-101010,-21|20|FBDEFC-101010,0|26|485050-101010,8|-23|A1A3A0-101010"}, _
-		{"90A9C0-101010","14|0|96ACC0-101010,-8|14|FCD8FC-101010,-17|-2|72899B-101010,-42|-8|3B4B5B-101010,-32|12|70889F-101010,11|22|485050-101010"}, _
+		{"99B3C5-101010","25|2|A5B9C6-101010,28|-17|A5B0B5-101010,-16|16|788FA6-101010,5|18|FFE9FF-101010,26|26|676665-101010,27|-35|959EA3-101010"}, _
 		{"", ""} _
 	}, _
 	{"Witch", 12, 180, 1, _
@@ -3994,7 +3994,7 @@ Function FindDonationRequest(start_x, pattern_list, is_troop_donatable, default_
                             ElseIf troop_name = kAcceptAny Then
                                 accept_any = true
                             Else 
-                                TracePrint "pattern found", pattern["request_word"]
+                                LogInfo(3, "pattern found"&pattern["request_word"])
                                 If text_x >= dont_accept_x + 10 or (text_x + 10 >= dont_accept_x and text_y < dont_accept_y) Then 
                                     specific_request = true
                                     pattern_matched(i) = 1
