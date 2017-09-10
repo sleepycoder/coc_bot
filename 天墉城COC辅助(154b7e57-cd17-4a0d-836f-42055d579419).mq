@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.3.1.2"
+Dim g_version = "1.3.1.3"
 Dim log_level = 1
 
 Sub Ping
@@ -87,6 +87,7 @@ End Function
 Dim kCOCApps = {_
 	{"国际版", "com.supercell.clashofclans"}, _
 	{"谷歌版", "com.supercell.clashofclans"}, _
+	{"腾讯", "com.tencent.tmgp.supercell.clashofclans"}, _
 	{"原版", "com.supercell.clashofclans"}, _
 	{"九游", "com.supercell.clashofclans.uc"}, _
 	{"昆仑", "com.supercell.clashofclans.kunlun"}, _
@@ -154,7 +155,7 @@ Function TryToStartCOCApp()
     TryToStartCOCApp = False
 End Function
 
-Dim kApkVersions = {"自动检测", "九游", "昆仑", "小米", "360", "百度", "豌豆荚", "华为", "靠谱", "松果", "新浪", "国际版", "谷歌版", "原版",  "益玩海马", "益玩靠谱"}
+Dim kApkVersions = {"自动检测", "九游", "昆仑", "小米", "腾讯", "360", "百度", "豌豆荚", "华为", "靠谱", "松果", "新浪", "国际版", "谷歌版", "原版",  "益玩海马", "益玩靠谱"}
 Function StartApp(first_run)
     If first_run and InClan() Then 
         StartApp = True
