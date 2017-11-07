@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.3.1.4"
+Dim g_version = "1.3.2.0"
 Dim log_level = 1
 
 Sub Ping
@@ -85,22 +85,22 @@ End Function
 /************** run coc ***********************************/
 /**********************************************************/
 Dim kCOCApps = {_
-	{"å›½é™…ç‰ˆ", "com.supercell.clashofclans"}, _
-	{"è°·æ­Œç‰ˆ", "com.supercell.clashofclans"}, _
-	{"è…¾è®¯", "com.tencent.tmgp.supercell.clashofclans"}, _
-	{"åŸç‰ˆ", "com.supercell.clashofclans"}, _
-	{"ä¹æ¸¸", "com.supercell.clashofclans.uc"}, _
-	{"æ˜†ä»‘", "com.supercell.clashofclans.kunlun"}, _
-	{"å°ç±³", "com.supercell.clashofclans.mi"}, _
+	{"¹ú¼Ê°æ", "com.supercell.clashofclans"}, _
+	{"¹È¸è°æ", "com.supercell.clashofclans"}, _
+	{"ÌÚÑ¶", "com.tencent.tmgp.supercell.clashofclans"}, _
+	{"Ô­°æ", "com.supercell.clashofclans"}, _
+	{"¾ÅÓÎ", "com.supercell.clashofclans.uc"}, _
+	{"À¥ÂØ", "com.supercell.clashofclans.kunlun"}, _
+	{"Ğ¡Ã×", "com.supercell.clashofclans.mi"}, _
 	{"360", "com.supercell.clashofclans.qihoo"}, _
-	{"ç™¾åº¦", "com.supercell.clashofclans.baidu"}, _
-	{"è±Œè±†èš", "com.supercell.clashofclans.wdj"}, _
-	{"åä¸º", "com.supercell.clashofclans.huawei"}, _
-	{"é è°±", "com.supercell.clashofclans.kaopu"}, _
-	{"æ¾æœ", "com.supercell.clashofclans.kaopu"}, _
-	{"æ–°æµª", "com.supercell.clashofclans.ewan.wyx"}, _
-	{"ç›Šç©æµ·é©¬", "com.supercell.clashofclans.ewan.hm"}, _
-	{"ç›Šç©é è°±", "com.supercell.clashofclans.ewan.kaopu"} _
+	{"°Ù¶È", "com.supercell.clashofclans.baidu"}, _
+	{"Íã¶¹¼Ô", "com.supercell.clashofclans.wdj"}, _
+	{"»ªÎª", "com.supercell.clashofclans.huawei"}, _
+	{"¿¿Æ×", "com.supercell.clashofclans.kaopu"}, _
+	{"ËÉ¹û", "com.supercell.clashofclans.kaopu"}, _
+	{"ĞÂÀË", "com.supercell.clashofclans.ewan.wyx"}, _
+	{"ÒæÍæº£Âí", "com.supercell.clashofclans.ewan.hm"}, _
+	{"ÒæÍæ¿¿Æ×", "com.supercell.clashofclans.ewan.kaopu"} _
 }
 Dim kRunningApp = null
 
@@ -127,10 +127,10 @@ Function TryToStartCOCApp()
         If i = l - 1 or app_info(1) <> package_name Then 
             package_name = app_info(1)
             If shanhai.ExistApp(package_name) Then 
-                LogAndShow 1, "å°è¯•å¯åŠ¨" & app_info(0) &"ç‰ˆæœ¬.."
+                LogAndShow 1, "³¢ÊÔÆô¶¯" & app_info(0) &"°æ±¾.."
                 If RunCOCApp(package_name) Then 
                     kRunningApp = package_name
-                    LogAndShow 1, app_info(0) &"ç‰ˆæœ¬å¯åŠ¨æˆåŠŸ"
+                    LogAndShow 1, app_info(0) &"°æ±¾Æô¶¯³É¹¦"
                     TryToStartCOCApp = True
                     Exit Function
                 End If
@@ -143,10 +143,10 @@ Function TryToStartCOCApp()
     Dim app_prefix_len = Len(app_prefix)
     For Each app In apps
         If Len(app) >= app_prefix_len and Left(app, app_prefix_len) = app_prefix Then 
-            LogAndShow 1, "å°è¯•å¯åŠ¨æ¸¸æˆåŒ…" & app &".."
+            LogAndShow 1, "³¢ÊÔÆô¶¯ÓÎÏ·°ü" & app &".."
             If RunCOCApp(app) Then 
                 kRunningApp = app
-                LogAndShow 1, app &"å¯åŠ¨æˆåŠŸ"
+                LogAndShow 1, app &"Æô¶¯³É¹¦"
                 TryToStartCOCApp = True
                 Exit Function
             End If
@@ -155,7 +155,7 @@ Function TryToStartCOCApp()
     TryToStartCOCApp = False
 End Function
 
-Dim kApkVersions = {"è‡ªåŠ¨æ£€æµ‹", "ä¹æ¸¸", "æ˜†ä»‘", "å°ç±³", "360", "ç™¾åº¦", "è±Œè±†èš", "åä¸º", "é è°±", "æ¾æœ", "æ–°æµª", "å›½é™…ç‰ˆ", "è°·æ­Œç‰ˆ", "åŸç‰ˆ",  "ç›Šç©æµ·é©¬", "ç›Šç©é è°±", "è…¾è®¯"}
+Dim kApkVersions = {"×Ô¶¯¼ì²â", "¾ÅÓÎ", "À¥ÂØ", "Ğ¡Ã×", "360", "°Ù¶È", "Íã¶¹¼Ô", "»ªÎª", "¿¿Æ×", "ËÉ¹û", "ĞÂÀË", "¹ú¼Ê°æ", "¹È¸è°æ", "Ô­°æ",  "ÒæÍæº£Âí", "ÒæÍæ¿¿Æ×", "ÌÚÑ¶"}
 Function StartApp(first_run)
     If first_run and InClan() Then 
         StartApp = True
@@ -171,7 +171,7 @@ Function StartApp(first_run)
     Dim selected = ReadUIConfig("apk_version", 0)
     If selected = 0 Then 
         If not TryToStartCOCApp() Then 
-            LogAndShow 1, "å¯åŠ¨æ¸¸æˆå¤±è´¥ï¼Œå¦‚ç¡®è®¤æ¸¸æˆå·²å®‰è£…ï¼Œè¯·è”ç³»ä½œè€…"
+            LogAndShow 1, "Æô¶¯ÓÎÏ·Ê§°Ü£¬ÈçÈ·ÈÏÓÎÏ·ÒÑ°²×°£¬ÇëÁªÏµ×÷Õß"
             Delay 3000
             StartApp = false
             Exit Function
@@ -189,7 +189,7 @@ Function StartApp(first_run)
                     StartApp = true
                     Exit Function
                 Else 
-                    LogAndShow 1, "å¯åŠ¨"&app_info(0)&"ç‰ˆæœ¬å¤±è´¥ï¼Œå»ºè®®ä½¿ç”¨è‡ªåŠ¨æ£€æµ‹ï¼Œå¦‚ä»æ— æ³•å¯åŠ¨ï¼Œè¯·è”ç³»ä½œè€…"
+                    LogAndShow 1, "Æô¶¯"&app_info(0)&"°æ±¾Ê§°Ü£¬½¨ÒéÊ¹ÓÃ×Ô¶¯¼ì²â£¬ÈçÈÔÎŞ·¨Æô¶¯£¬ÇëÁªÏµ×÷Õß"
                     Delay 3000
                     StartApp = false
                     Exit Function
@@ -454,11 +454,11 @@ Dim kTroopInfos = { _
 	{"BabyDragon", 10, 90, 0, _
 		{"7DE69D-101010","-31|17|4054B2-101010,20|-42|D0A878-101010,-7|7|7AE18A-101010,-7|46|2B9260-101010,-50|2|308439-101010,15|-19|D0A771-101010"}, _
 		{"60D880-101010","-33|51|52D488-101010,11|-6|1F5C89-101010,-34|16|4654B5-101010,-53|9|287335-101010,-58|29|285CA0-101010"}, _
-		{"7BE296-101010","-19|9|4053B8-101010,-38|20|285CA2-101010,-18|37|4EC786-101010,10|11|A8E8F8-101010,1|0|6FDD8D-101010,-10|22|40B458-101010"}, _
+		{"89F3A9-101010","-16|42|65E998-101010,-40|23|3D70B5-101010,-20|11|5361BF-101010,-38|4|358144-101010,14|-1|75F69D-101010,9|-5|75E58D-101010,-5|32|3EA173-101010"}, _
 		{"", ""} _
 	}, _
 	{"Miner", 5, 120, 0, _
-		{"8AA9F0-101010","59|4|B6BAB6-101010,55|-23|484844-101010,70|-15|C7FCFF-101010,7|22|FDB381-101010,-16|23|304460-101010,16|-32|384978-101010"}, _
+		{"6D6A65-101010","-49|2|859FDE-101010,-40|28|FFBD8C-101010,-42|42|657695-101010,20|-11|C0F8FE-101010,-36|8|FFFFFF-101010,-44|17|ADD6FF-101010,10|11|BEC4BE-101010"}, _
 		{"AEB3AE-101010","-43|2|A0CCFF-101010,-73|-3|E49665-101010,9|-12|E0FCFE-101010,-52|14|304467-101010,-49|-5|718DC9-101010,-9|0|686560-101010,-64|30|98BDFF-101010"}, _
 		{"7895D5-101010","43|4|AEB1AE-101010,38|19|E6C478-101010,-21|2|E09365-101010,-21|12|304460-101010,-14|30|98BCFF-101010,10|9|ADDCFF-101010"}, _
 		{"", ""} _
@@ -478,7 +478,7 @@ Dim kTroopInfos = { _
 	{"Valkyrie", 8, 90, 1, _
 		{"7092E8-101010","28|-12|7AAEFF-101010,21|-44|80B3FD-101010,-36|-12|5869A1-101010,-33|22|78A0F3-101010,-38|40|013BCC-101010,-2|39|0844E0-101010"}, _
 		{"7090E0-101010","14|-12|588CF8-101010,9|-36|71A8FA-101010,-26|13|78A0F6-101010,-58|6|88A8F1-101010,15|34|D09C5A-101010,-3|36|0844E3-101010,-27|29|003CCA-101010"}, _
-		{"7092E8-101010","-50|2|88A8F4-101010,20|13|4390FB-101010,8|18|0834A0-101010,-26|27|033CD0-101010,4|11|30436F-101010,-16|-6|7590E3-101010"}, _
+		{"7599ED-101010","8|15|1541AD-101010,-24|13|85ADFF-101010,-50|2|95B8FF-101010,12|-22|6E9EFF-101010,-28|23|1149D5-101010,0|9|43527F-101010,-47|15|3D4155-101010"}, _
 		{"", ""} _
 	}, _
 	{"Golem", 30, 300, 1, _
@@ -538,8 +538,8 @@ Dim kTroopInfos = { _
 }
 
 Dim kTroopChineseName = {_
-  "é‡è›®äºº", "å¼“ç®­æ‰‹", "å·¨äºº", "å“¥å¸ƒæ—", "ç‚¸å¼¹äºº", "æ°”çƒå…µ", "æ³•å¸ˆ", "å¤©ä½¿", "é£é¾™", "çš®å¡è¶…äºº", "é£é¾™å®å®", "çŸ¿å·¥", _
-  "äº¡çµ", "é‡çŒªéª‘å£«", "å¥³æ­¦ç¥", "æˆˆä»‘çŸ³äºº", "å¥³å·«", "ç†”å²©çŒçŠ¬", "å·¨çŸ³æŠ•æ‰‹", "é›·ç”µæ³•æœ¯", "ç‹‚æš´æ³•æœ¯", "æ¯’è¯æ³•æœ¯", "åœ°éœ‡æ³•æœ¯", "æ€¥é€Ÿæ³•æœ¯"  _
+  "Ò°ÂùÈË", "¹­¼ıÊÖ", "¾ŞÈË", "¸ç²¼ÁÖ", "Õ¨µ¯ÈË", "ÆøÇò±ø", "·¨Ê¦", "ÌìÊ¹", "·ÉÁú", "Æ¤¿¨³¬ÈË", "·ÉÁú±¦±¦", "¿ó¹¤", _
+  "ÍöÁé", "Ò°ÖíÆïÊ¿", "Å®ÎäÉñ", "¸êÂØÊ¯ÈË", "Å®Î×", "ÈÛÑÒÁÔÈ®", "¾ŞÊ¯Í¶ÊÖ", "À×µç·¨Êõ", "¿ñ±©·¨Êõ", "¶¾Ò©·¨Êõ", "µØÕğ·¨Êõ", "¼±ËÙ·¨Êõ"  _
 }
 
 Dim kTroopTypeCount = GetLength(kTroopInfos)
@@ -627,7 +627,7 @@ Dim kScreenCoordinates = { _
 	{"ReinforcementMessage", {535, 645}}, _
 	{"Upgrade", {99, 632}}, _
 	{"Say", {37, 435}}, _
-	{"SendWords", {10, 1224}}, _
+	{"SendWords", {44, 1250}}, _
 	{"Chat", {435, 34}}, _
 	{"NextDonation", {104, 468}}, _
 	{"PreviousDonation", {566, 468}}, _
@@ -1226,12 +1226,12 @@ Function GoToBarrackAndTrain(training_plan, cancel_training)
                     Dim resources = RecognizeOwnAmountInTraining()
                     If not IsDarkTroop(troop_type) Then 
                         If resources["elixir"] <= 50000 Then 
-                            LogAndShow 1, "åœ£æ°´æ‰€å‰©æ— å‡ ï¼Œåœæ­¢é€ å…µ"
+                            LogAndShow 1, "Ê¥Ë®ËùÊ£ÎŞ¼¸£¬Í£Ö¹Ôì±ø"
                             Exit Function
                         End If
                     Else 
                         If resources["dark_elixir"] <= 1000 Then 
-                            LogAndShow 1, "é»‘æ°´æ‰€å‰©æ— å‡ ï¼Œåœæ­¢é€ å…µ"
+                            LogAndShow 1, "ºÚË®ËùÊ£ÎŞ¼¸£¬Í£Ö¹Ôì±ø"
                             Exit Function
                         End If
                     End If
@@ -1327,12 +1327,12 @@ Function BrewSpell(spell, count)
         Dim resources = RecognizeOwnAmountInTraining()
         If IsDarkSpell(type) Then 
             If resources["dark_elixir"] <= 500 Then 
-                LogAndShow 1, "é»‘æ°´æ‰€å‰©æ— å‡ ï¼Œåœæ­¢é€ æ³•æœ¯"
+                LogAndShow 1, "ºÚË®ËùÊ£ÎŞ¼¸£¬Í£Ö¹Ôì·¨Êõ"
                 Exit Function
             End If
         Else 
             If resources["elixir"] <= 50000 Then 
-                LogAndShow 1, "åœ£æ°´æ‰€å‰©æ— å‡ ï¼Œåœæ­¢é€ æ³•æœ¯"
+                LogAndShow 1, "Ê¥Ë®ËùÊ£ÎŞ¼¸£¬Í£Ö¹Ôì·¨Êõ"
                 Exit Function
             End If
         End If
@@ -2722,7 +2722,7 @@ Function TargetBuildingStrategy(map, building_infos, own_resources, total_resour
                         If troop_count > 0 Then 
                             Dim troop_index = trained_troop_info(2)
                             Dim deployment_type = deployment["deployment_type"]
-                            If deployment_type = 0 Then //é›†ä¸­
+                            If deployment_type = 0 Then //¼¯ÖĞ
                                 For troop_count
                                     If deployment_point_index >= 500 Then 
                                         Exit For
@@ -2730,7 +2730,7 @@ Function TargetBuildingStrategy(map, building_infos, own_resources, total_resour
                                     deployment_points(deployment_point_index) = {grids(0, 0), grids(0, 1), troop_index}
                                     deployment_point_index = deployment_point_index + 1
                                 Next
-                            ElseIf deployment_type = 1 Then //å‡åŒ€
+                            ElseIf deployment_type = 1 Then //¾ùÔÈ
                                 Dim grid_step = Int(grid_count / troop_count)
                                 If grid_step <= 0 Then 
                                     grid_step = 1
@@ -2747,7 +2747,7 @@ Function TargetBuildingStrategy(map, building_infos, own_resources, total_resour
                                         index = index - grid_count
                                     End If
                                 Next
-                            ElseIf deployment_type = 2 Then //è¿‘å¤„
+                            ElseIf deployment_type = 2 Then //½ü´¦
                                 index = 0
                                 For troop_count
                                     If deployment_point_index >= 500 Then 
@@ -2760,7 +2760,7 @@ Function TargetBuildingStrategy(map, building_infos, own_resources, total_resour
                                         index = 0
                                     End If
                                 Next
-                            ElseIf deployment_type = 3 Then //éšæœº
+                            ElseIf deployment_type = 3 Then //Ëæ»ú
                                 For troop_count
                                     If deployment_point_index >= 500 Then 
                                         Exit For
@@ -2769,7 +2769,7 @@ Function TargetBuildingStrategy(map, building_infos, own_resources, total_resour
                                     deployment_points(deployment_point_index) = {grids(index, 0), grids(index, 1), troop_index}
                                     deployment_point_index = deployment_point_index + 1
                                 Next
-                            ElseIf deployment_type = 4 Then //è´´è¾¹
+                            ElseIf deployment_type = 4 Then //Ìù±ß
                                 Dim distance_to_edge = 999
                                 For index = 0 To grid_count - 1
                                     Dim t = DistanceToMapEdge(grids(index, 0), grids(index, 1))
@@ -3148,10 +3148,10 @@ End Function
 Function RestartApp(first_run)
     If not first_run Then
         For i=5 to 1 step -1
-            ShowMsg 1, "é‡å¯è¾…åŠ©å€’è®¡æ—¶..." & CStr(i)
+            ShowMsg 1, "ÖØÆô¸¨Öúµ¹¼ÆÊ±..." & CStr(i)
             Delay 1000
         Next
-        LogAndShow 1, "é‡å¯è¾…åŠ©..."
+        LogAndShow 1, "ÖØÆô¸¨Öú..."
     End If
 
     Report "Restart App"
@@ -3169,7 +3169,7 @@ Function WaitForLoading()
             Exit For 
         End If
 		
-		// è±Œè±†èšsdkæ›´æ–°
+		// Íã¶¹¼Ôsdk¸üĞÂ
 		If CmpColorEx("485|222|FFFFFF,167|211|FFFFFF,495|529|FFFFFF,302|525|FFFFFF,303|705|FFFFFF,490|742|FFFFFF,171|641|FFFFFF,247|947|FFFFFF", 1) = 1 Then
 			Tap 240, 500
 			Delay 2000
@@ -3179,7 +3179,7 @@ Function WaitForLoading()
             WaitForAnotherDevice() 
             Exit For
         End If
-        ShowMsg 1, "ç­‰å¾…è½½å…¥..."
+        ShowMsg 1, "µÈ´ıÔØÈë..."
         Delay 5000
     Next
 End Function
@@ -3545,7 +3545,7 @@ Function CheckUpgradeWallResourceEnough()
 End Function
 
 Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_threshold, min_wall_level, max_wall_level)
-    LogAndShow 1, "åˆ·å¢™æ£€æµ‹"
+    LogAndShow 1, "Ë¢Ç½¼ì²â"
     Dim kYMargin = 150
     Dim kUpMargin = 80
     Dim kXStep = 8
@@ -3560,7 +3560,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
     While true
         If g_uw_wall_info_index >= GetLength(kWallInfos) Then 
             If turn_over Then 
-                //LogAndShow 1, "æ— å¢™å¯åˆ·"
+                //LogAndShow 1, "ÎŞÇ½¿ÉË¢"
                 UpgradeWall = 1
                 Exit Function
             End If
@@ -3586,7 +3586,7 @@ Function UpgradeWall(current_gold, current_elixir, gold_threshold, elixir_thresh
 			
             //			If (gold_threshold = null or current_gold < gold_threshold or current_gold < wall_info["cost"] + minmal_remaining_resource) and _
 //				(elixir_threshold = null or wall_info["level"] < 8 or current_elixir < elixir_threshold or current_elixir < wall_info["cost"] + minmal_remaining_resource) Then 
-            //				//LogAndShow 1, "èµ„æºä¸å¤Ÿ"
+            //				//LogAndShow 1, "×ÊÔ´²»¹»"
             //				//UpgradeWall = 0
             //				//Exit Function
             //				  // not enough resources for walls
@@ -3840,7 +3840,7 @@ End Function
 
 Dim kWordBoundaryMark = {"FEFEFE-101010","0|2|FFFFFF-101010,0|3|FFFFFF-101010,0|4|FFFFFF-101010,0|5|FFFFFF-101010,-22|0|FEFEFE-101010,-22|1|FFFFFF-101010,-22|2|FFFFFF-101010,-22|3|FFFFFF-101010,-22|5|FFFFFF-101010,-19|1|FFFFFF-101010,-17|3|FFFFFF-101010,-13|1|FFFFFF-101010,-13|3|FFFFFF-101010,-10|1|FFFFFF-101010,-7|3|FFFFFF-101010,-5|1|FFFFFF-101010,-5|4|FFFFFF-101010,-2|2|FFFFFF-101010"}
 
-Dim kWordBoundary = "â–Œ"
+Dim kWordBoundary = "¨„"
 
 Function InClanChattingPage()
     InClanChattingPage = (CmpColorEx("667|829|008B48-101010,686|847|00D4A6-101010,46|460|D8ECE9-101010,20|460|A6D8D8-101010,702|242|587478-101010,683|413|506C70-101010",0.98) = 1)
@@ -3862,7 +3862,7 @@ Function Say(text)
     Say = true
 End Function
 
-//Say("â–Œäº¡çµâ–ŒçŒªâ–Œæ­¦ç¥â–ŒçŸ³â–Œå¥³å·«â–Œç‹—â–Œè“èƒ–â–Œ\nâ–Œæ³•â–Œå¤©ä½¿â–Œé¾™â–Œçš®å¡â–Œå®å®â–ŒçŸ¿å·¥â–Œ\nâ–Œè›®â–Œå¼“â–Œå·¨äººâ–Œå“¥å¸ƒæ—â–Œç‚¸å¼¹â–Œçƒâ–Œ\nâ–Œä¸â–Œè¦å‘å…¶å®ƒçš„åå­—ï¼Œâ–Œéšâ–Œæ„é»˜è®¤å‘å¼“æ³•")
+//Say("¨„ÍöÁé¨„Öí¨„ÎäÉñ¨„Ê¯¨„Å®Î×¨„¹·¨„À¶ÅÖ¨„\n¨„·¨¨„ÌìÊ¹¨„Áú¨„Æ¤¿¨¨„±¦±¦¨„¿ó¹¤¨„\n¨„´óÁú¨„Ê¯Í·¨„¾ŞÈË¨„\n¨„Âù¨„¹­¨„¾ŞÈË¨„¸ç²¼ÁÖ¨„Õ¨µ¯¨„Çò¨„\n¨„²»¨„Òª·¢ÆäËüµÄÃû×Ö£¬¨„Ëæ¨„ÒâÄ¬ÈÏ·¢¹­·¨")
 
 Dim kChattingContentStartX = 80
 Dim kChattingContentEndX = 590
@@ -3960,8 +3960,8 @@ End Function
 
 //Dim ps = CreateWordPatterns()
 
-// -1ï¼šnot found
-// >= 0ï¼šfind a request accepting troops in need
+// -1£ºnot found
+// >= 0£ºfind a request accepting troops in need
 Function FindDonationRequest(start_x, pattern_list, is_troop_donatable, default_troop_type_0, default_troop_type_1)
     Dim x = -1, y = -1
     Dim pattern_count = GetLength(pattern_list)
@@ -4140,6 +4140,10 @@ Function TryToDonate()
             Dim result = FindDonationRequest(start_x, g_donation_patterns, g_troops_are_donatable, g_default_donation_type_0, g_default_donation_type_1)
             Dim request_x = result(0)
             Dim need = result(1)
+            
+            Dim checked(50)
+            FillArray(checked, 50, false)
+            
             If request_x < 0 Then 
                 Exit While
             End If
@@ -4148,11 +4152,24 @@ Function TryToDonate()
             Delay 500
             Dim on_left = true
             Dim spell_panel_on_left = true
-            For donating_type = kTroopTypeCount - 1 To 0 step -1
+
+            While true
                 If donated_population >= g_max_donation_population Then 
-                    Exit For
+                    Exit While
                 End If
-                If need(donating_type) Then
+                
+                // Find the troop type with largest space.
+                Dim donating_type = -1
+                For troop_type = 0 To kTroopTypeCount - 1
+                	If not checked(troop_type) and need(troop_type) Then
+                		If donating_type = -1 or GetTroopSpace(troop_type) > GetTroopSpace(donating_type) Then
+                			donating_type = troop_type
+                		End If
+                	End If
+                Next
+                
+                If donating_type <> -1 Then 
+                	checked(donating_type) = true
                     If DonationPanelOpened() Then 
                         LogInfo(3, "try to donate "&kTroopChineseName(donating_type))
                         Dim troop_x = -1, troop_y = -1
@@ -4166,7 +4183,7 @@ Function TryToDonate()
                                     Swipe 310, 610, 310, 976, 200 
                                     spell_panel_on_left = true
                                 End If
-                                Delay 800
+                                Delay 1500
                                 FindMultiColor 215, 518, 400, 1073, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
                             End If
                         Else
@@ -4179,7 +4196,7 @@ Function TryToDonate()
                                     Swipe 440, 610, 440, 976, 200 
                                     on_left = true
                                 End If
-                                Delay 800
+                                Delay 1500
                                 FindMultiColor 213,508,683,1067, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
                             End If
                         End If
@@ -4192,8 +4209,9 @@ Function TryToDonate()
                                 donated_population = donated_population + GetTroopSpace(donating_type)
                                 LogInfo(3, "donate " & kTroopChineseName(donating_type))
                                 donated_count = donated_count + 1
-                                Delay 1000
+                                Delay 1500
                                 If not DonationPanelOpened() or donated_population >= g_max_donation_population Then 
+                                    Delay 1000
                                     Exit While
                                 End If
                                 FindMultiColor 337,508,683,1067, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
@@ -4203,10 +4221,12 @@ Function TryToDonate()
                             Wend
                         End If
                     Else 
-                        Exit For
+                        Exit While
                     End If
+                Else 
+                	Exit While
                 End If
-            Next
+            Wend
             If DonationPanelOpened() Then 
                 KeyPress "Back"
                 Delay 1000
@@ -4247,10 +4267,11 @@ Function WritePatternsToFile(pattern_list)
     File.Write("/sdcard/tyc_coc/donation_request_patterns_new.txt", content)
 End Function
 
-Dim kDonationRequestWords = {"è›®|Barbarian", "é»„æ¯›|Barbarian", "å¼“|Archer", "å·¨|Giant", "èƒ–|Giant", "å“¥å¸ƒæ—|Goblin", "ç‚¸å¼¹|WallBreaker", "çƒ|Balloon", _
-                             "æ³•|Wizard", "å¤©ä½¿|Healer", "é¾™|Dragon", "çš®å¡|PEKKA", "é¾™å®|BabyDragon|é¾™", "å°é¾™|BabyDragon|é¾™", "çŸ¿å·¥|Miner", _
-							 "äº¡çµ|Minion", "è‹è‡|Minion", "çŒª|HogRider", "æ­¦ç¥|Valkyrie", "çŸ³|Golem", "å¥³å·«|Witch", "ç‹—|LavaHound", "è“èƒ–|Bowler|èƒ–", "æŠ•æ‰‹|Bowler|çŸ³,å·¨", _
-							 "æ¯’|PoisonSpell", "éœ‡|EarthquakeSpell", "åŠ é€Ÿ|HasteSpell", "æ€¥é€Ÿ|HasteSpell", "éš|any", "å¢æ´|any", "ä¸|no"}
+Dim kDonationRequestWords = {"Âù|Barbarian", "»ÆÃ«|Barbarian", "¹­|Archer", "¾Ş|Giant", "ÅÖ|Giant", "¸ç²¼ÁÖ|Goblin", "Õ¨µ¯|WallBreaker", "Çò|Balloon", _
+                             "·¨|Wizard", "ÌìÊ¹|Healer", "Áú|Dragon", "Æ¤¿¨|PEKKA", "Áú±¦|BabyDragon|Áú", "Ğ¡Áú|BabyDragon|Áú", "¿ó¹¤|Miner", _
+                             "´óÁú|Dragon", "Ê¯Í·|Golem", "¾ŞÈË|Giant", _
+							 "ÍöÁé|Minion", "²ÔÓ¬|Minion", "Öí|HogRider", "ÎäÉñ|Valkyrie", "Ê¯|Golem", "Å®Î×|Witch", "¹·|LavaHound", "À¶ÅÖ|Bowler|ÅÖ", "Í¶ÊÖ|Bowler|Ê¯,¾Ş", _
+							 "¶¾|PoisonSpell", "Õğ|EarthquakeSpell", "¼ÓËÙ|HasteSpell", "¼±ËÙ|HasteSpell", "Ëæ|any", "ÔöÔ®|any", "²»|no"}
 
 Function AnnounceAndUpdatePattern(patterns, troop_types, default_troop)
     Dim troop_type_count = GetLength(troop_types)
@@ -4279,23 +4300,25 @@ Function AnnounceAndUpdatePattern(patterns, troop_types, default_troop)
         End If
     Next
 	
-    //lines(line_count) = kWordBoundary & "ä¸" & kWordBoundary & "è¦å‘å…¶å®ƒçš„åå­—"
+    //lines(line_count) = kWordBoundary & "²»" & kWordBoundary & "Òª·¢ÆäËüµÄÃû×Ö"
     //If default_troop >= 0 Then 
-    //	lines(line_count) = lines(line_count) & "," & kWordBoundary & "éš" & kWordBoundary & "ä¾¿é»˜è®¤å‘" & kTroopChineseName(default_troop)
+    //	lines(line_count) = lines(line_count) & "," & kWordBoundary & "Ëæ" & kWordBoundary & "±ãÄ¬ÈÏ·¢" & kTroopChineseName(default_troop)
     //End If
     //line_count = line_count + 1
 	
-    Dim content = ""//"æä¾›"
+    Dim content = ""//"Ìá¹©"
     For i = 0 to line_count - 1
         content = content & lines(i)
+        If (i Mod 4 = 3) or i = line_count - 1 Then 
+        	TracePrint content
+    		If not Say(content) Then 
+        		AnnounceAndUpdatePattern = -2
+        		Exit Function
+    		End If
+    		content = ""
+    		Delay 2000
+        End If
     Next
-    TracePrint content
-    If not Say(content) Then 
-        AnnounceAndUpdatePattern = -2
-        Exit Function
-    End If
-	
-    Delay 2000
 	
     Dim pattern_lists = CreateWordPatterns()
     Dim pattern_count = GetLength(pattern_lists)
@@ -4349,7 +4372,7 @@ Function Donate()
     End If
 	
     g_last_donation_time = Time()	
-    ShowMsg(1, "å¼€å§‹æå…µ..")
+    ShowMsg(1, "¿ªÊ¼¾è±ø..")
 	
     If not CanOpenChat() Then 
         Donate = -1
@@ -4422,7 +4445,6 @@ End Function
 //Next
 
 //Dim patterns(50)
-//
 //Dim troop_types(30)
 //For i = 0 To kTroopTypeCount - 1
 //	troop_types(i) = i
@@ -4642,15 +4664,15 @@ Function StartRobot(planed_troop_counts, overall_criteria, strategy)
                 Dim upgraded_wall_msg = ""
                 For wall_level = 0 To 11
                     If g_upgraded_walls(wall_level) > 0 Then 
-                        upgraded_wall_msg = upgraded_wall_msg&",å‡çº§"&CStr(wall_level)&"çº§å¢™"&CStr(g_upgraded_walls(wall_level))&"å—"
+                        upgraded_wall_msg = upgraded_wall_msg&",Éı¼¶"&CStr(wall_level)&"¼¶Ç½"&CStr(g_upgraded_walls(wall_level))&"¿é"
                     End If
                 Next
                 Dim donation_msg = ""
                 If g_total_donation_population > 0 Then 
-                    donation_msg = ",æå…µ"&CStr(g_total_donation_population)&"äººå£"
+                    donation_msg = ",¾è±ø"&CStr(g_total_donation_population)&"ÈË¿Ú"
                 End If
-                Dim stat_msg = "è¿è¡Œæ—¶é—´"&CStr(Int(span_minite / 60))&"å°æ—¶"&(span_minite Mod 60)&"åˆ†,è¿›æ”»æ¬¡æ•°"&CStr(g_total_attack_count)&_
-						",å…±è·å¾—é‡‘"&CStr(g_total_robbed_gold)&"æ°´"&CStr(g_total_robbed_elixir)&"é»‘"&CStr(g_total_robbed_dark_elixir)&upgraded_wall_msg&donation_msg
+                Dim stat_msg = "ÔËĞĞÊ±¼ä"&CStr(Int(span_minite / 60))&"Ğ¡Ê±"&(span_minite Mod 60)&"·Ö,½ø¹¥´ÎÊı"&CStr(g_total_attack_count)&_
+						",¹²»ñµÃ½ğ"&CStr(g_total_robbed_gold)&"Ë®"&CStr(g_total_robbed_elixir)&"ºÚ"&CStr(g_total_robbed_dark_elixir)&upgraded_wall_msg&donation_msg
                 ShowMsg(1, stat_msg)
                 Delay 2000
                 ShowMsg 1, stat_msg
@@ -4743,7 +4765,7 @@ End Function
 
 Function LoadDefaultStrategy(strategy_index)
     Dim strategy = null
-    If strategy_index = 0 Then // å¼“è›®æ‰“é±¼
+    If strategy_index = 0 Then // ¹­Âù´òÓã
         strategy = {_
 			"type": 1, _
 			"deployment_interval": 100, _
@@ -4779,7 +4801,7 @@ Function LoadDefaultStrategy(strategy_index)
         g_troop_plan(1) = -0.7
         g_only_attack_dead_fish = true
         g_overall_criteria(0) = {"gold":100000, "elixir":100000, "dark_elixir":0, "gold_and_elixir":0, "estimated":true}
-    ElseIf strategy_index = 1 Then // å¼“è›®å·¨æ‰“é±¼
+    ElseIf strategy_index = 1 Then // ¹­Âù¾Ş´òÓã
         strategy = {_
 			"type": 1, _
 			"deployment_interval": 100, _
@@ -4818,7 +4840,7 @@ Function LoadDefaultStrategy(strategy_index)
         g_only_attack_dead_fish = true
         g_overall_criteria(0) = {"gold":130000, "elixir":130000, "dark_elixir":0, "gold_and_elixir":0, "estimated":true}
         g_overall_criteria(1) = {"gold":0, "elixir":0, "dark_elixir":1500, "gold_and_elixir":0, "estimated":true}
-    ElseIf strategy_index = 2 Then // å…¨åŠ›æ‰“é»‘
+    ElseIf strategy_index = 2 Then // È«Á¦´òºÚ
         strategy = {_
 			"type": 1, _
 			"deployment_interval": 200, _
@@ -4854,7 +4876,7 @@ Function LoadDefaultStrategy(strategy_index)
         g_only_attack_dead_fish = true
         g_overall_criteria(0) = {"gold":0, "elixir":0, "dark_elixir":500, "gold_and_elixir":0, "estimated":true}
         g_overall_criteria(1) = {"gold":0, "elixir":200000, "dark_elixir":100, "gold_and_elixir":0, "estimated":true}
-    ElseIf strategy_index = 3 Then // é¾™æµå†²æ¯
+    ElseIf strategy_index = 3 Then // ÁúÁ÷³å±­
         strategy = {_
 			"type": 2, _
 			"troop_trained_percentage": 0.95 _
@@ -4867,7 +4889,7 @@ Function LoadDefaultStrategy(strategy_index)
         g_overall_criteria(3) = {"gold":0, "elixir":250000, "dark_elixir":0, "gold_and_elixir":0, "trophy":25, "estimated":false, "own_trophy":2600}
         g_overall_criteria(4) = {"gold":0, "elixir":200000, "dark_elixir":0, "gold_and_elixir":0, "trophy":20, "estimated":false, "own_trophy": 3000}
         g_spell_lightning_at_dark_elixir_drill = false  // don't spelllightning on dark elixir drills
-    ElseIf strategy_index = 4 Then // åœ¨çº¿æå…µ
+    ElseIf strategy_index = 4 Then // ÔÚÏß¾è±ø
         strategy = {_
 			"type": 3 _
 		}
@@ -4947,9 +4969,9 @@ Function Test()
 End Function
 
 Function WaitForAnotherDevice()
-    LogAndShow(3, "å¦ä¸€ä¸ªè®¾å¤‡ç™»å½•")
+    LogAndShow(3, "ÁíÒ»¸öÉè±¸µÇÂ¼")
     For i=0 to g_wait_for_another_device
-        ShowMsg(1, "ç­‰å¾…å¦ä¸€ä¸ªè®¾å¤‡é€€å‡º," & CStr(g_wait_for_another_device - i) &"ç§’")
+        ShowMsg(1, "µÈ´ıÁíÒ»¸öÉè±¸ÍË³ö," & CStr(g_wait_for_another_device - i) &"Ãë")
         Delay 1000
     Next
 End Function
@@ -4957,14 +4979,14 @@ End Function
 Function Run()
     If DEVICE.GetDPI() <> 320 or abs(GetScreenX() - 720) > 80 or abs(GetScreenY() - 1280) > 100 Then 
         For 5
-            ShowMsg 1, "ç›®å‰ä»…æ”¯æŒ 720x1280 DPI320 è®¾å¤‡ï¼Œå»ºè®®ä½¿ç”¨ç”µè„‘ä¸Šçš„å®‰å“æ¨¡æ‹Ÿå™¨"
+            ShowMsg 1, "Ä¿Ç°½öÖ§³Ö 720x1280 DPI320 Éè±¸£¬½¨ÒéÊ¹ÓÃµçÄÔÉÏµÄ°²×¿Ä£ÄâÆ÷"
             Delay 1000
         Next
         Exit Function
     End If
 	
     Log.Open 
-    LogAndShow(1, "è¾…åŠ©ç‰ˆæœ¬:"&CStr(g_version))
+    LogAndShow(1, "¸¨Öú°æ±¾:"&CStr(g_version))
     Report "Write log to " & GetTempDir()
     
     LoadSettingFromDefaultConfigPage()
@@ -5093,10 +5115,10 @@ Function LoadSettingFromDefaultConfigPage()
     g_enable_donation = ReadUIConfig("donate", false)
     If g_enable_donation Then 
         g_train_after_donation = ReadUIConfig("train_after_donation", false)
-        // "åŠåˆ†é’Ÿ", "5åˆ†é’Ÿ", "10åˆ†é’Ÿ", "30åˆ†é’Ÿ",
+        // "°ë·ÖÖÓ", "5·ÖÖÓ", "10·ÖÖÓ", "30·ÖÖÓ",
         Dim kDonationIntervals = {10, 5 * 60, 10 * 60, 30 * 60}
         g_donation_interval = kDonationIntervals(Int(ReadUIConfig("donation_interval", 0)))
-        // "ä¸é™", "10", "20", "50",
+        // "²»ÏŞ", "10", "20", "50",
         Dim kDonationPopulations = {9999, 10, 20, 50}
         g_max_donation_population = kDonationPopulations(Int(ReadUIConfig("donation_population", 0)))
         Dim donation_log = "_NL_donation-interval_"&CStr(g_donation_interval)&"_population_"&CStr(g_max_donation_population)&"_train_after_donation_"&CStr(g_train_after_donation)
@@ -5126,7 +5148,7 @@ Function LoadSettingFromDefaultConfigPage()
         TracePrint donation_log	
     End If
 
-    //Dim kAttackConfig = {"å¼“è›®æ‰“é±¼ï¼ˆé€ å…µä¾¿å®œï¼‰", "å¼“è›®å·¨æ‰“é±¼ï¼ˆé‡‘æ°´é»‘å‡è¡¡ï¼‰", "å…¨åŠ›æŠ¢é»‘ï¼ˆæ‰“é»‘å¿«ï¼‰", "é¾™æµå†²æ¯", "åœ¨çº¿æå…µ(ä¸è¿›æ”»)", "è‡ªå®šä¹‰"}
+    //Dim kAttackConfig = {"¹­Âù´òÓã£¨Ôì±ø±ãÒË£©", "¹­Âù¾Ş´òÓã£¨½ğË®ºÚ¾ùºâ£©", "È«Á¦ÇÀºÚ£¨´òºÚ¿ì£©", "ÁúÁ÷³å±­", "ÔÚÏß¾è±ø(²»½ø¹¥)", "×Ô¶¨Òå"}
     Dim kCustomMode = 5
     Dim overall_config = Int(ReadUIConfig("overall_config", 1))
     If overall_config <> kCustomMode Then 
@@ -5413,7 +5435,7 @@ Function BrewDragonAttackSpells()
     TapItem("SpellFactory", 500)
     Dim own_resources = RecognizeOwnAmountInTraining()
     If own_resources["elixir"] < 90000 or own_resources["dark_elixir"] < 300 Then 
-        LogAndShow 1, "èµ„æºä¸å¤Ÿ..."
+        LogAndShow 1, "×ÊÔ´²»¹»..."
         Exit Function
     End If
     BrewSpell("LightningSpell", 2)
@@ -5641,4 +5663,154 @@ Function DragonAttack(map, building_infos)
     DragonAttack = 0
 End Function
 
+//BrewDragonAttackSpells()
+//g_deploy_king = true
+//g_king_card_coordinate = FindKingCard()
+//DragonChallenge()
+//WaitAndBurstHeros(180)
+
+//Delay 4000
+//For 40
+//	UpgradeWall(2350000, 2000000000, 2000000, 10, 7, 11)	
+//Next
+//UpgradeWall(2500000, 2000000000, 10, null, 8, 11)
+//UpgradeWall(2500000, 2000000000, 10, null, 8, 11)
+//TracePrint AnotherDeviceIsLoggingIn()
+//TracePrint HasNextOpponentButton()
+//While true
+//	MoveToMapTop()
+//	Dim building_infos = FindAllBuildings()
+//	url.get("http://10.0.2.2:80/info?", 1)
+//	//MoveToMapBottom()
+//	//KeepCapture 
+//	//traceprint "memory:"&ShanHai.GetRAM()
+//Wend
+// Challenge()
+//Delay 4000
+//GoBackHomeFromBuildingMasterBase
+//Challenge()
+//MoveToMapTop()
+//CancellAllTroopTraining()
+//KeyPress "Back"
+//TracePrint NeedReinforcement()
+//TracePrint NeedGemsToRequestReinforcement()
+//TracePrint InWarResultPage()
+
+/*While true
+	Dim r = FindUpgradeButton(true)
+	TracePrint r(0), r(1), r(2)
+	r = FindUpgradeButton(false)
+	TracePrint r(0), r(1), r(2)
+	Delay 2000
+	TracePrint "..."
+Wend*/
+
+
 Run()
+
+//BrewSpell "PoisonSpell", 1
+//BrewSpell "EarthquakeSpell", 1
+//BrewSpell("HasteSpell", 1)
+
+
+//Dim r = RecognizeOwnAmountInTraining()
+//TracePrint r["elixir"], r["dark_elixir"]
+//Dim building_types = {0,1,2,3,4}
+//MoveToMapTop()
+//TracePrint DetectZoomRatio()
+//Dim buildings = FindBuildings(building_types)
+//For i = 0 To GetLength(buildings) - 1
+//	Dim building = buildings(i)
+//	TracePrint building["type"], building["level"], building["fullness"], building["x"], building["y"]
+//Next
+//
+//Dim map = DetectVacantGrids(true)
+//MarkAndUpdateBuildings(map, buildings)
+//PrintMap(map, buildings)
+	
+//Traceprint CheckUpgradeWallResourceEnough()
+//Dim results = RecognizeRobableAmount()
+//TracePrint(results(0), results(1), results(2), results(3))
+
+//Dim total = DetectTotalTroopCount()
+//TracePrint total(0), total(1)
+//Dim t = GetTrainedTroops()
+//Dim l = GetLength(t)
+//For i = 0 To l - 1
+//	Dim x = t(i)
+//	TracePrint kTroopChineseName(x(0)), x(1), x(2)
+//Next
+
+//Dim a = FindKingCard()
+//TracePrint a(0), a(1)
+//g_deploy_king = true
+//g_king_card_coordinate = FindKingCard()
+//TracePrint g_king_card_coordinate(0), g_king_card_coordinate(1)
+//g_deploy_queen = true
+//g_queen_card_coordinate = FindQueenCard()
+//TracePrint g_queen_card_coordinate(0), g_queen_card_coordinate(1)
+//WaitAndBurstHeros(300000)
+
+//While True
+//	Dim total = DetectTotalTroopCount()
+//	TracePrint total(0), total(1)
+//	Dim t = GetTrainedTroops()
+//	Dim l = GetLength(t)
+//	For i = 0 To l - 1
+//		Dim x = t(i)
+//		TracePrint kTroopChineseName(x(0)), x(1), x(2)
+//	Next
+//	Delay 2000
+//Wend
+//Delay 3000
+//Dim counts(30)
+//FillArray(counts, 30, 0)
+//FillArray(counts, 19, 1)
+//counts(18) = 2
+//counts(0) = 19
+//counts(1) = 140
+//counts(15) = 1000
+//counts(11) = 1
+//CancellAllTroopTraining()
+//TrainTroops(counts, kDontCancelTraining, true, false)
+//BrewSpell("LightningSpell", 5)
+//Test()
+
+
+//Dim king_bursted = false
+//While True
+//	If InWarResultPage() Then 
+//		Report "War end"
+//		TapItem "ReturnAfterWarEnd", 1000
+//		Exit While
+//	End If
+//	Report "War is ongoing"
+//	For 5
+//		If not king_bursted and KingIsHurt() Then 
+//			Tap g_king_card_coordinate(0), g_king_card_coordinate(1)
+//			king_bursted = true
+//		End If
+//		Delay 2000
+//	Next
+//Wend
+
+//Dim r = RecognizeWarResultAmount()
+//TracePrint r(0), r(1), r(2), r(3)
+//
+//Dim opponent_resources = RecognizeOwnAmount()
+//TracePrint opponent_resources(0), opponent_resources(1), opponent_resources(2)
+//GoToWar({{0, 0, 300, 0, false}}, {999999, 999999, 100}, "TargetBuilding", null, {{0, 50, 0}, {1, 150, 1}}, 200)
+
+//Test()
+//TracePrint HasZoomedOutToMaxInWar()
+//Dim resource_amount = EstimateRobableResourcesFromCollectors(collectors)
+//TracePrint resource_amount(0), resource_amount(1)
+//RecognizeRobableAmount()
+//RecognizeOwnAmount()
+//For 1000
+//	ListAllTroops 
+//	Delay 3000
+//Next
+//CollectResources()
+//CancellAllTroopTraining 
+//ListAllTroops
