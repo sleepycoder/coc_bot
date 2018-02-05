@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.3.2.0"
+Dim g_version = "1.3.2.6"
 Dim log_level = 1
 
 Sub Ping
@@ -629,8 +629,6 @@ Dim kScreenCoordinates = { _
 	{"Say", {37, 435}}, _
 	{"SendWords", {44, 1250}}, _
 	{"Chat", {435, 34}}, _
-	{"NextDonation", {104, 468}}, _
-	{"PreviousDonation", {566, 468}}, _
 	{"CloseChat", {407, 505}}, _
 	{"ConfirmWinningStarBonus", {188, 640}}, _
 	{"None"} _
@@ -3186,7 +3184,8 @@ End Function
 
 Function InWarPreparationPage()
     InWarPreparationPage = (CmpColorEx("257|172|45C7FF-101010,260|398|48C9FF-101010,170|402|0D51CE-101010,170|167|0D51D1-101010,705|166|78E4F8-101010,686|1216|8D85FE-101010",0.9) = 1 or _
-        CmpColorEx("214|180|45C1FF-101010,148|183|0D59DE-101010,212|388|40BFFF-101010,154|384|0D5DE5-101010,13|238|7AE5F8,705|395|78E4F8,683|1216|857DFF,663|1250|1511DC", 0.9) = 1)
+        CmpColorEx("214|180|45C1FF-101010,148|183|0D59DE-101010,212|388|40BFFF-101010,154|384|0D5DE5-101010,13|238|7AE5F8,705|395|78E4F8,683|1216|857DFF,663|1250|1511DC", 0.9) = 1 or _
+        CmpColorEx("12|146|82E8FB-101010,14|272|7DE8F9-101010,709|322|31C8EE-101010,710|434|28C8EF-101010,712|1218|384F65-101010,685|1221|8581FF-101010,680|1236|FFFFFF-101010,661|1254|1813D5-101010", 0.9) = 1)
 End Function
 
 Function InWarResultPage()
@@ -3843,7 +3842,9 @@ Dim kWordBoundaryMark = {"FEFEFE-101010","0|2|FFFFFF-101010,0|3|FFFFFF-101010,0|
 Dim kWordBoundary = "¨„"
 
 Function InClanChattingPage()
-    InClanChattingPage = (CmpColorEx("667|829|008B48-101010,686|847|00D4A6-101010,46|460|D8ECE9-101010,20|460|A6D8D8-101010,702|242|587478-101010,683|413|506C70-101010",0.98) = 1)
+    InClanChattingPage = _
+    	(CmpColorEx("667|829|008B48-101010,686|847|00D4A6-101010,46|460|D8ECE9-101010,20|460|A6D8D8-101010,702|242|587478-101010,683|413|506C70-101010",0.98) = 1 or _
+    	 CmpColorEx("706|264|5B7579-101010,668|269|506C70-101010,706|425|5B7579-101010,666|418|506C70-101010,661|493|506C70-101010,440|517|21A9FD-101010,374|528|1555CC-101010,412|525|FFFFFF-101010", 0.98) = 1)
 End Function
 
 Function ChattingPageIsOpened()
@@ -3970,6 +3971,17 @@ Function FindDonationRequest(start_x, pattern_list, is_troop_donatable, default_
         // Find the sword mark
         FindMultiColor start_x, kChattingContentStartY, kChattingContentEndX, kChattingContentStartY + 60, _
 			"B08870-101010","-11|6|B08C71-101010,2|3|E0E0E8-101010,-3|6|F5F1FC-101010,-17|11|183D68-101010,-13|13|2F7DA9-101010,-8|9|DBD0D3-101010,1|-1|B08870-101010", 5, 0.98, x, y
+		If x > 0 Then 
+		    Dim buton_x, button_y
+			// Check the donate button 
+			FindMultiColor x - 30, y + 290, x + 30, y + 350, _
+				"7DF2D5-101010","-27|1|31B56C-101010,4|102|84F5DC-101010,-25|101|2DBB70-101010", 5, 0.98, buton_x, button_y
+			If buton_x < 0 Then 
+				// not found
+				x = -1
+				y = -1
+			End If
+		End If	
         If x > 0 Then 
             Dim pattern_matched(50)
             FillArray(pattern_matched, 50, 0)
@@ -4090,12 +4102,30 @@ End Function
 //Dim t = FindDonationRequest(kChattingContentStartX, ps)
 //TracePrint t(0), t(1)
 
-Function HasNextDonation()
-    HasNextDonation = (CmpColorEx("107|454|00C894-101010,101|467|05BC80-101010,92|459|FFFFFF-101010,106|459|FFFFFF-101010",0.98) = 1)
+Function HasNextDonation(position)
+    // HasNextDonation = (CmpColorEx("107|454|00C894-101010,101|467|05BC80-101010,92|459|FFFFFF-101010,106|459|FFFFFF-101010",0.98) = 1)
+	Dim x, y
+	FindMultiColor 85, 440, 115, 483, "FFFFFF-101010", "-11|0|FFFFFF-101010,8|2|0DD5A0-101010,1|-5|11D198-101010,-10|-6|15A55D-101010,-10|7|15A55D-101010,0|7|0FCE95-101010,-18|1|15A55D-101010", 0, 0.9, x, y
+    If x > 0 Then 
+    	position(0) = x
+    	position(1) = y
+    	HasNextDonation = True
+    Else 
+    	HasNextDonation = False
+    End If
 End Function
 
-Function HasPreviousDonation()
-    HasPreviousDonation = (CmpColorEx("586|459|00C894-101010,564|467|089850-101010,566|458|FFFFFF-101010,578|460|FFFFFF-101010",0.98) = 1)
+Function HasPreviousDonation(position)
+    // HasPreviousDonation = (CmpColorEx("586|459|00C894-101010,564|467|089850-101010,566|458|FFFFFF-101010,578|460|FFFFFF-101010",0.98) = 1)
+    Dim x, y
+	FindMultiColor 560, 440, 590, 483, "FFFFFF-101010", "5|-6|0DD39D-101010,-11|-6|15A55D-101010,-8|0|FFFFFF-101010,-11|8|15A55D-101010,4|7|0DD19A-101010,12|1|0DD5A1-101010", 0, 0.9, x, y    
+    If x > 0 Then 
+    	position(0) = x
+    	position(1) = y
+    	HasPreviousDonation = True
+    Else 
+    	HasPreviousDonation = False
+    End If
 End Function
 
 Function DonationPanelOpened()
@@ -4125,8 +4155,11 @@ Function TryToDonate()
         Exit Function
     End If
     Dim donated_population = 0
-    While HasNextDonation()
-        TapItem("NextDonation", 600)
+    Dim position(2)
+    While HasNextDonation(position)
+        Tap position(0), position(1)
+        Delay 600
+        // TapItem("NextDonation", 600)
     Wend
 	
     Dim from_buttom = true
@@ -4210,7 +4243,11 @@ Function TryToDonate()
                                 LogInfo(3, "donate " & kTroopChineseName(donating_type))
                                 donated_count = donated_count + 1
                                 Delay 1500
-                                If not DonationPanelOpened() or donated_population >= g_max_donation_population Then 
+                                If not DonationPanelOpened() Then 
+                                    Delay 5000
+                                    Exit While
+                                End If
+                                If donated_population >= g_max_donation_population Then 
                                     Delay 1000
                                     Exit While
                                 End If
@@ -4230,11 +4267,14 @@ Function TryToDonate()
             If DonationPanelOpened() Then 
                 KeyPress "Back"
                 Delay 1000
+                start_x = request_x + 100
             End If
-            start_x = request_x + 100
         Wend
-        If HasPreviousDonation() Then 
-            TapItem "PreviousDonation", 1000
+        
+        If HasPreviousDonation(position) Then 
+            // TapItem "PreviousDonation", 1000
+        	Tap position(0), position(1)
+        	Delay 1000
         Else 
             Exit While
         End If	
@@ -5706,6 +5746,7 @@ End Function
 Wend*/
 
 
+//TracePrint InWarPreparationPage()
 Run()
 
 //BrewSpell "PoisonSpell", 1
