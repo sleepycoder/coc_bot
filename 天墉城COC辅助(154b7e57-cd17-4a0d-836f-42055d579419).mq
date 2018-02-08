@@ -4,7 +4,7 @@
 Import "file.lua"
 Import "shanhai.lua"
 
-Dim g_version = "1.3.2.6"
+Dim g_version = "1.3.2.8"
 Dim log_level = 1
 
 Sub Ping
@@ -4207,7 +4207,7 @@ Function TryToDonate()
                         LogInfo(3, "try to donate "&kTroopChineseName(donating_type))
                         Dim troop_x = -1, troop_y = -1
                         If IsSpell(donating_type) Then 
-                            FindMultiColor 215, 518, 400, 1073, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
+                            FindMultiColor 215, 518, 400, 1120, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
                             If troop_x < 0 Then 
                                 If spell_panel_on_left Then 
                                     Swipe 310, 976, 310, 610, 200
@@ -4217,10 +4217,10 @@ Function TryToDonate()
                                     spell_panel_on_left = true
                                 End If
                                 Delay 1500
-                                FindMultiColor 215, 518, 400, 1073, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
+                                FindMultiColor 215, 518, 400, 1120, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
                             End If
                         Else
-                            FindMultiColor 213,508,683,1067, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
+                            FindMultiColor 213,508,683,1120, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
                             If troop_x < 0 Then 
                                 If on_left Then 
                                     Swipe 440, 976, 440, 610, 200
@@ -4230,7 +4230,7 @@ Function TryToDonate()
                                     on_left = true
                                 End If
                                 Delay 1500
-                                FindMultiColor 213,508,683,1067, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
+                                FindMultiColor 213,508,683,1120, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
                             End If
                         End If
 						
@@ -4244,14 +4244,14 @@ Function TryToDonate()
                                 donated_count = donated_count + 1
                                 Delay 1500
                                 If not DonationPanelOpened() Then 
-                                    Delay 5000
+                                    Delay 4500
                                     Exit While
                                 End If
                                 If donated_population >= g_max_donation_population Then 
                                     Delay 1000
                                     Exit While
                                 End If
-                                FindMultiColor 337,508,683,1067, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
+                                FindMultiColor 337,508,683,1120, GetTroopColorInDonation(donating_type, 0), GetTroopColorInDonation(donating_type, 1), 0, 0.95, troop_x, troop_y
                                 If troop_x < 0 Then 
                                     Exit While
                                 End If
